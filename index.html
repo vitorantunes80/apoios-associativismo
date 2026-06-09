@@ -1,0 +1,3525 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0c4a6e">
+<title>Piscinas Municipais — Cabeceiras de Basto</title>
+<link rel="manifest" href="data:application/json,{}">
+<style>
+:root {
+  --blue-950: #0c1a2e;
+  --blue-900: #0c2d4f;
+  --blue-800: #0c4a6e;
+  --blue-700: #0369a1;
+  --blue-500: #0ea5e9;
+  --blue-300: #7dd3fc;
+  --blue-100: #e0f2fe;
+  --blue-50:  #f0f9ff;
+  --teal-500: #14b8a6;
+  --teal-100: #ccfbf1;
+  --amber-500:#f59e0b;
+  --amber-100:#fef3c7;
+  --red-500:  #ef4444;
+  --red-100:  #fee2e2;
+  --green-500:#22c55e;
+  --green-100:#dcfce7;
+  --gray-900: #111827;
+  --gray-700: #374151;
+  --gray-500: #6b7280;
+  --gray-300: #d1d5db;
+  --gray-100: #f3f4f6;
+  --gray-50:  #f9fafb;
+  --white:    #ffffff;
+  --sidebar-w: 220px;
+  --radius:   8px;
+  --shadow:   0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-md:0 4px 6px rgba(0,0,0,.1), 0 2px 4px rgba(0,0,0,.08);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 14px;
+  color: var(--gray-900);
+  background: var(--gray-50);
+  min-height: 100vh;
+}
+
+/* ── LOGIN ── */
+#login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--blue-950) 0%, var(--blue-800) 60%, var(--teal-500) 100%);
+}
+.login-card {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 48px 40px 40px;
+  width: 360px;
+  box-shadow: 0 20px 40px rgba(0,0,0,.25);
+  text-align: center;
+}
+.login-icon {
+  width: 64px; height: 64px;
+  background: var(--blue-100);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 28px;
+}
+.login-card h1 {
+  font-size: 20px; font-weight: 700;
+  color: var(--blue-900); margin-bottom: 4px;
+}
+.login-card p { color: var(--gray-500); font-size: 13px; margin-bottom: 28px; }
+.login-card input[type=text], .login-card input[type=password] {
+  width: 100%; padding: 11px 14px;
+  border: 1.5px solid var(--gray-300); border-radius: var(--radius);
+  font-size: 14px; outline: none; transition: border-color .15s;
+  text-align: center; letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+.login-card input:focus { border-color: var(--blue-500); }
+.btn-primary {
+  width: 100%; padding: 11px;
+  background: var(--blue-800); color: var(--white);
+  border: none; border-radius: var(--radius);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: background .15s;
+}
+.btn-primary:hover { background: var(--blue-700); }
+.login-error {
+  color: var(--red-500); font-size: 13px;
+  margin-top: 10px; min-height: 18px;
+}
+
+/* ── APP SHELL ── */
+#app { display: none; min-height: 100vh; }
+
+.sidebar {
+  position: fixed; top: 0; left: 0; bottom: 0;
+  width: var(--sidebar-w);
+  background: var(--blue-950);
+  display: flex; flex-direction: column;
+  z-index: 100;
+  overflow-y: auto;
+}
+.sidebar-header {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: 10px;
+}
+.sidebar-logo-icon {
+  width: 36px; height: 36px;
+  background: var(--blue-700);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.sidebar-logo-text { line-height: 1.2; }
+.sidebar-logo-text strong {
+  display: block; color: var(--white);
+  font-size: 13px; font-weight: 700;
+}
+.sidebar-logo-text span {
+  color: var(--blue-300); font-size: 11px;
+}
+.sidebar-piscina-badge {
+  margin: 10px 16px 0;
+  padding: 6px 10px;
+  background: rgba(255,255,255,.07);
+  border-radius: 6px;
+  font-size: 11px; color: var(--blue-300);
+}
+.sidebar-piscina-badge select {
+  background: transparent; border: none; color: var(--white);
+  font-size: 11px; outline: none; cursor: pointer; width: 100%;
+  font-weight: 600;
+}
+.sidebar-piscina-badge select option { background: var(--blue-900); color: var(--white); }
+
+.nav-section { padding: 8px 8px 0; }
+.nav-section-label {
+  padding: 8px 10px 4px;
+  font-size: 10px; font-weight: 700; letter-spacing: .08em;
+  color: rgba(255,255,255,.35); text-transform: uppercase;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: 6px;
+  color: rgba(255,255,255,.65); font-size: 13px;
+  cursor: pointer; transition: all .15s;
+  margin-bottom: 1px;
+}
+.nav-item:hover { background: rgba(255,255,255,.08); color: var(--white); }
+.nav-item.active { background: var(--blue-700); color: var(--white); font-weight: 600; }
+.nav-item .ni { font-size: 15px; width: 18px; text-align: center; }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.sidebar-user {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px;
+}
+.sidebar-avatar {
+  width: 30px; height: 30px;
+  background: var(--blue-700); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--white); font-weight: 700; flex-shrink: 0;
+}
+.sidebar-user-info strong {
+  display: block; color: var(--white); font-size: 12px;
+}
+.sidebar-user-info span { color: var(--blue-300); font-size: 11px; }
+.btn-logout {
+  width: 100%; padding: 7px;
+  background: rgba(255,255,255,.07); color: rgba(255,255,255,.65);
+  border: none; border-radius: 6px; font-size: 12px; cursor: pointer;
+  transition: background .15s;
+}
+.btn-logout:hover { background: rgba(255,255,255,.12); color: var(--white); }
+
+.main-content {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+.topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-300);
+  padding: 0 24px;
+  height: 52px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar-title {
+  font-size: 16px; font-weight: 700; color: var(--blue-900);
+}
+.topbar-meta { display: flex; align-items: center; gap: 10px; }
+.epoca-badge {
+  padding: 4px 10px;
+  background: var(--blue-100); color: var(--blue-800);
+  border-radius: 20px; font-size: 12px; font-weight: 600;
+}
+.piscina-badge {
+  padding: 4px 10px;
+  background: var(--teal-100); color: #0f766e;
+  border-radius: 20px; font-size: 12px; font-weight: 600;
+}
+
+.page-body { padding: 24px; flex: 1; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.card-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-header h3 { font-size: 14px; font-weight: 700; color: var(--gray-900); }
+.card-body { padding: 18px; }
+
+/* ── DASHBOARD STATS ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px; margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--white);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+.stat-label { font-size: 12px; color: var(--gray-500); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+.stat-value { font-size: 28px; font-weight: 800; color: var(--blue-900); margin: 6px 0 4px; line-height: 1; }
+.stat-sub { font-size: 12px; color: var(--gray-500); }
+.stat-icon { float: right; font-size: 24px; opacity: .3; margin-top: -4px; }
+
+/* ── TABELAS ── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  padding: 9px 12px; text-align: left;
+  font-size: 11px; font-weight: 700; color: var(--gray-500);
+  text-transform: uppercase; letter-spacing: .06em;
+  border-bottom: 1px solid var(--gray-300);
+  white-space: nowrap;
+}
+tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 13px; color: var(--gray-700);
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--gray-50); }
+
+/* ── FORMS ── */
+.form-row { display: grid; gap: 12px; margin-bottom: 12px; }
+.form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+.form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group label { font-size: 12px; font-weight: 600; color: var(--gray-700); }
+.form-control {
+  padding: 8px 10px;
+  border: 1.5px solid var(--gray-300); border-radius: 6px;
+  font-size: 13px; outline: none; transition: border-color .15s;
+  background: var(--white); color: var(--gray-900);
+}
+.form-control:focus { border-color: var(--blue-500); }
+.form-control[readonly] { background: var(--gray-50); color: var(--gray-500); }
+textarea.form-control { resize: vertical; min-height: 80px; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 6px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  border: 1.5px solid transparent; transition: all .15s;
+  white-space: nowrap;
+}
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-blue { background: var(--blue-800); color: var(--white); border-color: var(--blue-800); }
+.btn-blue:hover { background: var(--blue-700); border-color: var(--blue-700); }
+.btn-outline { background: var(--white); color: var(--gray-700); border-color: var(--gray-300); }
+.btn-outline:hover { background: var(--gray-50); }
+.btn-danger { background: var(--red-500); color: var(--white); border-color: var(--red-500); }
+.btn-danger:hover { background: #dc2626; }
+.btn-success { background: var(--green-500); color: var(--white); border-color: var(--green-500); }
+.btn-teal { background: var(--teal-500); color: var(--white); border-color: var(--teal-500); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 20px;
+}
+.modal {
+  background: var(--white);
+  border-radius: 12px;
+  width: 100%; max-width: 560px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0,0,0,.25);
+}
+.modal-lg { max-width: 780px; }
+.modal-header {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-header h3 { font-size: 16px; font-weight: 700; color: var(--gray-900); }
+.modal-close {
+  background: none; border: none; font-size: 20px;
+  color: var(--gray-500); cursor: pointer; padding: 2px 6px;
+  border-radius: 4px; line-height: 1;
+}
+.modal-close:hover { background: var(--gray-100); color: var(--gray-900); }
+.modal-body { padding: 20px; }
+.modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--gray-100);
+  display: flex; justify-content: flex-end; gap: 8px;
+}
+
+/* ── BADGES / PILLS ── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 20px;
+  font-size: 11px; font-weight: 700;
+}
+.badge-blue   { background: var(--blue-100);  color: var(--blue-800); }
+.badge-green  { background: var(--green-100); color: #166534; }
+.badge-red    { background: var(--red-100);   color: #991b1b; }
+.badge-amber  { background: var(--amber-100); color: #92400e; }
+.badge-gray   { background: var(--gray-100);  color: var(--gray-700); }
+.badge-teal   { background: var(--teal-100);  color: #0f766e; }
+
+/* ── ALERTS ── */
+.alert {
+  padding: 10px 14px; border-radius: var(--radius);
+  font-size: 13px; margin-bottom: 14px;
+  display: flex; align-items: flex-start; gap: 8px;
+}
+.alert-warn { background: var(--amber-100); color: #78350f; border: 1px solid #fde68a; }
+.alert-info { background: var(--blue-100);  color: var(--blue-800); border: 1px solid var(--blue-300); }
+.alert-error { background: var(--red-100); color: #7f1d1d; border: 1px solid #fca5a5; }
+
+/* ── SECTION HEADER ── */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.section-header h2 { font-size: 18px; font-weight: 800; color: var(--blue-900); }
+.section-header p { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+
+/* ── HORÁRIO GRID ── */
+.schedule-grid { overflow-x: auto; }
+.schedule-table { border-collapse: collapse; min-width: 700px; width: 100%; }
+.schedule-table th {
+  padding: 8px 10px; background: var(--blue-900); color: var(--white);
+  font-size: 12px; font-weight: 700; text-align: center; border: 1px solid var(--blue-800);
+}
+.schedule-table td {
+  padding: 3px; border: 1px solid var(--gray-200);
+  vertical-align: top; height: 28px;
+}
+.schedule-time { font-size: 11px; color: var(--gray-500); padding: 4px 8px; white-space: nowrap; font-weight: 600; }
+.turma-slot {
+  border-radius: 4px; padding: 3px 6px;
+  font-size: 11px; font-weight: 700; color: var(--white);
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+/* ── TABS ── */
+.tabs { display: flex; gap: 0; border-bottom: 2px solid var(--gray-200); margin-bottom: 20px; }
+.tab-btn {
+  padding: 8px 16px; border: none; background: none;
+  font-size: 13px; font-weight: 600; color: var(--gray-500);
+  cursor: pointer; border-bottom: 2px solid transparent;
+  margin-bottom: -2px; transition: all .15s;
+}
+.tab-btn.active { color: var(--blue-700); border-bottom-color: var(--blue-700); }
+.tab-btn:hover:not(.active) { color: var(--gray-700); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── SEARCH BAR ── */
+.search-bar {
+  display: flex; gap: 8px; margin-bottom: 16px; align-items: center;
+}
+.search-input {
+  flex: 1; padding: 8px 12px;
+  border: 1.5px solid var(--gray-300); border-radius: 6px;
+  font-size: 13px; outline: none;
+}
+.search-input:focus { border-color: var(--blue-500); }
+
+/* ── PRESENÇA GRID ── */
+.presenca-grid { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+.presenca-row {
+  display: contents;
+}
+.presenca-check {
+  width: 22px; height: 22px; cursor: pointer; accent-color: var(--blue-700);
+}
+
+/* ── QUALIDADE ÁGUA ── */
+.param-card {
+  background: var(--white); border: 1px solid var(--gray-300);
+  border-radius: var(--radius); padding: 14px;
+  text-align: center;
+}
+.param-value { font-size: 24px; font-weight: 800; }
+.param-label { font-size: 11px; color: var(--gray-500); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+.param-range { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+.param-ok   { color: var(--green-500); }
+.param-warn { color: var(--amber-500); }
+.param-bad  { color: var(--red-500); }
+
+/* ── LOADING ── */
+.loading {
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px; color: var(--gray-400); font-size: 14px; gap: 10px;
+}
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--gray-200); border-top-color: var(--blue-500);
+  border-radius: 50%; animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-state {
+  text-align: center; padding: 40px 20px; color: var(--gray-400);
+}
+.empty-state .empty-icon { font-size: 36px; margin-bottom: 10px; }
+.empty-state p { font-size: 14px; }
+
+/* ── UTILS ── */
+.hidden { display: none !important; }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.mt-1 { margin-top: 4px; }
+.mt-2 { margin-top: 8px; }
+.mt-3 { margin-top: 12px; }
+.mt-4 { margin-top: 16px; }
+.mb-3 { margin-bottom: 12px; }
+.mb-4 { margin-bottom: 16px; }
+.flex { display: flex; }
+.gap-2 { gap: 8px; }
+.items-center { align-items: center; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+/* ── PRINT ── */
+@media print {
+  .sidebar, .topbar, .no-print { display: none !important; }
+  .main-content { margin-left: 0; }
+  .page-body { padding: 0; }
+  .card { box-shadow: none; border: 1px solid #ccc; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-icon">🌊</div>
+    <h1>Piscinas Municipais</h1>
+    <p>Cabeceiras de Basto</p>
+    <input type="password" id="login-code" placeholder="Código de acesso" autocomplete="off">
+    <button class="btn-primary" onclick="doLogin()">Entrar</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">🏊</div>
+        <div class="sidebar-logo-text">
+          <strong>Piscinas</strong>
+          <span>Cabeceiras de Basto</span>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-piscina-badge">
+      <select id="piscina-select" onchange="setPiscina(this.value)">
+        <option value="ambas">Ambas as piscinas</option>
+        <option value="refojos">Refojos</option>
+        <option value="arco_baulhe">Arco de Baúlhe</option>
+      </select>
+    </div>
+
+    <nav class="nav-section">
+      <div class="nav-section-label">Principal</div>
+      <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+        <span class="ni">📊</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showPage('horario')" id="nav-horario">
+        <span class="ni">📅</span> Horário
+      </div>
+      <div class="nav-item" onclick="showPage('presencas')" id="nav-presencas">
+        <span class="ni">✅</span> Presenças
+      </div>
+    </nav>
+
+    <nav class="nav-section" id="nav-gestao-section">
+      <div class="nav-section-label">Gestão</div>
+      <div class="nav-item" onclick="showPage('alunos')" id="nav-alunos">
+        <span class="ni">👤</span> Alunos
+      </div>
+      <div class="nav-item" onclick="showPage('turmas')" id="nav-turmas">
+        <span class="ni">🎓</span> Turmas
+      </div>
+      <div class="nav-item" onclick="showPage('pagamentos')" id="nav-pagamentos">
+        <span class="ni">💶</span> Pagamentos
+      </div>
+      <div class="nav-item" onclick="showPage('avaliacoes')" id="nav-avaliacoes">
+        <span class="ni">📋</span> Avaliações
+      </div>
+    </nav>
+
+    <nav class="nav-section">
+      <div class="nav-section-label">Operacional</div>
+      <div class="nav-item" onclick="showPage('escala')" id="nav-escala">
+        <span class="ni">🦺</span> Escala Salvadores
+      </div>
+      <div class="nav-item" onclick="showPage('agua')" id="nav-agua">
+        <span class="ni">🧪</span> Qualidade da Água
+      </div>
+      <div class="nav-item" onclick="showPage('ocorrencias')" id="nav-ocorrencias">
+        <span class="ni">⚠️</span> Ocorrências
+      </div>
+      <div class="nav-item" onclick="showPage('avisos')" id="nav-avisos">
+        <span class="ni">📢</span> Avisos
+      </div>
+    </nav>
+
+    <nav class="nav-section" id="nav-admin-section">
+      <div class="nav-section-label">Administração</div>
+      <div class="nav-item" onclick="showPage('pessoal')" id="nav-pessoal">
+        <span class="ni">👥</span> Pessoal
+      </div>
+      <div class="nav-item" onclick="showPage('inventario')" id="nav-inventario">
+        <span class="ni">📦</span> Inventário
+      </div>
+      <div class="nav-item" onclick="showPage('relatorios')" id="nav-relatorios">
+        <span class="ni">📈</span> Relatórios
+      </div>
+      <div class="nav-item" onclick="showPage('config')" id="nav-config">
+        <span class="ni">⚙️</span> Configuração
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" id="user-avatar">A</div>
+        <div class="sidebar-user-info">
+          <strong id="user-name">—</strong>
+          <span id="user-role">—</span>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">Terminar sessão</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div class="topbar-meta">
+        <span class="epoca-badge" id="topbar-epoca">—</span>
+        <span class="piscina-badge" id="topbar-piscina">Todas</span>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- DASHBOARD -->
+      <div id="page-dashboard">
+        <div id="dash-content">
+          <div class="loading"><div class="spinner"></div> A carregar...</div>
+        </div>
+      </div>
+
+      <!-- HORÁRIO -->
+      <div id="page-horario" class="hidden">
+        <div class="section-header">
+          <div><h2>Horário</h2><p>Grelha visual de turmas por piscina</p></div>
+          <div class="flex gap-2">
+            <select class="form-control" id="horario-piscina-filter" onchange="renderHorario()" style="width:160px">
+              <option value="refojos">Refojos</option>
+              <option value="arco_baulhe">Arco de Baúlhe</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="printHorario()">🖨️ Imprimir</button>
+            <button class="btn btn-blue btn-sm" onclick="showPage('turmas')">+ Turma</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:12px">
+            <div id="horario-grid"><div class="loading"><div class="spinner"></div> A carregar...</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ALUNOS -->
+      <div id="page-alunos" class="hidden">
+        <div class="section-header">
+          <div><h2>Alunos</h2><p>Gestão de inscrições e fichas</p></div>
+          <button class="btn btn-blue" id="btn-novo-aluno" onclick="openAlunoModal()">+ Novo aluno</button>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:14px 18px">
+            <div class="search-bar">
+              <input type="text" class="search-input" id="alunos-search" placeholder="Pesquisar por nome, nº mecanográfico..." oninput="filterAlunos()">
+              <select class="form-control" id="alunos-filter-estado" onchange="filterAlunos()" style="width:140px">
+                <option value="">Todos</option>
+                <option value="ativa">Com inscrição ativa</option>
+                <option value="sem">Sem inscrição</option>
+              </select>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nº Mec.</th><th>Nome</th><th>Nasc.</th><th>Turma</th><th>Nível</th><th>Piscina</th><th>Estado</th><th></th>
+                  </tr>
+                </thead>
+                <tbody id="alunos-tbody">
+                  <tr><td colspan="8"><div class="loading"><div class="spinner"></div></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TURMAS -->
+      <div id="page-turmas" class="hidden">
+        <div class="section-header">
+          <div><h2>Turmas</h2><p>Gestão de turmas e inscrições</p></div>
+          <div class="flex gap-2" id="btn-nova-turma-wrap">
+            <button class="btn btn-blue" onclick="openTurmaModal()">+ Nova turma</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:14px 18px">
+            <div class="search-bar">
+              <select class="form-control" id="turmas-filter-piscina" onchange="filterTurmas()" style="width:160px">
+                <option value="">Ambas as piscinas</option>
+                <option value="refojos">Refojos</option>
+                <option value="arco_baulhe">Arco de Baúlhe</option>
+              </select>
+              <select class="form-control" id="turmas-filter-nivel" onchange="filterTurmas()" style="width:160px">
+                <option value="">Todos os níveis</option>
+              </select>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Nome</th><th>Nível</th><th>Piscina</th><th>Horário</th><th>Vagas</th><th>Professor</th><th></th></tr>
+                </thead>
+                <tbody id="turmas-tbody">
+                  <tr><td colspan="7"><div class="loading"><div class="spinner"></div></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRESENÇAS -->
+      <div id="page-presencas" class="hidden">
+        <div class="section-header">
+          <div><h2>Presenças</h2><p>Registo de assiduidade por aula</p></div>
+        </div>
+        <div class="grid-2 mb-4">
+          <div class="form-group">
+            <label>Turma</label>
+            <select class="form-control" id="presenca-turma-sel" onchange="loadPresencaAulas()">
+              <option value="">Selecionar turma...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Aula / Data</label>
+            <select class="form-control" id="presenca-aula-sel" onchange="loadPresencaLista()">
+              <option value="">Selecionar aula...</option>
+            </select>
+          </div>
+        </div>
+        <div id="presenca-panel">
+          <div class="empty-state"><div class="empty-icon">📋</div><p>Selecione uma turma e uma aula para registar presenças.</p></div>
+        </div>
+      </div>
+
+      <!-- PAGAMENTOS -->
+      <div id="page-pagamentos" class="hidden">
+        <div class="section-header">
+          <div><h2>Pagamentos</h2><p>Registo de mensalidades e taxas</p></div>
+          <button class="btn btn-blue" onclick="openPagamentoModal()">+ Registar pagamento</button>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:14px 18px">
+            <div class="search-bar">
+              <input type="text" class="search-input" id="pag-search" placeholder="Pesquisar aluno..." oninput="filterPagamentos()">
+              <input type="month" class="form-control" id="pag-mes" onchange="filterPagamentos()" style="width:150px">
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Data</th><th>Aluno</th><th>Tipo</th><th>Valor</th><th>Ref.</th><th>Registado por</th></tr>
+                </thead>
+                <tbody id="pagamentos-tbody">
+                  <tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AVALIAÇÕES -->
+      <div id="page-avaliacoes" class="hidden">
+        <div class="section-header">
+          <div><h2>Avaliações</h2><p>Registo de competências por período</p></div>
+        </div>
+        <div class="grid-2 mb-4">
+          <div class="form-group">
+            <label>Turma</label>
+            <select class="form-control" id="aval-turma-sel" onchange="loadAvaliacoes()">
+              <option value="">Selecionar turma...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Momento</label>
+            <select class="form-control" id="aval-momento-sel" onchange="loadAvaliacoes()">
+              <option value="1_periodo">1.º Período</option>
+              <option value="2_periodo">2.º Período</option>
+              <option value="3_periodo">3.º Período</option>
+              <option value="final">Final</option>
+            </select>
+          </div>
+        </div>
+        <div id="aval-panel">
+          <div class="empty-state"><div class="empty-icon">📋</div><p>Selecione uma turma para ver e registar avaliações.</p></div>
+        </div>
+      </div>
+
+      <!-- ESCALA SALVADORES -->
+      <div id="page-escala" class="hidden">
+        <div class="section-header">
+          <div><h2>Escala de Salvadores</h2><p>Serviço dos nadadores salvadores</p></div>
+          <button class="btn btn-blue" onclick="openEscalaModal()">+ Adicionar serviço</button>
+        </div>
+        <div class="grid-2 mb-4">
+          <div class="form-group">
+            <label>Piscina</label>
+            <select class="form-control" id="escala-piscina-sel" onchange="loadEscala()">
+              <option value="refojos">Refojos</option>
+              <option value="arco_baulhe">Arco de Baúlhe</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Semana</label>
+            <input type="week" class="form-control" id="escala-semana" onchange="loadEscala()">
+          </div>
+        </div>
+        <div id="escala-panel">
+          <div class="loading"><div class="spinner"></div> A carregar...</div>
+        </div>
+      </div>
+
+      <!-- QUALIDADE ÁGUA -->
+      <div id="page-agua" class="hidden">
+        <div class="section-header">
+          <div><h2>Qualidade da Água</h2><p>Registos diários de parâmetros</p></div>
+          <button class="btn btn-blue" onclick="openAguaModal()">+ Novo registo</button>
+        </div>
+        <div class="form-group mb-4" style="max-width:200px">
+          <label>Piscina</label>
+          <select class="form-control" id="agua-piscina-sel" onchange="loadAgua()">
+            <option value="refojos">Refojos</option>
+            <option value="arco_baulhe">Arco de Baúlhe</option>
+          </select>
+        </div>
+        <div id="agua-panel">
+          <div class="loading"><div class="spinner"></div> A carregar...</div>
+        </div>
+      </div>
+
+      <!-- OCORRÊNCIAS -->
+      <div id="page-ocorrencias" class="hidden">
+        <div class="section-header">
+          <div><h2>Ocorrências</h2><p>Registo de incidentes e situações</p></div>
+          <button class="btn btn-blue" onclick="openOcorrenciaModal()">+ Nova ocorrência</button>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:14px 18px">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Data</th><th>Piscina</th><th>Tipo</th><th>Gravidade</th><th>Descrição</th><th>Responsável</th></tr>
+                </thead>
+                <tbody id="ocorrencias-tbody">
+                  <tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AVISOS -->
+      <div id="page-avisos" class="hidden">
+        <div class="section-header">
+          <div><h2>Avisos</h2><p>Comunicados internos por papel</p></div>
+          <button class="btn btn-blue" id="btn-novo-aviso" onclick="openAvisoModal()">+ Novo aviso</button>
+        </div>
+        <div id="avisos-list">
+          <div class="loading"><div class="spinner"></div> A carregar...</div>
+        </div>
+      </div>
+
+      <!-- PESSOAL -->
+      <div id="page-pessoal" class="hidden">
+        <div class="section-header">
+          <div><h2>Pessoal</h2><p>Gestão de utilizadores e colaboradores</p></div>
+          <button class="btn btn-blue" onclick="openPessoalModal()">+ Novo utilizador</button>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab(this,'tab-professores')">Professores</button>
+          <button class="tab-btn" onclick="switchTab(this,'tab-salvadores')">Nadadores Salvadores</button>
+          <button class="tab-btn" onclick="switchTab(this,'tab-recepcao')">Receção</button>
+          <button class="tab-btn" onclick="switchTab(this,'tab-admins')">Admins / Coord.</button>
+        </div>
+        <div class="tab-panel active" id="tab-professores">
+          <div class="table-wrap"><table><thead><tr><th>Nome</th><th>Piscina base</th><th>Turmas</th><th>Código</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="pessoal-prof-tbody"><tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr></tbody></table></div>
+        </div>
+        <div class="tab-panel" id="tab-salvadores">
+          <div class="table-wrap"><table><thead><tr><th>Nome</th><th>Piscina base</th><th>Cert. Salv.</th><th>Validade</th><th>Código</th><th></th></tr></thead>
+          <tbody id="pessoal-salv-tbody"><tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr></tbody></table></div>
+        </div>
+        <div class="tab-panel" id="tab-recepcao">
+          <div class="table-wrap"><table><thead><tr><th>Nome</th><th>Piscina base</th><th>Código</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="pessoal-rec-tbody"></tbody></table></div>
+        </div>
+        <div class="tab-panel" id="tab-admins">
+          <div class="table-wrap"><table><thead><tr><th>Nome</th><th>Papel</th><th>Código</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="pessoal-adm-tbody"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- INVENTÁRIO -->
+      <div id="page-inventario" class="hidden">
+        <div class="section-header">
+          <div><h2>Inventário</h2><p>Material e equipamento por piscina</p></div>
+          <button class="btn btn-blue" onclick="openInventarioModal()">+ Novo item</button>
+        </div>
+        <div class="form-group mb-4" style="max-width:200px">
+          <label>Piscina</label>
+          <select class="form-control" id="inv-piscina-sel" onchange="loadInventario()">
+            <option value="refojos">Refojos</option>
+            <option value="arco_baulhe">Arco de Baúlhe</option>
+          </select>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Item</th><th>Categoria</th><th>Total</th><th>Disponível</th><th>Estado</th><th></th></tr></thead>
+              <tbody id="inv-tbody"><tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- RELATÓRIOS -->
+      <div id="page-relatorios" class="hidden">
+        <div class="section-header">
+          <div><h2>Relatórios</h2><p>Exportação e análise de dados</p></div>
+        </div>
+        <div class="grid-3">
+          <div class="card" style="cursor:pointer" onclick="gerarRelatorio('assiduidade')">
+            <div class="card-body" style="text-align:center;padding:24px">
+              <div style="font-size:32px;margin-bottom:8px">📊</div>
+              <div style="font-weight:700;color:var(--blue-900)">Relatório de Assiduidade</div>
+              <div style="font-size:12px;color:var(--gray-500);margin-top:4px">Por turma, aluno e piscina</div>
+            </div>
+          </div>
+          <div class="card" style="cursor:pointer" onclick="gerarRelatorio('financeiro')">
+            <div class="card-body" style="text-align:center;padding:24px">
+              <div style="font-size:32px;margin-bottom:8px">💶</div>
+              <div style="font-weight:700;color:var(--blue-900)">Relatório Financeiro</div>
+              <div style="font-size:12px;color:var(--gray-500);margin-top:4px">Pagamentos por época e mês</div>
+            </div>
+          </div>
+          <div class="card" style="cursor:pointer" onclick="gerarRelatorio('substituicao')">
+            <div class="card-body" style="text-align:center;padding:24px">
+              <div style="font-size:32px;margin-bottom:8px">📄</div>
+              <div style="font-weight:700;color:var(--blue-900)">Ficha de Substituição</div>
+              <div style="font-size:12px;color:var(--gray-500);margin-top:4px">Para substituição de professor</div>
+            </div>
+          </div>
+          <div class="card" style="cursor:pointer" onclick="gerarRelatorio('ocupacao')">
+            <div class="card-body" style="text-align:center;padding:24px">
+              <div style="font-size:32px;margin-bottom:8px">📈</div>
+              <div style="font-weight:700;color:var(--blue-900)">Taxa de Ocupação</div>
+              <div style="font-size:12px;color:var(--gray-500);margin-top:4px">Inscritos vs. vagas por turma</div>
+            </div>
+          </div>
+          <div class="card" style="cursor:pointer" onclick="gerarRelatorio('agua')">
+            <div class="card-body" style="text-align:center;padding:24px">
+              <div style="font-size:32px;margin-bottom:8px">🧪</div>
+              <div style="font-weight:700;color:var(--blue-900)">Qualidade da Água</div>
+              <div style="font-size:12px;color:var(--gray-500);margin-top:4px">Histórico de parâmetros</div>
+            </div>
+          </div>
+          <div class="card" style="cursor:pointer" onclick="gerarRelatorio('alunos_risco')">
+            <div class="card-body" style="text-align:center;padding:24px">
+              <div style="font-size:32px;margin-bottom:8px">⚠️</div>
+              <div style="font-weight:700;color:var(--blue-900)">Alunos em Risco</div>
+              <div style="font-size:12px;color:var(--gray-500);margin-top:4px">Faltas acima do limiar</div>
+            </div>
+          </div>
+        </div>
+        <div id="relatorio-output" class="mt-4"></div>
+      </div>
+
+      <!-- CONFIG -->
+      <div id="page-config" class="hidden">
+        <div class="section-header">
+          <div><h2>Configuração</h2><p>Parâmetros gerais da aplicação</p></div>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab(this,'tab-epocas')">Épocas</button>
+          <button class="tab-btn" onclick="switchTab(this,'tab-niveis')">Níveis</button>
+          <button class="tab-btn" onclick="switchTab(this,'tab-tipos-pag')">Tipos de Pagamento</button>
+          <button class="tab-btn" onclick="switchTab(this,'tab-competencias')">Competências</button>
+          <button class="tab-btn" onclick="switchTab(this,'tab-parametros')">Parâmetros</button>
+        </div>
+
+        <div class="tab-panel active" id="tab-epocas">
+          <div class="flex gap-2 mb-4" style="justify-content:flex-end">
+            <button class="btn btn-blue" onclick="openEpocaModal()">+ Nova época</button>
+          </div>
+          <div class="card"><div class="table-wrap">
+            <table><thead><tr><th>Nome</th><th>Início</th><th>Fim</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="epocas-tbody"><tr><td colspan="5"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
+            </table></div></div>
+        </div>
+
+        <div class="tab-panel" id="tab-niveis">
+          <div class="flex gap-2 mb-4" style="justify-content:flex-end">
+            <button class="btn btn-blue" onclick="openNivelModal()">+ Novo nível</button>
+          </div>
+          <div class="card"><div class="table-wrap">
+            <table><thead><tr><th>Código</th><th>Nome</th><th>Cor</th><th>Ordem</th><th>Ativo</th><th></th></tr></thead>
+            <tbody id="niveis-tbody"><tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
+            </table></div></div>
+        </div>
+
+        <div class="tab-panel" id="tab-tipos-pag">
+          <div class="flex gap-2 mb-4" style="justify-content:flex-end">
+            <button class="btn btn-blue" onclick="openTipoPagModal()">+ Novo tipo</button>
+          </div>
+          <div class="card"><div class="table-wrap">
+            <table><thead><tr><th>Nome</th><th>Descrição</th><th>Valor padrão</th><th>Ativo</th><th></th></tr></thead>
+            <tbody id="tipos-pag-tbody"></tbody>
+            </table></div></div>
+        </div>
+
+        <div class="tab-panel" id="tab-competencias">
+          <div class="flex gap-2 mb-4">
+            <select class="form-control" id="comp-nivel-filter" onchange="loadCompetencias()" style="width:200px">
+              <option value="">Todos os níveis</option>
+            </select>
+            <button class="btn btn-blue" onclick="openCompetenciaModal()">+ Nova competência</button>
+          </div>
+          <div class="card"><div class="table-wrap">
+            <table><thead><tr><th>Competência</th><th>Nível</th><th>Ordem</th><th>Ativo</th><th></th></tr></thead>
+            <tbody id="competencias-tbody"></tbody>
+            </table></div></div>
+        </div>
+
+        <div class="tab-panel" id="tab-parametros">
+          <div id="config-params-panel">
+            <div class="loading"><div class="spinner"></div> A carregar...</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-body -->
+  </div><!-- /main-content -->
+</div><!-- /app -->
+
+<!-- ═══ MODAIS ═══ -->
+
+<!-- Modal Época -->
+<div class="modal-overlay hidden" id="modal-epoca">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-epoca-title">Nova Época</h3>
+      <button class="modal-close" onclick="closeModal('modal-epoca')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="epoca-id">
+      <div class="form-row cols-2">
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Nome da época</label>
+          <input type="text" class="form-control" id="epoca-nome" placeholder="ex: Época 2026/2027">
+        </div>
+        <div class="form-group">
+          <label>Data início</label>
+          <input type="date" class="form-control" id="epoca-inicio">
+        </div>
+        <div class="form-group">
+          <label>Data fim</label>
+          <input type="date" class="form-control" id="epoca-fim">
+        </div>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="checkbox" id="epoca-ativa"> Definir como época ativa
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-epoca')">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveEpoca()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Nível -->
+<div class="modal-overlay hidden" id="modal-nivel">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-nivel-title">Novo Nível</h3>
+      <button class="modal-close" onclick="closeModal('modal-nivel')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="nivel-id">
+      <div class="form-row cols-2">
+        <div class="form-group">
+          <label>Código</label>
+          <input type="text" class="form-control" id="nivel-codigo" placeholder="ex: AT1">
+        </div>
+        <div class="form-group">
+          <label>Ordem</label>
+          <input type="number" class="form-control" id="nivel-ordem" value="0">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Nome</label>
+          <input type="text" class="form-control" id="nivel-nome" placeholder="ex: Aprendizagem da Técnica 1">
+        </div>
+        <div class="form-group">
+          <label>Cor</label>
+          <input type="color" class="form-control" id="nivel-cor" value="#3b82f6">
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="nivel-ativo" checked> Ativo
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-nivel')">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveNivel()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Aluno -->
+<div class="modal-overlay hidden" id="modal-aluno">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 id="modal-aluno-title">Novo Aluno</h3>
+      <button class="modal-close" onclick="closeModal('modal-aluno')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="aluno-id">
+      <div class="tabs" style="margin-bottom:16px">
+        <button class="tab-btn active" onclick="switchTab(this,'atab-dados')">Dados Pessoais</button>
+        <button class="tab-btn" onclick="switchTab(this,'atab-saude')">Saúde</button>
+        <button class="tab-btn" onclick="switchTab(this,'atab-enc')">Encarregado</button>
+      </div>
+      <div class="tab-panel active" id="atab-dados">
+        <div class="form-row cols-3">
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Nome completo *</label>
+            <input type="text" class="form-control" id="aluno-nome">
+          </div>
+          <div class="form-group">
+            <label>Nº mecanográfico</label>
+            <input type="text" class="form-control" id="aluno-nmec" placeholder="Auto se vazio">
+          </div>
+          <div class="form-group">
+            <label>Data de nascimento</label>
+            <input type="date" class="form-control" id="aluno-nasc">
+          </div>
+          <div class="form-group">
+            <label>Sexo</label>
+            <select class="form-control" id="aluno-sexo">
+              <option value="">—</option>
+              <option value="M">Masculino</option>
+              <option value="F">Feminino</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Morada</label>
+            <input type="text" class="form-control" id="aluno-morada">
+          </div>
+          <div class="form-group">
+            <label>Contacto</label>
+            <input type="text" class="form-control" id="aluno-contacto">
+          </div>
+          <div class="form-group">
+            <label>NIF</label>
+            <input type="text" class="form-control" id="aluno-nif">
+          </div>
+          <div class="form-group">
+            <label>Residência</label>
+            <select class="form-control" id="aluno-residente">
+              <option value="true">Residente no concelho</option>
+              <option value="false">Fora do concelho</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="tab-panel" id="atab-saude">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Problemas de saúde</label>
+            <textarea class="form-control" id="aluno-saude" placeholder="Descreva eventuais problemas de saúde relevantes"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Necessidades especiais</label>
+            <textarea class="form-control" id="aluno-nec-esp" placeholder="Necessidades de adaptação ou apoio"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Material de apoio necessário</label>
+            <input type="text" class="form-control" id="aluno-material">
+          </div>
+        </div>
+        <div style="display:flex;gap:24px;margin-top:8px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="aluno-medo-agua"> Medo de água
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="aluno-sabe-nadar"> Sabe nadar
+          </label>
+        </div>
+      </div>
+      <div class="tab-panel" id="atab-enc">
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label>Nome do encarregado</label>
+            <input type="text" class="form-control" id="aluno-enc-nome">
+          </div>
+          <div class="form-group">
+            <label>Contacto do encarregado</label>
+            <input type="text" class="form-control" id="aluno-enc-contacto">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-aluno')">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveAluno()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Turma -->
+<div class="modal-overlay hidden" id="modal-turma">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 id="modal-turma-title">Nova Turma</h3>
+      <button class="modal-close" onclick="closeModal('modal-turma')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="turma-id">
+      <div class="form-row cols-2">
+        <div class="form-group">
+          <label>Nome da turma</label>
+          <input type="text" class="form-control" id="turma-nome" placeholder="ex: AT1-A (opcional)">
+        </div>
+        <div class="form-group">
+          <label>Piscina *</label>
+          <select class="form-control" id="turma-piscina">
+            <option value="refojos">Refojos</option>
+            <option value="arco_baulhe">Arco de Baúlhe</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nível *</label>
+          <select class="form-control" id="turma-nivel"></select>
+        </div>
+        <div class="form-group">
+          <label>Vagas máximas</label>
+          <input type="number" class="form-control" id="turma-vagas" value="10" min="1">
+        </div>
+        <div class="form-group">
+          <label>Hora início</label>
+          <input type="time" class="form-control" id="turma-h-inicio" value="09:00">
+        </div>
+        <div class="form-group">
+          <label>Hora fim</label>
+          <input type="time" class="form-control" id="turma-h-fim" value="10:00">
+        </div>
+      </div>
+      <div class="form-group mb-3">
+        <label>Dias da semana</label>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" name="dia" value="1"> Seg</label>
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" name="dia" value="2"> Ter</label>
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" name="dia" value="3"> Qua</label>
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" name="dia" value="4"> Qui</label>
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" name="dia" value="5"> Sex</label>
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" name="dia" value="6"> Sáb</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Professor(es)</label>
+        <div id="turma-profs-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-turma')">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveTurma()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Pagamento -->
+<div class="modal-overlay hidden" id="modal-pagamento">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Registar Pagamento</h3>
+      <button class="modal-close" onclick="closeModal('modal-pagamento')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Aluno *</label>
+          <input type="text" class="form-control" id="pag-aluno-search" placeholder="Pesquisar aluno..." oninput="searchAlunosPag(this.value)">
+          <input type="hidden" id="pag-aluno-id">
+          <div id="pag-aluno-results" style="border:1px solid var(--gray-300);border-radius:6px;max-height:150px;overflow-y:auto;display:none"></div>
+        </div>
+        <div class="form-group">
+          <label>Tipo de pagamento *</label>
+          <select class="form-control" id="pag-tipo"></select>
+        </div>
+        <div class="form-row cols-2" style="margin:0">
+          <div class="form-group">
+            <label>Valor (€) *</label>
+            <input type="number" class="form-control" id="pag-valor" step="0.01" min="0">
+          </div>
+          <div class="form-group">
+            <label>Data</label>
+            <input type="date" class="form-control" id="pag-data">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Referência</label>
+          <input type="text" class="form-control" id="pag-ref" placeholder="Nº de recibo ou referência">
+        </div>
+        <div class="form-group">
+          <label>Notas</label>
+          <textarea class="form-control" id="pag-notas" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-pagamento')">Cancelar</button>
+      <button class="btn btn-blue" onclick="savePagamento()">Registar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ocorrência -->
+<div class="modal-overlay hidden" id="modal-ocorrencia">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Nova Ocorrência</h3>
+      <button class="modal-close" onclick="closeModal('modal-ocorrencia')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row cols-2">
+        <div class="form-group">
+          <label>Piscina</label>
+          <select class="form-control" id="oc-piscina">
+            <option value="refojos">Refojos</option>
+            <option value="arco_baulhe">Arco de Baúlhe</option>
+            <option value="ambas">Ambas</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data/hora</label>
+          <input type="datetime-local" class="form-control" id="oc-data">
+        </div>
+        <div class="form-group">
+          <label>Tipo</label>
+          <select class="form-control" id="oc-tipo">
+            <option value="acidente">Acidente</option>
+            <option value="comportamento">Comportamento</option>
+            <option value="equipamento">Equipamento</option>
+            <option value="seguranca">Segurança</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Gravidade</label>
+          <select class="form-control" id="oc-gravidade">
+            <option value="baixa">Baixa</option>
+            <option value="media">Média</option>
+            <option value="alta">Alta</option>
+            <option value="critica">Crítica</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Descrição *</label>
+          <textarea class="form-control" id="oc-descricao" rows="3"></textarea>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Medidas tomadas</label>
+          <textarea class="form-control" id="oc-medidas" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-ocorrencia')">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveOcorrencia()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Aviso -->
+<div class="modal-overlay hidden" id="modal-aviso">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Novo Aviso</h3>
+      <button class="modal-close" onclick="closeModal('modal-aviso')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Título *</label>
+          <input type="text" class="form-control" id="av-titulo">
+        </div>
+        <div class="form-group">
+          <label>Piscina</label>
+          <select class="form-control" id="av-piscina">
+            <option value="ambas">Ambas</option>
+            <option value="refojos">Refojos</option>
+            <option value="arco_baulhe">Arco de Baúlhe</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Destinatários (papéis)</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" name="av-papel" value="professor"> Professor</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" name="av-papel" value="nadador_salvador"> Nadador Salvador</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" name="av-papel" value="recepcao"> Receção</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" name="av-papel" value="coordenador"> Coordenador</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Conteúdo *</label>
+          <textarea class="form-control" id="av-conteudo" rows="4"></textarea>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="av-publicado" checked> Publicar imediatamente
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-aviso')">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveAviso()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Pessoal -->
+<div class="modal-overlay hidden" id="modal-pessoal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-pessoal-title">Novo Utilizador</h3>
+      <button class="modal-close" onclick="closeModal('modal-pessoal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="pessoal-id">
+      <div class="form-row cols-2">
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Nome *</label>
+          <input type="text" class="form-control" id="pessoal-nome">
+        </div>
+        <div class="form-group">
+          <label>Papel *</label>
+          <select class="form-control" id="pessoal-papel" onchange="toggleCerts()">
+            <option value="professor">Professor</option>
+            <option value="nadador_salvador">Nadador Salvador</option>
+            <option value="recepcao">Receção</option>
+            <option value="coordenador">Coordenador</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Código de acesso *</label>
+          <input type="text" class="form-control" id="pessoal-codigo" placeholder="Código único de login">
+        </div>
+        <div class="form-group">
+          <label>Piscina base</label>
+          <select class="form-control" id="pessoal-piscina">
+            <option value="">Ambas</option>
+            <option value="refojos">Refojos</option>
+            <option value="arco_baulhe">Arco de Baúlhe</option>
+          </select>
+        </div>
+      </div>
+      <div id="certs-section" class="hidden">
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label>Nº certificado salvamento</label>
+            <input type="text" class="form-control" id="pessoal-cert-num">
+          </div>
+          <div class="form-group">
+            <label>Validade</label>
+            <input type="date" class="form-control" id="pessoal-cert-val">
+          </div>
+        </div>
+      </div>
+      <div class="form-group mt-2">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="checkbox" id="pessoal-ativo" checked> Utilizador ativo
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-pessoal')">Cancelar</button>
+      <button class="btn btn-blue" onclick="savePessoal()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Qualidade Água -->
+<div class="modal-overlay hidden" id="modal-agua">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Registo de Qualidade da Água</h3>
+      <button class="modal-close" onclick="closeModal('modal-agua')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row cols-2">
+        <div class="form-group">
+          <label>Piscina</label>
+          <select class="form-control" id="agua-piscina-modal">
+            <option value="refojos">Refojos</option>
+            <option value="arco_baulhe">Arco de Baúlhe</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data/hora</label>
+          <input type="datetime-local" class="form-control" id="agua-data">
+        </div>
+        <div class="form-group">
+          <label>Cloro (mg/L) — normal: 0.5–1.5</label>
+          <input type="number" class="form-control" id="agua-cloro" step="0.01" placeholder="ex: 1.0">
+        </div>
+        <div class="form-group">
+          <label>pH — normal: 7.2–7.8</label>
+          <input type="number" class="form-control" id="agua-ph" step="0.01" placeholder="ex: 7.4">
+        </div>
+        <div class="form-group">
+          <label>Temperatura (°C)</label>
+          <input type="number" class="form-control" id="agua-temp" step="0.1" placeholder="ex: 27.5">
+        </div>
+        <div class="form-group">
+          <label>Estado geral</label>
+          <select class="form-control" id="agua-ok">
+            <option value="true">Dentro dos parâmetros ✅</option>
+            <option value="false">Fora dos parâmetros ⚠️</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Observações</label>
+          <textarea class="form-control" id="agua-obs" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-agua')">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveAgua()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Inventário -->
+<div class="modal-overlay hidden" id="modal-inventario">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-inv-title">Novo Item</h3>
+      <button class="modal-close" onclick="closeModal('modal-inventario')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="inv-id">
+      <div class="form-row cols-2">
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Nome *</label>
+          <input type="text" class="form-control" id="inv-nome" placeholder="ex: Prancha flutuação">
+        </div>
+        <div class="form-group">
+          <label>Categoria</label>
+          <input type="text" class="form-control" id="inv-categoria" placeholder="ex: Flutuadores">
+        </div>
+        <div class="form-group">
+          <label>Piscina</label>
+          <select class="form-control" id="inv-piscina">
+            <option value="refojos">Refojos</option>
+            <option value="arco_baulhe">Arco de Baúlhe</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Quantidade total</label>
+          <input type="number" class="form-control" id="inv-total" min="0" value="0">
+        </div>
+        <div class="form-group">
+          <label>Quantidade disponível</label>
+          <input type="number" class="form-control" id="inv-disp" min="0" value="0">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Estado</label>
+          <select class="form-control" id="inv-estado">
+            <option value="bom">Bom</option>
+            <option value="degradado">Degradado</option>
+            <option value="avariado">Avariado</option>
+            <option value="abatido">Abatido</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Notas</label>
+          <textarea class="form-control" id="inv-notas" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-inventario')">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveInventario()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Escala -->
+<div class="modal-overlay hidden" id="modal-escala">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Adicionar Serviço</h3>
+      <button class="modal-close" onclick="closeModal('modal-escala')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row cols-2">
+        <div class="form-group">
+          <label>Nadador Salvador *</label>
+          <select class="form-control" id="esc-salvadorsel"></select>
+        </div>
+        <div class="form-group">
+          <label>Piscina *</label>
+          <select class="form-control" id="esc-piscina">
+            <option value="refojos">Refojos</option>
+            <option value="arco_baulhe">Arco de Baúlhe</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data *</label>
+          <input type="date" class="form-control" id="esc-data">
+        </div>
+        <div class="form-group">
+          <label>Período</label>
+          <select class="form-control" id="esc-periodo">
+            <option value="manha">Manhã</option>
+            <option value="tarde">Tarde</option>
+            <option value="dia_inteiro">Dia inteiro</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Notas</label>
+          <textarea class="form-control" id="esc-notas" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-escala')">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveEscala()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Tipo Pagamento -->
+<div class="modal-overlay hidden" id="modal-tipo-pag">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-tp-title">Novo Tipo de Pagamento</h3>
+      <button class="modal-close" onclick="closeModal('modal-tipo-pag')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="tp-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nome *</label>
+          <input type="text" class="form-control" id="tp-nome">
+        </div>
+        <div class="form-group">
+          <label>Descrição</label>
+          <input type="text" class="form-control" id="tp-desc">
+        </div>
+        <div class="form-group">
+          <label>Valor padrão (€)</label>
+          <input type="number" class="form-control" id="tp-valor" step="0.01">
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="tp-ativo" checked> Ativo
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-tipo-pag')">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveTipoPag()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Competência -->
+<div class="modal-overlay hidden" id="modal-competencia">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-comp-title">Nova Competência</h3>
+      <button class="modal-close" onclick="closeModal('modal-competencia')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="comp-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nome *</label>
+          <input type="text" class="form-control" id="comp-nome">
+        </div>
+        <div class="form-group">
+          <label>Nível (opcional)</label>
+          <select class="form-control" id="comp-nivel">
+            <option value="">Todos os níveis</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Descrição</label>
+          <textarea class="form-control" id="comp-desc" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Ordem</label>
+          <input type="number" class="form-control" id="comp-ordem" value="0">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-competencia')">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveCompetencia()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="position:fixed;bottom:24px;right:24px;z-index:9999;display:none">
+  <div id="toast-inner" style="padding:12px 18px;border-radius:8px;background:var(--gray-900);color:var(--white);font-size:13px;font-weight:600;box-shadow:var(--shadow-md);max-width:320px"></div>
+</div>
+
+<script>
+const SUPA_URL = 'https://egmfeavslcihqkywkaje.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnbWZlYXZzbGNpaHFreXdrYWplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMjAyNDQsImV4cCI6MjA5NjU5NjI0NH0.ZLmk1ZkCADmOOiKoYzzT_1MmfDUEE_g31YgbDiBzvt4';
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let currentUser = null;
+let currentEpoca = null;
+let currentPiscina = 'ambas';
+let cache = {};
+
+// ── SUPABASE ───────────────────────────────────────────────────────────────
+async function sb(table, opts) {
+  opts = opts || {};
+  let url = SUPA_URL + '/rest/v1/' + table;
+  const params = [];
+  if (opts.select)  params.push('select=' + opts.select);
+  if (opts.filter)  Object.entries(opts.filter).forEach(([k,v]) => params.push(k + '=' + v));
+  if (opts.order)   params.push('order=' + opts.order);
+  if (opts.limit)   params.push('limit=' + opts.limit);
+  if (params.length) url += '?' + params.join('&');
+  const headers = {
+    'apikey': SUPA_KEY,
+    'Authorization': 'Bearer ' + SUPA_KEY,
+    'Content-Type': 'application/json',
+    'Prefer': opts.upsert ? 'resolution=merge-duplicates' : (opts.single ? 'return=representation' : 'return=representation')
+  };
+  const method = opts.method || 'GET';
+  const body = opts.body ? JSON.stringify(opts.body) : undefined;
+  const res = await fetch(url, { method, headers, body });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || err.hint || res.statusText);
+  }
+  if (method === 'DELETE') return true;
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+async function sbInsert(table, data) {
+  return sb(table, { method: 'POST', body: data });
+}
+async function sbUpdate(table, id, data) {
+  return sb(table, { method: 'PATCH', filter: { 'id': 'eq.' + id }, body: data });
+}
+async function sbDelete(table, id) {
+  return sb(table, { method: 'DELETE', filter: { 'id': 'eq.' + id } });
+}
+async function sbUpsert(table, data) {
+  return sb(table, { method: 'POST', body: data, upsert: true });
+}
+
+// ── AUTH ───────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const code = document.getElementById('login-code').value.trim();
+  if (!code) return;
+  try {
+    const res = await sb('utilizadores', {
+      select: '*',
+      filter: { 'codigo_acesso': 'eq.' + code, 'ativo': 'eq.true' }
+    });
+    if (!res.length) {
+      document.getElementById('login-error').textContent = 'Código inválido ou utilizador inativo.';
+      return;
+    }
+    currentUser = res[0];
+    sessionStorage.setItem('piscinas_user', JSON.stringify(currentUser));
+    initApp();
+  } catch (e) {
+    document.getElementById('login-error').textContent = 'Erro de ligação: ' + e.message;
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('piscinas_user');
+  currentUser = null; currentEpoca = null; cache = {};
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-code').value = '';
+}
+
+document.getElementById('login-code').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') doLogin();
+});
+
+// ── BOOT ───────────────────────────────────────────────────────────────────
+async function initApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  const roles = { admin: 'Administrador', coordenador: 'Coordenador', professor: 'Professor', nadador_salvador: 'Nadador Salvador', recepcao: 'Receção' };
+  document.getElementById('user-name').textContent = currentUser.nome;
+  document.getElementById('user-role').textContent = roles[currentUser.papel] || currentUser.papel;
+  document.getElementById('user-avatar').textContent = currentUser.nome.charAt(0).toUpperCase();
+
+  applyRoleVisibility();
+  await loadEpocaAtiva();
+  await loadGlobalCache();
+  showPage('dashboard');
+}
+
+function applyRoleVisibility() {
+  const p = currentUser.papel;
+  const isAdmin = p === 'admin' || p === 'coordenador';
+  if (!isAdmin) {
+    document.getElementById('nav-admin-section').style.display = 'none';
+  }
+  if (p === 'nadador_salvador') {
+    document.getElementById('nav-gestao-section').style.display = 'none';
+  }
+  if (p === 'recepcao') {
+    ['nav-avaliacoes','nav-escala','nav-pessoal'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  }
+}
+
+async function loadEpocaAtiva() {
+  try {
+    const res = await sb('epocas', { select: '*', filter: { 'ativa': 'eq.true' }, limit: 1 });
+    currentEpoca = res.length ? res[0] : null;
+    const badge = document.getElementById('topbar-epoca');
+    badge.textContent = currentEpoca ? currentEpoca.nome : 'Sem época ativa';
+  } catch (e) { console.error(e); }
+}
+
+async function loadGlobalCache() {
+  try {
+    const [niveis, utilizadores, tiposPag, competencias] = await Promise.all([
+      sb('niveis', { select: '*', filter: { 'ativo': 'eq.true' }, order: 'ordem.asc' }),
+      sb('utilizadores', { select: '*', filter: { 'ativo': 'eq.true' }, order: 'nome.asc' }),
+      sb('tipos_pagamento', { select: '*', filter: { 'ativo': 'eq.true' } }),
+      sb('competencias_config', { select: '*,niveis(codigo,nome)', filter: { 'ativo': 'eq.true' }, order: 'ordem.asc' })
+    ]);
+    cache.niveis = niveis;
+    cache.utilizadores = utilizadores;
+    cache.tiposPag = tiposPag;
+    cache.competencias = competencias;
+    cache.professores = utilizadores.filter(u => u.papel === 'professor');
+    cache.salvadores = utilizadores.filter(u => u.papel === 'nadador_salvador');
+  } catch (e) { console.error('Cache error:', e); }
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('[id^="page-"]').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const page = document.getElementById('page-' + name);
+  if (page) page.classList.remove('hidden');
+  const nav = document.getElementById('nav-' + name);
+  if (nav) nav.classList.add('active');
+  const titles = {
+    dashboard: 'Dashboard', horario: 'Horário', alunos: 'Alunos', turmas: 'Turmas',
+    presencas: 'Presenças', pagamentos: 'Pagamentos', avaliacoes: 'Avaliações',
+    escala: 'Escala de Salvadores', agua: 'Qualidade da Água', ocorrencias: 'Ocorrências',
+    avisos: 'Avisos', pessoal: 'Pessoal', inventario: 'Inventário',
+    relatorios: 'Relatórios', config: 'Configuração'
+  };
+  document.getElementById('page-title').textContent = titles[name] || name;
+  const loaders = {
+    dashboard: loadDashboard, horario: loadHorario, alunos: loadAlunos,
+    turmas: loadTurmas, presencas: initPresencas, pagamentos: loadPagamentos,
+    avaliacoes: initAvaliacoes, escala: initEscala, agua: initAgua,
+    ocorrencias: loadOcorrencias, avisos: loadAvisos, pessoal: loadPessoal,
+    inventario: loadInventario, config: loadConfig
+  };
+  if (loaders[name]) loaders[name]();
+}
+
+function setPiscina(v) {
+  currentPiscina = v;
+  const labels = { ambas: 'Todas', refojos: 'Refojos', arco_baulhe: 'Arco de Baúlhe' };
+  document.getElementById('topbar-piscina').textContent = labels[v] || v;
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const el = document.getElementById('dash-content');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div> A carregar...</div>';
+  try {
+    if (!currentEpoca) {
+      el.innerHTML = '<div class="alert alert-warn">⚠️ Nenhuma época ativa. Configure uma época em <strong>Configuração → Épocas</strong>.</div>';
+      return;
+    }
+    const [turmas, inscricoes, alunos, pagamentos, ocorrencias, agua] = await Promise.all([
+      sb('turmas', { select: 'id,nome,piscina,vagas_max,nivel_id', filter: { 'epoca_id': 'eq.' + currentEpoca.id, 'ativa': 'eq.true' } }),
+      sb('inscricoes', { select: 'id,turma_id,estado', filter: { 'epoca_id': 'eq.' + currentEpoca.id } }),
+      sb('alunos', { select: 'id', filter: { 'ativo': 'eq.true' } }),
+      sb('pagamentos', { select: 'valor', filter: { 'epoca_id': 'eq.' + currentEpoca.id } }),
+      sb('ocorrencias', { select: 'id,gravidade', filter: { 'epoca_id': 'eq.' + currentEpoca.id } }),
+      sb('qualidade_agua', { select: 'id,piscina,dentro_parametros,data_hora', order: 'data_hora.desc', limit: 4 })
+    ]);
+
+    const ativas = inscricoes.filter(i => i.estado === 'ativa');
+    const totalInscritos = ativas.length;
+    const totalTurmas = turmas.length;
+    const totalReceita = pagamentos.reduce((s, p) => s + parseFloat(p.valor || 0), 0);
+    const ocCriticas = ocorrencias.filter(o => o.gravidade === 'alta' || o.gravidade === 'critica').length;
+
+    const ocupacaoPorTurma = turmas.map(t => {
+      const ins = ativas.filter(i => i.turma_id === t.id).length;
+      return { ...t, inscritos: ins, pct: Math.round((ins / t.vagas_max) * 100) };
+    }).sort((a, b) => b.pct - a.pct);
+
+    const aguaAlerts = agua.filter(r => r.dentro_parametros === false);
+
+    let html = '';
+    if (aguaAlerts.length) {
+      html += '<div class="alert alert-warn">⚠️ <strong>' + aguaAlerts.length + ' registo(s)</strong> de qualidade da água fora dos parâmetros. <a href="#" onclick="showPage(\'agua\')" style="color:inherit;font-weight:700">Ver →</a></div>';
+    }
+    if (ocCriticas) {
+      html += '<div class="alert alert-error">🚨 <strong>' + ocCriticas + ' ocorrência(s)</strong> de gravidade alta/crítica. <a href="#" onclick="showPage(\'ocorrencias\')" style="color:inherit;font-weight:700">Ver →</a></div>';
+    }
+
+    html += '<div class="stats-grid">';
+    html += statCard('Alunos inscritos', totalInscritos, 'na época ativa', '🏊', 'blue');
+    html += statCard('Turmas ativas', totalTurmas, 'em ambas as piscinas', '🎓', 'teal');
+    html += statCard('Receita (época)', '€ ' + totalReceita.toFixed(2), 'total de pagamentos', '💶', 'green');
+    html += statCard('Ocorrências', ocorrencias.length, ocCriticas + ' alta/crítica', '⚠️', ocCriticas ? 'red' : 'gray');
+    html += '</div>';
+
+    html += '<div class="grid-2">';
+
+    // Ocupação por turma
+    html += '<div class="card"><div class="card-header"><h3>Ocupação das Turmas</h3></div><div class="card-body" style="padding:0">';
+    if (ocupacaoPorTurma.length) {
+      html += '<div style="padding:12px 16px;max-height:300px;overflow-y:auto">';
+      ocupacaoPorTurma.forEach(t => {
+        const nivel = (cache.niveis || []).find(n => n.id === t.nivel_id);
+        const nivelNome = nivel ? nivel.codigo : '—';
+        const cor = pct2color(t.pct);
+        html += '<div style="margin-bottom:10px">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">';
+        html += '<span style="font-size:12px;font-weight:600">' + (t.nome || nivelNome) + ' <span class="badge badge-gray" style="font-size:10px">' + piscinaNome(t.piscina) + '</span></span>';
+        html += '<span style="font-size:12px;color:var(--gray-500)">' + t.inscritos + '/' + t.vagas_max + '</span>';
+        html += '</div>';
+        html += '<div style="background:var(--gray-200);border-radius:4px;height:6px"><div style="background:' + cor + ';width:' + Math.min(t.pct, 100) + '%;height:100%;border-radius:4px;transition:width .3s"></div></div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    } else {
+      html += '<div class="empty-state"><div class="empty-icon">📋</div><p>Sem turmas registadas.</p></div>';
+    }
+    html += '</div></div>';
+
+    // Última qualidade água
+    html += '<div class="card"><div class="card-header"><h3>Última Qualidade da Água</h3></div><div class="card-body">';
+    if (agua.length) {
+      const byPiscina = {};
+      agua.forEach(r => { if (!byPiscina[r.piscina]) byPiscina[r.piscina] = r; });
+      Object.entries(byPiscina).forEach(([pis, r]) => {
+        html += '<div style="margin-bottom:14px">';
+        html += '<div style="font-size:12px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:6px">' + piscinaNome(pis) + '</div>';
+        html += '<div style="display:flex;gap:8px">';
+        html += paramMini('Cloro', r.cloro, 'mg/L', 0.5, 1.5);
+        html += paramMini('pH', r.ph, '', 7.2, 7.8);
+        html += paramMini('Temp.', r.temperatura, '°C', 26, 30);
+        html += '</div>';
+        html += '<div style="font-size:11px;color:var(--gray-400);margin-top:4px">' + fmtDatetime(r.data_hora) + '</div>';
+        html += '</div>';
+      });
+    } else {
+      html += '<div class="empty-state"><div class="empty-icon">🧪</div><p>Sem registos de qualidade.</p></div>';
+    }
+    html += '</div></div>';
+
+    html += '</div>';
+    el.innerHTML = html;
+  } catch (e) {
+    el.innerHTML = '<div class="alert alert-error">Erro ao carregar dashboard: ' + e.message + '</div>';
+  }
+}
+
+function statCard(label, value, sub, icon, color) {
+  const colors = { blue: 'var(--blue-100)', teal: 'var(--teal-100)', green: 'var(--green-100)', red: 'var(--red-100)', gray: 'var(--gray-100)' };
+  return '<div class="stat-card"><span class="stat-icon">' + icon + '</span><div class="stat-label">' + label + '</div><div class="stat-value" style="color:var(--blue-900)">' + value + '</div><div class="stat-sub">' + sub + '</div></div>';
+}
+
+function paramMini(label, val, unit, min, max) {
+  if (val === null || val === undefined) return '<div style="flex:1;text-align:center;font-size:12px;color:var(--gray-400)">—</div>';
+  const ok = val >= min && val <= max;
+  const color = ok ? 'var(--green-500)' : 'var(--red-500)';
+  return '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:' + color + '">' + val + '</div><div style="font-size:10px;color:var(--gray-500)">' + label + (unit ? ' ' + unit : '') + '</div></div>';
+}
+
+function pct2color(pct) {
+  if (pct >= 95) return 'var(--red-500)';
+  if (pct >= 80) return 'var(--amber-500)';
+  return 'var(--green-500)';
+}
+
+// ── HORÁRIO ────────────────────────────────────────────────────────────────
+async function loadHorario() {
+  await renderHorario();
+}
+
+async function renderHorario() {
+  const piscina = document.getElementById('horario-piscina-filter').value;
+  const el = document.getElementById('horario-grid');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  if (!currentEpoca) { el.innerHTML = '<div class="alert alert-warn">Sem época ativa.</div>'; return; }
+  try {
+    const turmas = await sb('turmas', {
+      select: 'id,nome,hora_inicio,hora_fim,dias_semana,nivel_id,vagas_max',
+      filter: { 'epoca_id': 'eq.' + currentEpoca.id, 'piscina': 'eq.' + piscina, 'ativa': 'eq.true' }
+    });
+    const inscricoes = await sb('inscricoes', {
+      select: 'turma_id',
+      filter: { 'epoca_id': 'eq.' + currentEpoca.id, 'estado': 'eq.ativa' }
+    });
+    const insByTurma = {};
+    inscricoes.forEach(i => { insByTurma[i.turma_id] = (insByTurma[i.turma_id] || 0) + 1; });
+
+    const dias = ['Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+    const slots = buildTimeSlots('09:00', '20:30', 30);
+
+    let html = '<div class="schedule-grid"><table class="schedule-table"><thead><tr><th style="width:70px">Hora</th>';
+    dias.forEach(d => html += '<th>' + d + '</th>');
+    html += '</tr></thead><tbody>';
+
+    const placedTurmas = new Set();
+
+    slots.forEach((slot, si) => {
+      html += '<tr>';
+      if (si % 2 === 0) {
+        html += '<td class="schedule-time" rowspan="2">' + slot + '</td>';
+      }
+      for (let d = 1; d <= 6; d++) {
+        const cell_turmas = turmas.filter(t => {
+          if (!t.dias_semana || !t.dias_semana.includes(d)) return false;
+          return t.hora_inicio === slot + ':00' || t.hora_inicio === slot;
+        });
+        if (cell_turmas.length) {
+          const t = cell_turmas[0];
+          const nivel = (cache.niveis || []).find(n => n.id === t.nivel_id);
+          const cor = nivel ? nivel.cor : '#6b7280';
+          const rows = durationToRows(t.hora_inicio, t.hora_fim);
+          const inscritos = insByTurma[t.id] || 0;
+          if (!placedTurmas.has(t.id + '_' + d)) {
+            placedTurmas.add(t.id + '_' + d);
+            html += '<td rowspan="' + rows + '" style="padding:2px;vertical-align:top">';
+            html += '<div class="turma-slot" style="background:' + cor + ';height:calc(100% - 4px)" onclick="showTurmaDetail(\'' + t.id + '\')" title="' + (t.nome || nivel && nivel.codigo || '') + ' — ' + t.hora_inicio + ' a ' + t.hora_fim + '">';
+            html += (t.nome || (nivel ? nivel.codigo : '?'));
+            html += '<div style="font-size:9px;opacity:.8">' + inscritos + '/' + t.vagas_max + '</div>';
+            html += '</div></td>';
+          }
+        } else {
+          const occupied = turmas.some(t => {
+            if (!t.dias_semana || !t.dias_semana.includes(d)) return false;
+            if (placedTurmas.has(t.id + '_' + d)) return false;
+            return timeInRange(slot, t.hora_inicio, t.hora_fim);
+          });
+          if (!occupied) html += '<td></td>';
+        }
+      }
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+    el.innerHTML = html;
+  } catch (e) {
+    el.innerHTML = '<div class="alert alert-error">Erro: ' + e.message + '</div>';
+  }
+}
+
+function buildTimeSlots(start, end, step) {
+  const slots = [];
+  let [h, m] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number);
+  while (h * 60 + m < eh * 60 + em) {
+    slots.push(String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0'));
+    m += step; if (m >= 60) { m -= 60; h++; }
+  }
+  return slots;
+}
+
+function durationToRows(start, end) {
+  const [sh, sm] = (start + ':00').split(':').map(Number);
+  const [eh, em] = (end + ':00').split(':').map(Number);
+  return Math.round(((eh * 60 + em) - (sh * 60 + sm)) / 30);
+}
+
+function timeInRange(t, start, end) {
+  const tv = t.split(':').map(Number); const tmin = tv[0]*60+tv[1];
+  const sv = (start+':00').split(':').map(Number); const smin = sv[0]*60+sv[1];
+  const ev = (end+':00').split(':').map(Number); const emin = ev[0]*60+ev[1];
+  return tmin > smin && tmin < emin;
+}
+
+function showTurmaDetail(id) { showPage('turmas'); }
+
+function printHorario() {
+  window.print();
+}
+
+// ── ALUNOS ─────────────────────────────────────────────────────────────────
+let allAlunos = [];
+
+async function loadAlunos() {
+  const tbody = document.getElementById('alunos-tbody');
+  tbody.innerHTML = '<tr><td colspan="8"><div class="loading"><div class="spinner"></div></div></td></tr>';
+  try {
+    const alunos = await sb('alunos', { select: '*', filter: { 'ativo': 'eq.true' }, order: 'nome.asc' });
+    let inscricoes = [];
+    if (currentEpoca) {
+      inscricoes = await sb('inscricoes', {
+        select: 'aluno_id,turma_id,estado,turmas(nome,nivel_id,piscina,niveis(codigo))',
+        filter: { 'epoca_id': 'eq.' + currentEpoca.id, 'estado': 'eq.ativa' }
+      });
+    }
+    const inscMap = {};
+    inscricoes.forEach(i => { inscMap[i.aluno_id] = i; });
+    allAlunos = alunos.map(a => ({ ...a, _insc: inscMap[a.id] || null }));
+    renderAlunosTbody(allAlunos);
+    populateTurmaSelects();
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="8" style="color:var(--red-500)">Erro: ' + e.message + '</td></tr>';
+  }
+}
+
+function renderAlunosTbody(list) {
+  const tbody = document.getElementById('alunos-tbody');
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">👤</div><p>Nenhum aluno encontrado.</p></div></td></tr>'; return; }
+  tbody.innerHTML = list.map(a => {
+    const insc = a._insc;
+    const turma = insc && insc.turmas ? (insc.turmas.nome || (insc.turmas.niveis ? insc.turmas.niveis.codigo : '—')) : '—';
+    const nivel = insc && insc.turmas && insc.turmas.niveis ? insc.turmas.niveis.codigo : '—';
+    const piscina = insc && insc.turmas ? piscinaNome(insc.turmas.piscina) : '—';
+    const estadoBadge = insc ? '<span class="badge badge-green">Inscrito</span>' : '<span class="badge badge-gray">Sem inscrição</span>';
+    const canEdit = canEditAll();
+    return '<tr>' +
+      '<td>' + (a.n_mecanografico || '—') + '</td>' +
+      '<td style="font-weight:600">' + a.nome + '</td>' +
+      '<td>' + (a.data_nascimento ? fmtDate(a.data_nascimento) : '—') + '</td>' +
+      '<td>' + turma + '</td>' +
+      '<td>' + nivel + '</td>' +
+      '<td>' + piscina + '</td>' +
+      '<td>' + estadoBadge + '</td>' +
+      '<td class="text-right">' +
+        (canEdit ? '<button class="btn btn-sm btn-outline" onclick="openAlunoModal(\'' + a.id + '\')">✏️</button> ' : '') +
+        '<button class="btn btn-sm btn-outline" onclick="openFichaAluno(\'' + a.id + '\')">👁</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function filterAlunos() {
+  const q = document.getElementById('alunos-search').value.toLowerCase();
+  const estado = document.getElementById('alunos-filter-estado').value;
+  let list = allAlunos;
+  if (q) list = list.filter(a => a.nome.toLowerCase().includes(q) || (a.n_mecanografico || '').toLowerCase().includes(q));
+  if (estado === 'ativa') list = list.filter(a => a._insc);
+  else if (estado === 'sem') list = list.filter(a => !a._insc);
+  renderAlunosTbody(list);
+}
+
+function openAlunoModal(id) {
+  clearModal('modal-aluno');
+  document.getElementById('modal-aluno-title').textContent = id ? 'Editar Aluno' : 'Novo Aluno';
+  document.getElementById('aluno-id').value = id || '';
+  if (id) {
+    const a = allAlunos.find(x => x.id === id);
+    if (a) {
+      document.getElementById('aluno-nome').value = a.nome || '';
+      document.getElementById('aluno-nmec').value = a.n_mecanografico || '';
+      document.getElementById('aluno-nasc').value = a.data_nascimento || '';
+      document.getElementById('aluno-sexo').value = a.sexo || '';
+      document.getElementById('aluno-morada').value = a.morada || '';
+      document.getElementById('aluno-contacto').value = a.contacto || '';
+      document.getElementById('aluno-nif').value = a.nif || '';
+      document.getElementById('aluno-residente').value = String(a.residente_concelho !== false);
+      document.getElementById('aluno-saude').value = a.problemas_saude || '';
+      document.getElementById('aluno-nec-esp').value = a.necessidades_especiais || '';
+      document.getElementById('aluno-material').value = a.material_apoio || '';
+      document.getElementById('aluno-medo-agua').checked = !!a.medo_agua;
+      document.getElementById('aluno-sabe-nadar').checked = !!a.sabe_nadar;
+      document.getElementById('aluno-enc-nome').value = a.encarregado_nome || '';
+      document.getElementById('aluno-enc-contacto').value = a.encarregado_contacto || '';
+    }
+  }
+  // Reset to first tab
+  const tabs = document.querySelectorAll('#modal-aluno .tab-btn');
+  const panels = document.querySelectorAll('#modal-aluno .tab-panel');
+  tabs.forEach((t, i) => { t.classList.toggle('active', i === 0); panels[i].classList.toggle('active', i === 0); });
+  openModal('modal-aluno');
+}
+
+async function saveAluno() {
+  const id = document.getElementById('aluno-id').value;
+  const nome = document.getElementById('aluno-nome').value.trim();
+  if (!nome) { toast('Nome obrigatório', 'error'); return; }
+  const data = {
+    nome,
+    n_mecanografico: document.getElementById('aluno-nmec').value.trim() || null,
+    data_nascimento: document.getElementById('aluno-nasc').value || null,
+    sexo: document.getElementById('aluno-sexo').value || null,
+    morada: document.getElementById('aluno-morada').value.trim() || null,
+    contacto: document.getElementById('aluno-contacto').value.trim() || null,
+    nif: document.getElementById('aluno-nif').value.trim() || null,
+    residente_concelho: document.getElementById('aluno-residente').value === 'true',
+    problemas_saude: document.getElementById('aluno-saude').value.trim() || null,
+    necessidades_especiais: document.getElementById('aluno-nec-esp').value.trim() || null,
+    material_apoio: document.getElementById('aluno-material').value.trim() || null,
+    medo_agua: document.getElementById('aluno-medo-agua').checked,
+    sabe_nadar: document.getElementById('aluno-sabe-nadar').checked,
+    encarregado_nome: document.getElementById('aluno-enc-nome').value.trim() || null,
+    encarregado_contacto: document.getElementById('aluno-enc-contacto').value.trim() || null
+  };
+  try {
+    if (id) await sbUpdate('alunos', id, data);
+    else await sbInsert('alunos', data);
+    closeModal('modal-aluno');
+    toast(id ? 'Aluno atualizado.' : 'Aluno criado.');
+    loadAlunos();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+function openFichaAluno(id) {
+  const a = allAlunos.find(x => x.id === id);
+  if (!a) return;
+  toast('Ficha de ' + a.nome + ' — em desenvolvimento.');
+}
+
+// ── TURMAS ─────────────────────────────────────────────────────────────────
+let allTurmas = [];
+
+async function loadTurmas() {
+  const tbody = document.getElementById('turmas-tbody');
+  tbody.innerHTML = '<tr><td colspan="7"><div class="loading"><div class="spinner"></div></div></td></tr>';
+  if (!currentEpoca) { tbody.innerHTML = '<tr><td colspan="7"><div class="alert alert-warn">Sem época ativa.</div></td></tr>'; return; }
+  try {
+    const turmas = await sb('turmas', {
+      select: 'id,nome,nivel_id,piscina,hora_inicio,hora_fim,dias_semana,vagas_max,ativa',
+      filter: { 'epoca_id': 'eq.' + currentEpoca.id },
+      order: 'hora_inicio.asc'
+    });
+    const profTurmas = await sb('professor_turmas', {
+      select: 'turma_id,utilizador_id,utilizadores(nome)',
+      filter: { 'epoca_id': 'eq.' + currentEpoca.id }
+    });
+    const inscricoes = await sb('inscricoes', {
+      select: 'turma_id',
+      filter: { 'epoca_id': 'eq.' + currentEpoca.id, 'estado': 'eq.ativa' }
+    });
+    const insByTurma = {};
+    inscricoes.forEach(i => { insByTurma[i.turma_id] = (insByTurma[i.turma_id] || 0) + 1; });
+    const profsByTurma = {};
+    profTurmas.forEach(pt => {
+      if (!profsByTurma[pt.turma_id]) profsByTurma[pt.turma_id] = [];
+      if (pt.utilizadores) profsByTurma[pt.turma_id].push(pt.utilizadores.nome);
+    });
+    allTurmas = turmas.map(t => ({ ...t, _inscritos: insByTurma[t.id] || 0, _profs: profsByTurma[t.id] || [] }));
+    populateTurmasFilters();
+    renderTurmasTbody(allTurmas);
+    populateTurmaSelects();
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="7" style="color:var(--red-500)">Erro: ' + e.message + '</td></tr>';
+  }
+}
+
+function populateTurmasFilters() {
+  const sel = document.getElementById('turmas-filter-nivel');
+  sel.innerHTML = '<option value="">Todos os níveis</option>';
+  (cache.niveis || []).forEach(n => sel.innerHTML += '<option value="' + n.id + '">' + n.codigo + ' — ' + n.nome + '</option>');
+}
+
+function renderTurmasTbody(list) {
+  const tbody = document.getElementById('turmas-tbody');
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🎓</div><p>Nenhuma turma.</p></div></td></tr>'; return; }
+  const diasNomes = ['','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  tbody.innerHTML = list.map(t => {
+    const nivel = (cache.niveis || []).find(n => n.id === t.nivel_id);
+    const diasStr = (t.dias_semana || []).map(d => diasNomes[d]).join(', ');
+    const vagasBadge = t._inscritos >= t.vagas_max
+      ? '<span class="badge badge-red">Lotada</span>'
+      : t._inscritos >= t.vagas_max * 0.8
+        ? '<span class="badge badge-amber">' + t._inscritos + '/' + t.vagas_max + '</span>'
+        : '<span class="badge badge-green">' + t._inscritos + '/' + t.vagas_max + '</span>';
+    const canEdit = canEditAll();
+    return '<tr>' +
+      '<td style="font-weight:600">' + (t.nome || (nivel ? nivel.codigo : '—')) + '</td>' +
+      '<td>' + (nivel ? '<span class="badge badge-blue">' + nivel.codigo + '</span>' : '—') + '</td>' +
+      '<td>' + piscinaNome(t.piscina) + '</td>' +
+      '<td>' + diasStr + ' ' + fmtTime(t.hora_inicio) + '–' + fmtTime(t.hora_fim) + '</td>' +
+      '<td>' + vagasBadge + '</td>' +
+      '<td>' + (t._profs.join(', ') || '—') + '</td>' +
+      '<td class="text-right">' + (canEdit ? '<button class="btn btn-sm btn-outline" onclick="openTurmaModal(\'' + t.id + '\')">✏️</button>' : '') + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function filterTurmas() {
+  const piscina = document.getElementById('turmas-filter-piscina').value;
+  const nivel = document.getElementById('turmas-filter-nivel').value;
+  let list = allTurmas;
+  if (piscina) list = list.filter(t => t.piscina === piscina);
+  if (nivel) list = list.filter(t => t.nivel_id === nivel);
+  renderTurmasTbody(list);
+}
+
+async function openTurmaModal(id) {
+  clearModal('modal-turma');
+  document.getElementById('modal-turma-title').textContent = id ? 'Editar Turma' : 'Nova Turma';
+  document.getElementById('turma-id').value = id || '';
+  const nivelSel = document.getElementById('turma-nivel');
+  nivelSel.innerHTML = (cache.niveis || []).map(n => '<option value="' + n.id + '">' + n.codigo + ' — ' + n.nome + '</option>').join('');
+
+  // Build professor checkboxes
+  const profsDiv = document.getElementById('turma-profs-list');
+  profsDiv.innerHTML = (cache.professores || []).map(p =>
+    '<label style="display:flex;align-items:center;gap:4px;padding:4px 8px;border:1px solid var(--gray-300);border-radius:4px;cursor:pointer;font-size:12px">' +
+    '<input type="checkbox" name="turma-prof" value="' + p.id + '"> ' + p.nome +
+    '</label>'
+  ).join('');
+
+  if (id) {
+    const t = allTurmas.find(x => x.id === id);
+    if (t) {
+      document.getElementById('turma-nome').value = t.nome || '';
+      document.getElementById('turma-piscina').value = t.piscina;
+      nivelSel.value = t.nivel_id;
+      document.getElementById('turma-vagas').value = t.vagas_max;
+      document.getElementById('turma-h-inicio').value = fmtTime(t.hora_inicio);
+      document.getElementById('turma-h-fim').value = fmtTime(t.hora_fim);
+      (t.dias_semana || []).forEach(d => {
+        const cb = document.querySelector('input[name="dia"][value="' + d + '"]');
+        if (cb) cb.checked = true;
+      });
+      (t._profs || []).forEach(nome => {
+        const p = (cache.professores || []).find(x => x.nome === nome);
+        if (p) {
+          const cb = document.querySelector('input[name="turma-prof"][value="' + p.id + '"]');
+          if (cb) cb.checked = true;
+        }
+      });
+    }
+  }
+  openModal('modal-turma');
+}
+
+async function saveTurma() {
+  if (!currentEpoca) { toast('Sem época ativa.', 'error'); return; }
+  const id = document.getElementById('turma-id').value;
+  const dias = Array.from(document.querySelectorAll('input[name="dia"]:checked')).map(c => parseInt(c.value));
+  if (!dias.length) { toast('Selecione pelo menos um dia.', 'error'); return; }
+  const data = {
+    nome: document.getElementById('turma-nome').value.trim() || null,
+    piscina: document.getElementById('turma-piscina').value,
+    nivel_id: document.getElementById('turma-nivel').value,
+    vagas_max: parseInt(document.getElementById('turma-vagas').value),
+    hora_inicio: document.getElementById('turma-h-inicio').value,
+    hora_fim: document.getElementById('turma-h-fim').value,
+    dias_semana: dias,
+    epoca_id: currentEpoca.id
+  };
+  try {
+    let turmaId = id;
+    if (id) { await sbUpdate('turmas', id, data); }
+    else {
+      const res = await sbInsert('turmas', data);
+      turmaId = Array.isArray(res) ? res[0].id : res.id;
+    }
+    // Update professor_turmas
+    const profIds = Array.from(document.querySelectorAll('input[name="turma-prof"]:checked')).map(c => c.value);
+    if (!id) {
+      for (const pid of profIds) {
+        await sbInsert('professor_turmas', { utilizador_id: pid, turma_id: turmaId, epoca_id: currentEpoca.id }).catch(() => {});
+      }
+    }
+    closeModal('modal-turma');
+    toast(id ? 'Turma atualizada.' : 'Turma criada.');
+    loadTurmas();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+function populateTurmaSelects() {
+  const selects = ['presenca-turma-sel', 'aval-turma-sel'];
+  selects.forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">Selecionar turma...</option>';
+    (allTurmas || []).filter(t => t.ativa !== false).forEach(t => {
+      const nivel = (cache.niveis || []).find(n => n.id === t.nivel_id);
+      sel.innerHTML += '<option value="' + t.id + '">' + (t.nome || (nivel ? nivel.codigo : '?')) + ' — ' + piscinaNome(t.piscina) + '</option>';
+    });
+    if (prev) sel.value = prev;
+  });
+}
+
+// ── PRESENÇAS ──────────────────────────────────────────────────────────────
+async function initPresencas() {
+  if (!allTurmas.length) {
+    await sb('turmas', { select: 'id,nome,nivel_id,piscina,hora_inicio,hora_fim,dias_semana', filter: { 'epoca_id': 'eq.' + (currentEpoca ? currentEpoca.id : 'x') } })
+      .then(t => { allTurmas = t; })
+      .catch(() => {});
+  }
+  populateTurmaSelects();
+}
+
+async function loadPresencaAulas() {
+  const turmaId = document.getElementById('presenca-turma-sel').value;
+  const sel = document.getElementById('presenca-aula-sel');
+  sel.innerHTML = '<option value="">A carregar...</option>';
+  if (!turmaId) { sel.innerHTML = '<option value="">Selecionar aula...</option>'; return; }
+  try {
+    const aulas = await sb('aulas', {
+      select: 'id,data,cancelada',
+      filter: { 'turma_id': 'eq.' + turmaId },
+      order: 'data.desc',
+      limit: 30
+    });
+    sel.innerHTML = '<option value="">Selecionar aula...</option>' +
+      aulas.map(a => '<option value="' + a.id + '">' + fmtDate(a.data) + (a.cancelada ? ' (cancelada)' : '') + '</option>').join('');
+  } catch (e) { sel.innerHTML = '<option value="">Erro</option>'; }
+}
+
+async function loadPresencaLista() {
+  const aulaId = document.getElementById('presenca-aula-sel').value;
+  const panel = document.getElementById('presenca-panel');
+  if (!aulaId) return;
+  panel.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const turmaId = document.getElementById('presenca-turma-sel').value;
+    const [inscricoes, presencas] = await Promise.all([
+      sb('inscricoes', {
+        select: 'aluno_id,alunos(id,nome)',
+        filter: { 'turma_id': 'eq.' + turmaId, 'estado': 'eq.ativa' }
+      }),
+      sb('presencas', { select: '*', filter: { 'aula_id': 'eq.' + aulaId } })
+    ]);
+    const presMap = {};
+    presencas.forEach(p => { presMap[p.aluno_id] = p; });
+
+    let html = '<div class="card"><div class="card-header"><h3>Lista de Presenças</h3><span style="font-size:12px;color:var(--gray-500)">' + inscricoes.length + ' alunos</span></div><div class="card-body" style="padding:0">';
+    if (!inscricoes.length) {
+      html += '<div class="empty-state"><div class="empty-icon">👤</div><p>Sem alunos inscritos nesta turma.</p></div>';
+    } else {
+      html += '<div style="padding:8px 0">';
+      inscricoes.forEach(i => {
+        if (!i.alunos) return;
+        const pres = presMap[i.aluno_id];
+        const presente = pres ? pres.presente : false;
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--gray-100)">';
+        html += '<span style="font-size:13px">' + i.alunos.nome + '</span>';
+        html += '<div style="display:flex;gap:8px">';
+        html += '<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px">';
+        html += '<input type="radio" name="pres_' + i.aluno_id + '" value="true"' + (presente ? ' checked' : '') + ' onchange="savePresenca(\'' + aulaId + '\',\'' + i.aluno_id + '\',true)"> Presente</label>';
+        html += '<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px">';
+        html += '<input type="radio" name="pres_' + i.aluno_id + '" value="false"' + (!presente && pres ? ' checked' : '') + ' onchange="savePresenca(\'' + aulaId + '\',\'' + i.aluno_id + '\',false)"> Falta</label>';
+        html += '</div></div>';
+      });
+      html += '</div>';
+    }
+    html += '</div></div>';
+    panel.innerHTML = html;
+  } catch (e) {
+    panel.innerHTML = '<div class="alert alert-error">Erro: ' + e.message + '</div>';
+  }
+}
+
+async function savePresenca(aulaId, alunoId, presente) {
+  try {
+    const existing = await sb('presencas', {
+      select: 'id',
+      filter: { 'aula_id': 'eq.' + aulaId, 'aluno_id': 'eq.' + alunoId }
+    });
+    if (existing.length) {
+      await sbUpdate('presencas', existing[0].id, { presente, registado_por: currentUser.id });
+    } else {
+      await sbInsert('presencas', { aula_id: aulaId, aluno_id: alunoId, presente, registado_por: currentUser.id });
+    }
+  } catch (e) { toast('Erro ao guardar presença: ' + e.message, 'error'); }
+}
+
+// ── PAGAMENTOS ─────────────────────────────────────────────────────────────
+let allPagamentos = [];
+
+async function loadPagamentos() {
+  const tbody = document.getElementById('pagamentos-tbody');
+  tbody.innerHTML = '<tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr>';
+  // Set current month default
+  const mesEl = document.getElementById('pag-mes');
+  if (!mesEl.value) {
+    const now = new Date();
+    mesEl.value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  }
+  // Populate tipo select
+  const tipoSel = document.getElementById('pag-tipo');
+  tipoSel.innerHTML = (cache.tiposPag || []).map(t => '<option value="' + t.id + '">' + t.nome + '</option>').join('');
+  try {
+    const filter = { 'order': 'data_pagamento.desc' };
+    if (currentEpoca) filter.filter = { 'epoca_id': 'eq.' + currentEpoca.id };
+    const pagamentos = await sb('pagamentos', {
+      select: 'id,data_pagamento,valor,referencia,aluno_id,tipo_pagamento_id,alunos(nome),tipos_pagamento(nome),utilizadores(nome)',
+      filter: currentEpoca ? { 'epoca_id': 'eq.' + currentEpoca.id } : {},
+      order: 'data_pagamento.desc'
+    });
+    allPagamentos = pagamentos;
+    renderPagamentosTbody(allPagamentos);
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="6" style="color:var(--red-500)">Erro: ' + e.message + '</td></tr>';
+  }
+}
+
+function renderPagamentosTbody(list) {
+  const tbody = document.getElementById('pagamentos-tbody');
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">💶</div><p>Nenhum pagamento.</p></div></td></tr>'; return; }
+  tbody.innerHTML = list.map(p => '<tr>' +
+    '<td>' + fmtDate(p.data_pagamento) + '</td>' +
+    '<td style="font-weight:600">' + (p.alunos ? p.alunos.nome : '—') + '</td>' +
+    '<td>' + (p.tipos_pagamento ? p.tipos_pagamento.nome : '—') + '</td>' +
+    '<td style="font-weight:700;color:var(--green-500)">€ ' + parseFloat(p.valor).toFixed(2) + '</td>' +
+    '<td>' + (p.referencia || '—') + '</td>' +
+    '<td>' + (p.utilizadores ? p.utilizadores.nome : '—') + '</td>' +
+  '</tr>').join('');
+}
+
+function filterPagamentos() {
+  const q = document.getElementById('pag-search').value.toLowerCase();
+  const mes = document.getElementById('pag-mes').value;
+  let list = allPagamentos;
+  if (q) list = list.filter(p => p.alunos && p.alunos.nome.toLowerCase().includes(q));
+  if (mes) list = list.filter(p => p.data_pagamento && p.data_pagamento.startsWith(mes));
+  renderPagamentosTbody(list);
+}
+
+function openPagamentoModal() {
+  clearModal('modal-pagamento');
+  document.getElementById('pag-data').value = new Date().toISOString().split('T')[0];
+  // Populate tipo
+  const tipoSel = document.getElementById('pag-tipo');
+  tipoSel.innerHTML = (cache.tiposPag || []).map(t => '<option value="' + t.id + '">' + t.nome + '</option>').join('');
+  openModal('modal-pagamento');
+}
+
+async function searchAlunosPag(q) {
+  const resDiv = document.getElementById('pag-aluno-results');
+  if (q.length < 2) { resDiv.style.display = 'none'; return; }
+  const list = (allAlunos.length ? allAlunos : await sb('alunos', { select: 'id,nome', filter: { 'ativo': 'eq.true' }, order: 'nome.asc' }))
+    .filter(a => a.nome.toLowerCase().includes(q.toLowerCase())).slice(0, 8);
+  if (!list.length) { resDiv.style.display = 'none'; return; }
+  resDiv.style.display = 'block';
+  resDiv.innerHTML = list.map(a =>
+    '<div style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--gray-100)" onmousedown="selectAlunosPag(\'' + a.id + '\',\'' + a.nome.replace(/'/g,"&#39;") + '\')">' + a.nome + '</div>'
+  ).join('');
+}
+
+function selectAlunosPag(id, nome) {
+  document.getElementById('pag-aluno-search').value = nome;
+  document.getElementById('pag-aluno-id').value = id;
+  document.getElementById('pag-aluno-results').style.display = 'none';
+}
+
+async function savePagamento() {
+  const alunoId = document.getElementById('pag-aluno-id').value;
+  if (!alunoId) { toast('Selecione um aluno.', 'error'); return; }
+  const valor = parseFloat(document.getElementById('pag-valor').value);
+  if (!valor || valor <= 0) { toast('Valor inválido.', 'error'); return; }
+  const data = {
+    aluno_id: alunoId,
+    epoca_id: currentEpoca ? currentEpoca.id : null,
+    tipo_pagamento_id: document.getElementById('pag-tipo').value,
+    valor,
+    data_pagamento: document.getElementById('pag-data').value,
+    referencia: document.getElementById('pag-ref').value.trim() || null,
+    notas: document.getElementById('pag-notas').value.trim() || null,
+    registado_por: currentUser.id
+  };
+  try {
+    await sbInsert('pagamentos', data);
+    closeModal('modal-pagamento');
+    toast('Pagamento registado.');
+    loadPagamentos();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+// ── AVALIAÇÕES ─────────────────────────────────────────────────────────────
+async function initAvaliacoes() {
+  if (!allTurmas.length && currentEpoca) {
+    allTurmas = await sb('turmas', { select: 'id,nome,nivel_id,piscina', filter: { 'epoca_id': 'eq.' + currentEpoca.id } }).catch(() => []);
+  }
+  populateTurmaSelects();
+}
+
+async function loadAvaliacoes() {
+  const turmaId = document.getElementById('aval-turma-sel').value;
+  const momento = document.getElementById('aval-momento-sel').value;
+  const panel = document.getElementById('aval-panel');
+  if (!turmaId) return;
+  panel.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const turma = allTurmas.find(t => t.id === turmaId);
+    const [inscricoes, avaliacoes, competencias] = await Promise.all([
+      sb('inscricoes', { select: 'aluno_id,alunos(id,nome)', filter: { 'turma_id': 'eq.' + turmaId, 'estado': 'eq.ativa' } }),
+      sb('avaliacoes', { select: '*', filter: { 'turma_id': 'eq.' + turmaId, 'momento': 'eq.' + momento, 'epoca_id': 'eq.' + (currentEpoca ? currentEpoca.id : 'x') } }),
+      sb('competencias_config', { select: '*', filter: { 'ativo': 'eq.true' }, order: 'ordem.asc' })
+        .then(cs => { const nivelId = turma ? turma.nivel_id : null; return cs.filter(c => !c.nivel_id || c.nivel_id === nivelId); })
+    ]);
+    const avalMap = {};
+    avaliacoes.forEach(a => { avalMap[a.aluno_id + '_' + a.competencia_id] = a; });
+    const escala = ['Não Adquirido', 'Em Desenvolvimento', 'Adquirido', 'Consolidado'];
+
+    if (!competencias.length) {
+      panel.innerHTML = '<div class="alert alert-info">Configure competências em <strong>Configuração → Competências</strong>.</div>'; return;
+    }
+    if (!inscricoes.length) {
+      panel.innerHTML = '<div class="empty-state"><div class="empty-icon">👤</div><p>Sem alunos inscritos nesta turma.</p></div>'; return;
+    }
+
+    let html = '<div class="card"><div class="table-wrap"><table><thead><tr><th>Aluno</th>';
+    competencias.forEach(c => html += '<th style="white-space:normal;min-width:100px">' + c.nome + '</th>');
+    html += '</tr></thead><tbody>';
+    inscricoes.forEach(i => {
+      if (!i.alunos) return;
+      html += '<tr><td style="font-weight:600;white-space:nowrap">' + i.alunos.nome + '</td>';
+      competencias.forEach(c => {
+        const key = i.aluno_id + '_' + c.id;
+        const val = avalMap[key] ? avalMap[key].valor : '';
+        html += '<td><select class="form-control" style="width:100%;min-width:90px;font-size:11px" onchange="saveAvaliacao(\'' + i.aluno_id + '\',\'' + c.id + '\',\'' + turmaId + '\',\'' + momento + '\',this.value)">';
+        html += '<option value="">—</option>';
+        escala.forEach(e => html += '<option value="' + e + '"' + (val === e ? ' selected' : '') + '>' + e + '</option>');
+        html += '</select></td>';
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table></div></div>';
+    panel.innerHTML = html;
+  } catch (e) {
+    panel.innerHTML = '<div class="alert alert-error">Erro: ' + e.message + '</div>';
+  }
+}
+
+async function saveAvaliacao(alunoId, competenciaId, turmaId, momento, valor) {
+  if (!currentEpoca) return;
+  try {
+    const existing = await sb('avaliacoes', {
+      select: 'id',
+      filter: { 'aluno_id': 'eq.' + alunoId, 'competencia_id': 'eq.' + competenciaId, 'turma_id': 'eq.' + turmaId, 'momento': 'eq.' + momento, 'epoca_id': 'eq.' + currentEpoca.id }
+    });
+    const data = { aluno_id: alunoId, competencia_id: competenciaId, turma_id: turmaId, momento, valor, epoca_id: currentEpoca.id, registado_por: currentUser.id };
+    if (existing.length) await sbUpdate('avaliacoes', existing[0].id, { valor });
+    else await sbInsert('avaliacoes', data);
+  } catch (e) { toast('Erro ao guardar: ' + e.message, 'error'); }
+}
+
+// ── ESCALA SALVADORES ──────────────────────────────────────────────────────
+function initEscala() {
+  const semanaEl = document.getElementById('escala-semana');
+  if (!semanaEl.value) {
+    const now = new Date();
+    const jan1 = new Date(now.getFullYear(), 0, 1);
+    const week = Math.ceil(((now - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+    semanaEl.value = now.getFullYear() + '-W' + String(week).padStart(2,'0');
+  }
+  loadEscala();
+}
+
+async function loadEscala() {
+  const piscina = document.getElementById('escala-piscina-sel').value;
+  const semana = document.getElementById('escala-semana').value;
+  const panel = document.getElementById('escala-panel');
+  panel.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  if (!semana) return;
+
+  const [year, weekStr] = semana.split('-W');
+  const weekDates = getWeekDates(parseInt(year), parseInt(weekStr));
+
+  try {
+    const escala = await sb('escala_nadadores', {
+      select: 'id,data,periodo,notas,utilizadores(nome)',
+      filter: { 'piscina': 'eq.' + piscina, 'epoca_id': currentEpoca ? 'eq.' + currentEpoca.id : 'is.null' },
+      order: 'data.asc'
+    });
+
+    const escMap = {};
+    escala.forEach(e => { escMap[e.data + '_' + e.periodo] = e; });
+    const periodos = ['manha','tarde','dia_inteiro'];
+    const perLabels = { manha: 'Manhã', tarde: 'Tarde', dia_inteiro: 'Dia inteiro' };
+    const diasNomes = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+
+    let html = '<div class="card"><div class="table-wrap"><table><thead><tr><th>Período</th>';
+    weekDates.forEach((d, i) => html += '<th>' + diasNomes[i] + '<br><span style="font-weight:400;font-size:10px">' + fmtDate(d) + '</span></th>');
+    html += '</tr></thead><tbody>';
+
+    periodos.forEach(per => {
+      html += '<tr><td style="font-weight:700;font-size:12px">' + perLabels[per] + '</td>';
+      weekDates.forEach(d => {
+        const dateStr = d.toISOString().split('T')[0];
+        const entry = escMap[dateStr + '_' + per];
+        html += '<td style="padding:6px">';
+        if (entry) {
+          html += '<div style="background:var(--blue-100);color:var(--blue-900);padding:4px 8px;border-radius:4px;font-size:12px;font-weight:600">';
+          html += entry.utilizadores ? entry.utilizadores.nome.split(' ')[0] : '—';
+          html += '</div>';
+        }
+        html += '</td>';
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table></div></div>';
+    panel.innerHTML = html;
+  } catch (e) {
+    panel.innerHTML = '<div class="alert alert-error">Erro: ' + e.message + '</div>';
+  }
+}
+
+function openEscalaModal() {
+  clearModal('modal-escala');
+  document.getElementById('esc-data').value = new Date().toISOString().split('T')[0];
+  const sel = document.getElementById('esc-salvadorsel');
+  sel.innerHTML = (cache.salvadores || []).map(s => '<option value="' + s.id + '">' + s.nome + '</option>').join('');
+  openModal('modal-escala');
+}
+
+async function saveEscala() {
+  if (!currentEpoca) { toast('Sem época ativa.', 'error'); return; }
+  const data = {
+    utilizador_id: document.getElementById('esc-salvadorsel').value,
+    piscina: document.getElementById('esc-piscina').value,
+    data: document.getElementById('esc-data').value,
+    periodo: document.getElementById('esc-periodo').value,
+    notas: document.getElementById('esc-notas').value.trim() || null,
+    epoca_id: currentEpoca.id
+  };
+  try {
+    await sbInsert('escala_nadadores', data);
+    closeModal('modal-escala');
+    toast('Serviço adicionado.');
+    loadEscala();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+function getWeekDates(year, week) {
+  const jan4 = new Date(year, 0, 4);
+  const monday = new Date(jan4);
+  monday.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (week - 1) * 7);
+  return Array.from({ length: 7 }, (_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); return d; });
+}
+
+// ── QUALIDADE ÁGUA ─────────────────────────────────────────────────────────
+function initAgua() { loadAgua(); }
+
+async function loadAgua() {
+  const piscina = document.getElementById('agua-piscina-sel').value;
+  const panel = document.getElementById('agua-panel');
+  panel.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const registos = await sb('qualidade_agua', {
+      select: 'id,data_hora,cloro,ph,temperatura,dentro_parametros,observacoes,utilizadores(nome)',
+      filter: { 'piscina': 'eq.' + piscina },
+      order: 'data_hora.desc',
+      limit: 30
+    });
+
+    let html = '';
+    if (registos.length) {
+      const ultimo = registos[0];
+      html += '<div class="grid-3 mb-4">';
+      html += paramCard('Cloro', ultimo.cloro, 'mg/L', 0.5, 1.5);
+      html += paramCard('pH', ultimo.ph, '', 7.2, 7.8);
+      html += paramCard('Temperatura', ultimo.temperatura, '°C', 26, 30);
+      html += '</div>';
+    }
+    html += '<div class="card"><div class="card-header"><h3>Histórico</h3></div><div class="table-wrap"><table><thead><tr><th>Data/Hora</th><th>Cloro</th><th>pH</th><th>Temp.</th><th>Estado</th><th>Obs.</th><th>Por</th></tr></thead><tbody>';
+    if (!registos.length) {
+      html += '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🧪</div><p>Sem registos.</p></div></td></tr>';
+    } else {
+      registos.forEach(r => {
+        html += '<tr>' +
+          '<td>' + fmtDatetime(r.data_hora) + '</td>' +
+          '<td>' + (r.cloro !== null ? r.cloro : '—') + '</td>' +
+          '<td>' + (r.ph !== null ? r.ph : '—') + '</td>' +
+          '<td>' + (r.temperatura !== null ? r.temperatura + '°C' : '—') + '</td>' +
+          '<td>' + (r.dentro_parametros ? '<span class="badge badge-green">✅ OK</span>' : '<span class="badge badge-red">⚠️ Fora</span>') + '</td>' +
+          '<td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (r.observacoes || '—') + '</td>' +
+          '<td>' + (r.utilizadores ? r.utilizadores.nome.split(' ')[0] : '—') + '</td>' +
+        '</tr>';
+      });
+    }
+    html += '</tbody></table></div></div>';
+    panel.innerHTML = html;
+  } catch (e) {
+    panel.innerHTML = '<div class="alert alert-error">Erro: ' + e.message + '</div>';
+  }
+}
+
+function paramCard(label, val, unit, min, max) {
+  if (val === null || val === undefined) {
+    return '<div class="param-card"><div class="param-value" style="color:var(--gray-300)">—</div><div class="param-label">' + label + '</div><div class="param-range">' + min + '–' + max + ' ' + unit + '</div></div>';
+  }
+  const ok = parseFloat(val) >= min && parseFloat(val) <= max;
+  return '<div class="param-card"><div class="param-value ' + (ok ? 'param-ok' : 'param-bad') + '">' + val + ' ' + unit + '</div><div class="param-label">' + label + '</div><div class="param-range">Normal: ' + min + '–' + max + ' ' + unit + '</div></div>';
+}
+
+function openAguaModal() {
+  clearModal('modal-agua');
+  const now = new Date();
+  document.getElementById('agua-data').value = now.toISOString().slice(0,16);
+  document.getElementById('agua-piscina-modal').value = document.getElementById('agua-piscina-sel').value;
+  openModal('modal-agua');
+}
+
+async function saveAgua() {
+  const data = {
+    piscina: document.getElementById('agua-piscina-modal').value,
+    data_hora: document.getElementById('agua-data').value,
+    cloro: parseFloat(document.getElementById('agua-cloro').value) || null,
+    ph: parseFloat(document.getElementById('agua-ph').value) || null,
+    temperatura: parseFloat(document.getElementById('agua-temp').value) || null,
+    dentro_parametros: document.getElementById('agua-ok').value === 'true',
+    observacoes: document.getElementById('agua-obs').value.trim() || null,
+    registado_por: currentUser.id
+  };
+  try {
+    await sbInsert('qualidade_agua', data);
+    closeModal('modal-agua');
+    toast('Registo guardado.');
+    loadAgua();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+// ── OCORRÊNCIAS ────────────────────────────────────────────────────────────
+async function loadOcorrencias() {
+  const tbody = document.getElementById('ocorrencias-tbody');
+  tbody.innerHTML = '<tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr>';
+  try {
+    const ocs = await sb('ocorrencias', {
+      select: 'id,data_hora,piscina,tipo,gravidade,descricao,utilizadores!responsavel_id(nome)',
+      filter: currentEpoca ? { 'epoca_id': 'eq.' + currentEpoca.id } : {},
+      order: 'data_hora.desc'
+    });
+    const gravBadge = { baixa: 'badge-green', media: 'badge-amber', alta: 'badge-red', critica: 'badge-red' };
+    tbody.innerHTML = !ocs.length
+      ? '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">✅</div><p>Sem ocorrências registadas.</p></div></td></tr>'
+      : ocs.map(o => '<tr>' +
+          '<td>' + fmtDatetime(o.data_hora) + '</td>' +
+          '<td>' + piscinaNome(o.piscina) + '</td>' +
+          '<td>' + (o.tipo || '—') + '</td>' +
+          '<td><span class="badge ' + (gravBadge[o.gravidade] || 'badge-gray') + '">' + (o.gravidade || '—') + '</span></td>' +
+          '<td style="max-width:200px">' + o.descricao + '</td>' +
+          '<td>' + (o.utilizadores ? o.utilizadores.nome.split(' ')[0] : '—') + '</td>' +
+        '</tr>').join('');
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="6" style="color:var(--red-500)">Erro: ' + e.message + '</td></tr>';
+  }
+}
+
+function openOcorrenciaModal() {
+  clearModal('modal-ocorrencia');
+  document.getElementById('oc-data').value = new Date().toISOString().slice(0,16);
+  openModal('modal-ocorrencia');
+}
+
+async function saveOcorrencia() {
+  const desc = document.getElementById('oc-descricao').value.trim();
+  if (!desc) { toast('Descrição obrigatória.', 'error'); return; }
+  const data = {
+    piscina: document.getElementById('oc-piscina').value,
+    data_hora: document.getElementById('oc-data').value,
+    tipo: document.getElementById('oc-tipo').value,
+    gravidade: document.getElementById('oc-gravidade').value,
+    descricao: desc,
+    medidas_tomadas: document.getElementById('oc-medidas').value.trim() || null,
+    responsavel_id: currentUser.id,
+    created_by: currentUser.id,
+    epoca_id: currentEpoca ? currentEpoca.id : null
+  };
+  try {
+    await sbInsert('ocorrencias', data);
+    closeModal('modal-ocorrencia');
+    toast('Ocorrência registada.');
+    loadOcorrencias();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+// ── AVISOS ─────────────────────────────────────────────────────────────────
+async function loadAvisos() {
+  const panel = document.getElementById('avisos-list');
+  panel.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const canPost = currentUser.papel === 'admin' || currentUser.papel === 'coordenador';
+  document.getElementById('btn-novo-aviso').classList.toggle('hidden', !canPost);
+  try {
+    let filter = currentEpoca ? { 'epoca_id': 'eq.' + currentEpoca.id } : {};
+    if (!canPost) {
+      filter['papeis_destino'] = 'cs.["' + currentUser.papel + '"]';
+      filter['publicado'] = 'eq.true';
+    }
+    const avisos = await sb('avisos', {
+      select: 'id,titulo,conteudo,piscina,papeis_destino,publicado,created_at,utilizadores(nome)',
+      filter,
+      order: 'created_at.desc'
+    });
+    if (!avisos.length) {
+      panel.innerHTML = '<div class="empty-state"><div class="empty-icon">📢</div><p>Sem avisos.</p></div>'; return;
+    }
+    panel.innerHTML = avisos.map(a => '<div class="card mb-3">' +
+      '<div class="card-header">' +
+        '<div><div style="font-weight:700;color:var(--blue-900)">' + a.titulo + '</div>' +
+        '<div style="font-size:11px;color:var(--gray-500);margin-top:2px">' + piscinaNome(a.piscina) + ' · ' + fmtDatetime(a.created_at) + ' · ' + (a.utilizadores ? a.utilizadores.nome : '—') + '</div></div>' +
+        (a.publicado ? '<span class="badge badge-green">Publicado</span>' : '<span class="badge badge-gray">Rascunho</span>') +
+      '</div>' +
+      '<div class="card-body" style="white-space:pre-wrap;font-size:13px">' + a.conteudo + '</div>' +
+    '</div>').join('');
+  } catch (e) {
+    panel.innerHTML = '<div class="alert alert-error">Erro: ' + e.message + '</div>';
+  }
+}
+
+function openAvisoModal() {
+  clearModal('modal-aviso');
+  openModal('modal-aviso');
+}
+
+async function saveAviso() {
+  const titulo = document.getElementById('av-titulo').value.trim();
+  const conteudo = document.getElementById('av-conteudo').value.trim();
+  if (!titulo || !conteudo) { toast('Título e conteúdo obrigatórios.', 'error'); return; }
+  const papeis = Array.from(document.querySelectorAll('input[name="av-papel"]:checked')).map(c => c.value);
+  const data = {
+    titulo, conteudo,
+    piscina: document.getElementById('av-piscina').value,
+    papeis_destino: papeis,
+    publicado: document.getElementById('av-publicado').checked,
+    created_by: currentUser.id,
+    epoca_id: currentEpoca ? currentEpoca.id : null
+  };
+  try {
+    await sbInsert('avisos', data);
+    closeModal('modal-aviso');
+    toast('Aviso guardado.');
+    loadAvisos();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+// ── PESSOAL ────────────────────────────────────────────────────────────────
+async function loadPessoal() {
+  const papeis = { professor: 'pessoal-prof-tbody', nadador_salvador: 'pessoal-salv-tbody', recepcao: 'pessoal-rec-tbody' };
+  try {
+    const utilizadores = await sb('utilizadores', { select: '*', filter: { 'ativo': 'eq.true' }, order: 'nome.asc' });
+    cache.utilizadores = utilizadores;
+    cache.professores = utilizadores.filter(u => u.papel === 'professor');
+    cache.salvadores = utilizadores.filter(u => u.papel === 'nadador_salvador');
+
+    // Contar turmas por professor
+    let profTurmasCount = {};
+    if (currentEpoca) {
+      const pt = await sb('professor_turmas', { select: 'utilizador_id', filter: { 'epoca_id': 'eq.' + currentEpoca.id } });
+      pt.forEach(p => { profTurmasCount[p.utilizador_id] = (profTurmasCount[p.utilizador_id] || 0) + 1; });
+    }
+
+    // Professores
+    const profRows = utilizadores.filter(u => u.papel === 'professor').map(u => '<tr>' +
+      '<td style="font-weight:600">' + u.nome + '</td>' +
+      '<td>' + piscinaNome(u.piscina_principal) + '</td>' +
+      '<td>' + (profTurmasCount[u.id] || 0) + ' turmas</td>' +
+      '<td><code style="font-size:11px;background:var(--gray-100);padding:2px 6px;border-radius:4px">' + u.codigo_acesso + '</code></td>' +
+      '<td><span class="badge badge-green">Ativo</span></td>' +
+      '<td class="text-right"><button class="btn btn-sm btn-outline" onclick="openPessoalModal(\'' + u.id + '\')">✏️</button></td>' +
+    '</tr>').join('');
+    document.getElementById('pessoal-prof-tbody').innerHTML = profRows || '<tr><td colspan="6"><div class="empty-state"><p>Sem professores.</p></div></td></tr>';
+
+    // Salvadores
+    const salvRows = utilizadores.filter(u => u.papel === 'nadador_salvador').map(u => {
+      const certs = Array.isArray(u.certificacoes) ? u.certificacoes : [];
+      const cert = certs[0] || {};
+      return '<tr>' +
+        '<td style="font-weight:600">' + u.nome + '</td>' +
+        '<td>' + piscinaNome(u.piscina_principal) + '</td>' +
+        '<td>' + (cert.tipo || '—') + '</td>' +
+        '<td>' + (cert.validade ? fmtDate(cert.validade) : '—') + '</td>' +
+        '<td><code style="font-size:11px;background:var(--gray-100);padding:2px 6px;border-radius:4px">' + u.codigo_acesso + '</code></td>' +
+        '<td class="text-right"><button class="btn btn-sm btn-outline" onclick="openPessoalModal(\'' + u.id + '\')">✏️</button></td>' +
+      '</tr>';
+    }).join('');
+    document.getElementById('pessoal-salv-tbody').innerHTML = salvRows || '<tr><td colspan="6"><div class="empty-state"><p>Sem salvadores.</p></div></td></tr>';
+
+    // Receção
+    const recRows = utilizadores.filter(u => u.papel === 'recepcao').map(u => '<tr>' +
+      '<td style="font-weight:600">' + u.nome + '</td>' +
+      '<td>' + piscinaNome(u.piscina_principal) + '</td>' +
+      '<td><code style="font-size:11px;background:var(--gray-100);padding:2px 6px;border-radius:4px">' + u.codigo_acesso + '</code></td>' +
+      '<td><span class="badge badge-green">Ativo</span></td>' +
+      '<td class="text-right"><button class="btn btn-sm btn-outline" onclick="openPessoalModal(\'' + u.id + '\')">✏️</button></td>' +
+    '</tr>').join('');
+    document.getElementById('pessoal-rec-tbody').innerHTML = recRows || '<tr><td colspan="4"><div class="empty-state"><p>Sem rececionistas.</p></div></td></tr>';
+
+    // Admins/coord
+    const admRows = utilizadores.filter(u => u.papel === 'admin' || u.papel === 'coordenador').map(u => '<tr>' +
+      '<td style="font-weight:600">' + u.nome + '</td>' +
+      '<td><span class="badge badge-blue">' + u.papel + '</span></td>' +
+      '<td><code style="font-size:11px;background:var(--gray-100);padding:2px 6px;border-radius:4px">' + u.codigo_acesso + '</code></td>' +
+      '<td><span class="badge badge-green">Ativo</span></td>' +
+      '<td class="text-right"><button class="btn btn-sm btn-outline" onclick="openPessoalModal(\'' + u.id + '\')">✏️</button></td>' +
+    '</tr>').join('');
+    document.getElementById('pessoal-adm-tbody').innerHTML = admRows || '<tr><td colspan="5"><div class="empty-state"><p>Sem admins.</p></div></td></tr>';
+
+  } catch (e) { console.error(e); toast('Erro ao carregar pessoal.', 'error'); }
+}
+
+function openPessoalModal(id) {
+  clearModal('modal-pessoal');
+  document.getElementById('modal-pessoal-title').textContent = id ? 'Editar Utilizador' : 'Novo Utilizador';
+  document.getElementById('pessoal-id').value = id || '';
+  document.getElementById('certs-section').classList.add('hidden');
+  if (id) {
+    const u = (cache.utilizadores || []).find(x => x.id === id);
+    if (u) {
+      document.getElementById('pessoal-nome').value = u.nome;
+      document.getElementById('pessoal-papel').value = u.papel;
+      document.getElementById('pessoal-codigo').value = u.codigo_acesso;
+      document.getElementById('pessoal-piscina').value = u.piscina_principal || '';
+      document.getElementById('pessoal-ativo').checked = !!u.ativo;
+      toggleCerts();
+      if (u.papel === 'nadador_salvador') {
+        const certs = Array.isArray(u.certificacoes) ? u.certificacoes : [];
+        const cert = certs[0] || {};
+        document.getElementById('pessoal-cert-num').value = cert.tipo || '';
+        document.getElementById('pessoal-cert-val').value = cert.validade || '';
+      }
+    }
+  }
+  openModal('modal-pessoal');
+}
+
+function toggleCerts() {
+  const papel = document.getElementById('pessoal-papel').value;
+  document.getElementById('certs-section').classList.toggle('hidden', papel !== 'nadador_salvador');
+}
+
+async function savePessoal() {
+  const id = document.getElementById('pessoal-id').value;
+  const nome = document.getElementById('pessoal-nome').value.trim();
+  const codigo = document.getElementById('pessoal-codigo').value.trim();
+  if (!nome || !codigo) { toast('Nome e código obrigatórios.', 'error'); return; }
+  const papel = document.getElementById('pessoal-papel').value;
+  const certs = papel === 'nadador_salvador' ? [{
+    tipo: document.getElementById('pessoal-cert-num').value.trim() || null,
+    validade: document.getElementById('pessoal-cert-val').value || null
+  }] : [];
+  const data = {
+    nome, codigo_acesso: codigo, papel,
+    piscina_principal: document.getElementById('pessoal-piscina').value || null,
+    ativo: document.getElementById('pessoal-ativo').checked,
+    certificacoes: certs
+  };
+  try {
+    if (id) await sbUpdate('utilizadores', id, data);
+    else await sbInsert('utilizadores', data);
+    closeModal('modal-pessoal');
+    toast(id ? 'Utilizador atualizado.' : 'Utilizador criado.');
+    loadPessoal();
+    loadGlobalCache();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+// ── INVENTÁRIO ─────────────────────────────────────────────────────────────
+let allInventario = [];
+
+async function loadInventario() {
+  const tbody = document.getElementById('inv-tbody');
+  tbody.innerHTML = '<tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr>';
+  const piscina = document.getElementById('inv-piscina-sel').value;
+  try {
+    const inv = await sb('inventario', { select: '*', filter: { 'piscina': 'eq.' + piscina }, order: 'categoria.asc,nome.asc' });
+    allInventario = inv;
+    const estadoCor = { bom: 'badge-green', degradado: 'badge-amber', avariado: 'badge-red', abatido: 'badge-gray' };
+    tbody.innerHTML = !inv.length
+      ? '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📦</div><p>Sem itens registados.</p></div></td></tr>'
+      : inv.map(i => '<tr>' +
+          '<td style="font-weight:600">' + i.nome + '</td>' +
+          '<td>' + (i.categoria || '—') + '</td>' +
+          '<td>' + i.quantidade_total + '</td>' +
+          '<td>' + i.quantidade_disponivel + '</td>' +
+          '<td><span class="badge ' + (estadoCor[i.estado] || 'badge-gray') + '">' + i.estado + '</span></td>' +
+          '<td class="text-right"><button class="btn btn-sm btn-outline" onclick="openInventarioModal(\'' + i.id + '\')">✏️</button></td>' +
+        '</tr>').join('');
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="6" style="color:var(--red-500)">Erro: ' + e.message + '</td></tr>';
+  }
+}
+
+function openInventarioModal(id) {
+  clearModal('modal-inventario');
+  document.getElementById('modal-inv-title').textContent = id ? 'Editar Item' : 'Novo Item';
+  document.getElementById('inv-id').value = id || '';
+  if (id) {
+    const i = allInventario.find(x => x.id === id);
+    if (i) {
+      document.getElementById('inv-nome').value = i.nome;
+      document.getElementById('inv-categoria').value = i.categoria || '';
+      document.getElementById('inv-piscina').value = i.piscina;
+      document.getElementById('inv-total').value = i.quantidade_total;
+      document.getElementById('inv-disp').value = i.quantidade_disponivel;
+      document.getElementById('inv-estado').value = i.estado;
+      document.getElementById('inv-notas').value = i.notas || '';
+    }
+  } else {
+    document.getElementById('inv-piscina').value = document.getElementById('inv-piscina-sel').value;
+  }
+  openModal('modal-inventario');
+}
+
+async function saveInventario() {
+  const id = document.getElementById('inv-id').value;
+  const nome = document.getElementById('inv-nome').value.trim();
+  if (!nome) { toast('Nome obrigatório.', 'error'); return; }
+  const data = {
+    nome,
+    categoria: document.getElementById('inv-categoria').value.trim() || null,
+    piscina: document.getElementById('inv-piscina').value,
+    quantidade_total: parseInt(document.getElementById('inv-total').value) || 0,
+    quantidade_disponivel: parseInt(document.getElementById('inv-disp').value) || 0,
+    estado: document.getElementById('inv-estado').value,
+    notas: document.getElementById('inv-notas').value.trim() || null
+  };
+  try {
+    if (id) await sbUpdate('inventario', id, data);
+    else await sbInsert('inventario', data);
+    closeModal('modal-inventario');
+    toast(id ? 'Item atualizado.' : 'Item adicionado.');
+    loadInventario();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+// ── RELATÓRIOS ─────────────────────────────────────────────────────────────
+async function gerarRelatorio(tipo) {
+  const output = document.getElementById('relatorio-output');
+  output.innerHTML = '<div class="loading"><div class="spinner"></div> A gerar relatório...</div>';
+  try {
+    if (tipo === 'assiduidade') await relatorioAssiduidade(output);
+    else if (tipo === 'financeiro') await relatorioFinanceiro(output);
+    else if (tipo === 'ocupacao') await relatorioOcupacao(output);
+    else if (tipo === 'alunos_risco') await relatorioAlunosRisco(output);
+    else { output.innerHTML = '<div class="alert alert-info">Este relatório será implementado em breve.</div>'; }
+  } catch (e) {
+    output.innerHTML = '<div class="alert alert-error">Erro: ' + e.message + '</div>';
+  }
+}
+
+async function relatorioOcupacao(el) {
+  if (!currentEpoca) { el.innerHTML = '<div class="alert alert-warn">Sem época ativa.</div>'; return; }
+  const turmas = await sb('turmas', { select: 'id,nome,nivel_id,piscina,vagas_max', filter: { 'epoca_id': 'eq.' + currentEpoca.id, 'ativa': 'eq.true' } });
+  const inscricoes = await sb('inscricoes', { select: 'turma_id', filter: { 'epoca_id': 'eq.' + currentEpoca.id, 'estado': 'eq.ativa' } });
+  const insByT = {};
+  inscricoes.forEach(i => { insByT[i.turma_id] = (insByT[i.turma_id] || 0) + 1; });
+  let html = '<div class="card"><div class="card-header"><h3>Taxa de Ocupação — ' + currentEpoca.nome + '</h3><button class="btn btn-sm btn-outline" onclick="window.print()">🖨️ Imprimir</button></div><div class="table-wrap"><table><thead><tr><th>Turma</th><th>Nível</th><th>Piscina</th><th>Inscritos</th><th>Vagas</th><th>Ocupação</th></tr></thead><tbody>';
+  turmas.forEach(t => {
+    const nivel = (cache.niveis || []).find(n => n.id === t.nivel_id);
+    const ins = insByT[t.id] || 0;
+    const pct = Math.round((ins / t.vagas_max) * 100);
+    const cor = pct >= 95 ? 'var(--red-500)' : pct >= 80 ? 'var(--amber-500)' : 'var(--green-500)';
+    html += '<tr><td>' + (t.nome || (nivel ? nivel.codigo : '—')) + '</td><td>' + (nivel ? nivel.codigo : '—') + '</td><td>' + piscinaNome(t.piscina) + '</td><td>' + ins + '</td><td>' + t.vagas_max + '</td><td><span style="font-weight:700;color:' + cor + '">' + pct + '%</span></td></tr>';
+  });
+  html += '</tbody></table></div></div>';
+  el.innerHTML = html;
+}
+
+async function relatorioAssiduidade(el) {
+  if (!currentEpoca) { el.innerHTML = '<div class="alert alert-warn">Sem época ativa.</div>'; return; }
+  const presencas = await sb('presencas', { select: 'aluno_id,presente,aulas(data,turma_id)', filter: {} });
+  el.innerHTML = '<div class="alert alert-info">Relatório de assiduidade — ' + presencas.length + ' registos encontrados. Exportação detalhada em desenvolvimento.</div>';
+}
+
+async function relatorioFinanceiro(el) {
+  if (!currentEpoca) { el.innerHTML = '<div class="alert alert-warn">Sem época ativa.</div>'; return; }
+  const pag = await sb('pagamentos', { select: 'valor,data_pagamento,tipos_pagamento(nome)', filter: { 'epoca_id': 'eq.' + currentEpoca.id }, order: 'data_pagamento.asc' });
+  const porTipo = {};
+  let total = 0;
+  pag.forEach(p => {
+    const tipo = p.tipos_pagamento ? p.tipos_pagamento.nome : 'Outro';
+    porTipo[tipo] = (porTipo[tipo] || 0) + parseFloat(p.valor || 0);
+    total += parseFloat(p.valor || 0);
+  });
+  let html = '<div class="card"><div class="card-header"><h3>Resumo Financeiro — ' + currentEpoca.nome + '</h3></div><div class="card-body"><div class="table-wrap"><table><thead><tr><th>Tipo</th><th class="text-right">Total (€)</th></tr></thead><tbody>';
+  Object.entries(porTipo).forEach(([tipo, val]) => { html += '<tr><td>' + tipo + '</td><td class="text-right" style="font-weight:700">€ ' + val.toFixed(2) + '</td></tr>'; });
+  html += '<tr style="background:var(--blue-50)"><td style="font-weight:700">TOTAL</td><td class="text-right" style="font-weight:800;color:var(--blue-900)">€ ' + total.toFixed(2) + '</td></tr>';
+  html += '</tbody></table></div></div></div>';
+  el.innerHTML = html;
+}
+
+async function relatorioAlunosRisco(el) {
+  el.innerHTML = '<div class="alert alert-info">Relatório de alunos em risco de exclusão — em desenvolvimento. Requer configuração de limiares em Configuração → Parâmetros.</div>';
+}
+
+// ── CONFIG ─────────────────────────────────────────────────────────────────
+async function loadConfig() {
+  await Promise.all([loadEpocas(), loadNiveis(), loadTiposPagamento(), loadCompetencias(), loadParametros()]);
+  populateNivelSelects();
+}
+
+async function loadEpocas() {
+  const tbody = document.getElementById('epocas-tbody');
+  try {
+    const epocas = await sb('epocas', { select: '*', order: 'data_inicio.desc' });
+    tbody.innerHTML = !epocas.length
+      ? '<tr><td colspan="5"><div class="empty-state"><p>Sem épocas configuradas.</p></div></td></tr>'
+      : epocas.map(e => '<tr>' +
+          '<td style="font-weight:600">' + e.nome + '</td>' +
+          '<td>' + fmtDate(e.data_inicio) + '</td>' +
+          '<td>' + fmtDate(e.data_fim) + '</td>' +
+          '<td>' + (e.ativa ? '<span class="badge badge-green">✅ Ativa</span>' : '<span class="badge badge-gray">Inativa</span>') + '</td>' +
+          '<td class="text-right">' +
+            '<button class="btn btn-sm btn-outline" onclick="openEpocaModal(\'' + e.id + '\')">✏️</button> ' +
+            (!e.ativa ? '<button class="btn btn-sm btn-teal" onclick="ativarEpoca(\'' + e.id + '\')">Ativar</button>' : '') +
+          '</td>' +
+        '</tr>').join('');
+  } catch (ex) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--red-500)">Erro: ' + ex.message + '</td></tr>'; }
+}
+
+function openEpocaModal(id) {
+  clearModal('modal-epoca');
+  document.getElementById('modal-epoca-title').textContent = id ? 'Editar Época' : 'Nova Época';
+  document.getElementById('epoca-id').value = id || '';
+  openModal('modal-epoca');
+}
+
+async function saveEpoca() {
+  const id = document.getElementById('epoca-id').value;
+  const nome = document.getElementById('epoca-nome').value.trim();
+  const inicio = document.getElementById('epoca-inicio').value;
+  const fim = document.getElementById('epoca-fim').value;
+  if (!nome || !inicio || !fim) { toast('Preencha todos os campos.', 'error'); return; }
+  const ativa = document.getElementById('epoca-ativa').checked;
+  try {
+    if (ativa) {
+      const all = await sb('epocas', { select: 'id' });
+      for (const e of all) { await sbUpdate('epocas', e.id, { ativa: false }).catch(() => {}); }
+    }
+    const data = { nome, data_inicio: inicio, data_fim: fim, ativa };
+    if (id) await sbUpdate('epocas', id, data);
+    else await sbInsert('epocas', data);
+    closeModal('modal-epoca');
+    toast(id ? 'Época atualizada.' : 'Época criada.');
+    loadEpocas();
+    if (ativa) { await loadEpocaAtiva(); }
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+async function ativarEpoca(id) {
+  try {
+    const all = await sb('epocas', { select: 'id' });
+    for (const e of all) await sbUpdate('epocas', e.id, { ativa: false }).catch(() => {});
+    await sbUpdate('epocas', id, { ativa: true });
+    toast('Época ativada.');
+    loadEpocas();
+    await loadEpocaAtiva();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+async function loadNiveis() {
+  const tbody = document.getElementById('niveis-tbody');
+  try {
+    const niveis = await sb('niveis', { select: '*', order: 'ordem.asc' });
+    cache.niveis = niveis.filter(n => n.ativo);
+    tbody.innerHTML = niveis.map(n => '<tr>' +
+      '<td><code style="font-size:12px;background:var(--gray-100);padding:2px 6px;border-radius:4px">' + n.codigo + '</code></td>' +
+      '<td>' + n.nome + '</td>' +
+      '<td><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:' + n.cor + ';vertical-align:middle"></span></td>' +
+      '<td>' + n.ordem + '</td>' +
+      '<td>' + (n.ativo ? '<span class="badge badge-green">✅</span>' : '<span class="badge badge-gray">—</span>') + '</td>' +
+      '<td class="text-right"><button class="btn btn-sm btn-outline" onclick="openNivelModal(\'' + n.id + '\')">✏️</button></td>' +
+    '</tr>').join('');
+  } catch (ex) { tbody.innerHTML = '<tr><td colspan="6" style="color:var(--red-500)">Erro</td></tr>'; }
+}
+
+function openNivelModal(id) {
+  clearModal('modal-nivel');
+  document.getElementById('modal-nivel-title').textContent = id ? 'Editar Nível' : 'Novo Nível';
+  document.getElementById('nivel-id').value = id || '';
+  if (id) {
+    const n = (cache.niveis || []).find(x => x.id === id) || {};
+    document.getElementById('nivel-codigo').value = n.codigo || '';
+    document.getElementById('nivel-nome').value = n.nome || '';
+    document.getElementById('nivel-cor').value = n.cor || '#3b82f6';
+    document.getElementById('nivel-ordem').value = n.ordem || 0;
+    document.getElementById('nivel-ativo').checked = n.ativo !== false;
+  }
+  openModal('modal-nivel');
+}
+
+async function saveNivel() {
+  const id = document.getElementById('nivel-id').value;
+  const codigo = document.getElementById('nivel-codigo').value.trim();
+  const nome = document.getElementById('nivel-nome').value.trim();
+  if (!codigo || !nome) { toast('Código e nome obrigatórios.', 'error'); return; }
+  const data = { codigo, nome, cor: document.getElementById('nivel-cor').value, ordem: parseInt(document.getElementById('nivel-ordem').value) || 0, ativo: document.getElementById('nivel-ativo').checked };
+  try {
+    if (id) await sbUpdate('niveis', id, data);
+    else await sbInsert('niveis', data);
+    closeModal('modal-nivel');
+    toast(id ? 'Nível atualizado.' : 'Nível criado.');
+    loadNiveis();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+async function loadTiposPagamento() {
+  try {
+    const tipos = await sb('tipos_pagamento', { select: '*', order: 'nome.asc' });
+    cache.tiposPag = tipos.filter(t => t.ativo);
+    const tbody = document.getElementById('tipos-pag-tbody');
+    tbody.innerHTML = tipos.map(t => '<tr>' +
+      '<td style="font-weight:600">' + t.nome + '</td>' +
+      '<td>' + (t.descricao || '—') + '</td>' +
+      '<td>' + (t.valor_padrao ? '€ ' + parseFloat(t.valor_padrao).toFixed(2) : '—') + '</td>' +
+      '<td>' + (t.ativo ? '<span class="badge badge-green">✅</span>' : '<span class="badge badge-gray">—</span>') + '</td>' +
+      '<td class="text-right"><button class="btn btn-sm btn-outline" onclick="openTipoPagModal(\'' + t.id + '\')">✏️</button></td>' +
+    '</tr>').join('');
+  } catch (e) { console.error(e); }
+}
+
+function openTipoPagModal(id) {
+  clearModal('modal-tipo-pag');
+  document.getElementById('modal-tp-title').textContent = id ? 'Editar Tipo' : 'Novo Tipo';
+  document.getElementById('tp-id').value = id || '';
+  if (id) {
+    const t = (cache.tiposPag || []).find(x => x.id === id) || {};
+    document.getElementById('tp-nome').value = t.nome || '';
+    document.getElementById('tp-desc').value = t.descricao || '';
+    document.getElementById('tp-valor').value = t.valor_padrao || '';
+    document.getElementById('tp-ativo').checked = t.ativo !== false;
+  }
+  openModal('modal-tipo-pag');
+}
+
+async function saveTipoPag() {
+  const id = document.getElementById('tp-id').value;
+  const nome = document.getElementById('tp-nome').value.trim();
+  if (!nome) { toast('Nome obrigatório.', 'error'); return; }
+  const data = { nome, descricao: document.getElementById('tp-desc').value.trim() || null, valor_padrao: parseFloat(document.getElementById('tp-valor').value) || null, ativo: document.getElementById('tp-ativo').checked };
+  try {
+    if (id) await sbUpdate('tipos_pagamento', id, data);
+    else await sbInsert('tipos_pagamento', data);
+    closeModal('modal-tipo-pag');
+    toast(id ? 'Tipo atualizado.' : 'Tipo criado.');
+    loadTiposPagamento();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+async function loadCompetencias() {
+  const nivelFilter = document.getElementById('comp-nivel-filter').value;
+  try {
+    let filter = { 'ativo': 'eq.true' };
+    if (nivelFilter) filter['nivel_id'] = 'eq.' + nivelFilter;
+    const comps = await sb('competencias_config', { select: 'id,nome,nivel_id,ordem,ativo,niveis(codigo)', filter, order: 'ordem.asc' });
+    const tbody = document.getElementById('competencias-tbody');
+    tbody.innerHTML = comps.map(c => '<tr>' +
+      '<td style="font-weight:600">' + c.nome + '</td>' +
+      '<td>' + (c.niveis ? c.niveis.codigo : '<span style="color:var(--gray-400)">Todos</span>') + '</td>' +
+      '<td>' + c.ordem + '</td>' +
+      '<td>' + (c.ativo ? '<span class="badge badge-green">✅</span>' : '<span class="badge badge-gray">—</span>') + '</td>' +
+      '<td class="text-right"><button class="btn btn-sm btn-outline" onclick="openCompetenciaModal(\'' + c.id + '\')">✏️</button></td>' +
+    '</tr>').join('') || '<tr><td colspan="5"><div class="empty-state"><p>Sem competências configuradas.</p></div></td></tr>';
+  } catch (e) { console.error(e); }
+}
+
+function openCompetenciaModal(id) {
+  clearModal('modal-competencia');
+  document.getElementById('modal-comp-title').textContent = id ? 'Editar Competência' : 'Nova Competência';
+  document.getElementById('comp-id').value = id || '';
+  populateNivelSelects();
+  openModal('modal-competencia');
+}
+
+function populateNivelSelects() {
+  const selects = ['comp-nivel', 'comp-nivel-filter'];
+  selects.forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const hasEmpty = selId === 'comp-nivel-filter';
+    sel.innerHTML = (hasEmpty ? '<option value="">Todos os níveis</option>' : '<option value="">Todos os níveis</option>') +
+      (cache.niveis || []).map(n => '<option value="' + n.id + '">' + n.codigo + ' — ' + n.nome + '</option>').join('');
+  });
+}
+
+async function saveCompetencia() {
+  const id = document.getElementById('comp-id').value;
+  const nome = document.getElementById('comp-nome').value.trim();
+  if (!nome) { toast('Nome obrigatório.', 'error'); return; }
+  const data = { nome, nivel_id: document.getElementById('comp-nivel').value || null, descricao: document.getElementById('comp-desc').value.trim() || null, ordem: parseInt(document.getElementById('comp-ordem').value) || 0, ativo: true };
+  try {
+    if (id) await sbUpdate('competencias_config', id, data);
+    else await sbInsert('competencias_config', data);
+    closeModal('modal-competencia');
+    toast(id ? 'Competência atualizada.' : 'Competência criada.');
+    loadCompetencias();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+async function loadParametros() {
+  const panel = document.getElementById('config-params-panel');
+  try {
+    const rows = await sb('config', { select: '*' });
+    const configMap = {};
+    rows.forEach(r => { configMap[r.chave] = r; });
+
+    const horario = configMap['horario_funcionamento'] ? configMap['horario_funcionamento'].valor : { manha: { inicio: '09:00', fim: '12:30' }, tarde: { inicio: '14:00', fim: '20:30' } };
+    const limFaltasSeg = configMap['limiar_faltas_seguidas'] ? configMap['limiar_faltas_seguidas'].valor : 3;
+    const limFaltasMens = configMap['limiar_faltas_mensais'] ? configMap['limiar_faltas_mensais'].valor : 5;
+
+    panel.innerHTML = '<div class="grid-2"><div class="card"><div class="card-header"><h3>Horário de Funcionamento</h3></div><div class="card-body"><div class="form-row cols-2">' +
+      '<div class="form-group"><label>Manhã — Início</label><input type="time" class="form-control" id="cfg-manha-ini" value="' + (horario.manha ? horario.manha.inicio : '09:00') + '"></div>' +
+      '<div class="form-group"><label>Manhã — Fim</label><input type="time" class="form-control" id="cfg-manha-fim" value="' + (horario.manha ? horario.manha.fim : '12:30') + '"></div>' +
+      '<div class="form-group"><label>Tarde — Início</label><input type="time" class="form-control" id="cfg-tarde-ini" value="' + (horario.tarde ? horario.tarde.inicio : '14:00') + '"></div>' +
+      '<div class="form-group"><label>Tarde — Fim</label><input type="time" class="form-control" id="cfg-tarde-fim" value="' + (horario.tarde ? horario.tarde.fim : '20:30') + '"></div>' +
+      '</div><button class="btn btn-blue" onclick="saveHorario()">Guardar horário</button></div></div>' +
+
+      '<div class="card"><div class="card-header"><h3>Limiares de Assiduidade</h3></div><div class="card-body"><div class="form-row">' +
+      '<div class="form-group"><label>Faltas seguidas (alerta)</label><input type="number" class="form-control" id="cfg-faltas-seg" value="' + limFaltasSeg + '" min="1"></div>' +
+      '<div class="form-group"><label>Faltas mensais (alerta)</label><input type="number" class="form-control" id="cfg-faltas-mens" value="' + limFaltasMens + '" min="1"></div>' +
+      '</div><button class="btn btn-blue" onclick="saveParametros()">Guardar limiares</button></div></div></div>';
+  } catch (e) {
+    panel.innerHTML = '<div class="alert alert-error">Erro: ' + e.message + '</div>';
+  }
+}
+
+async function saveHorario() {
+  const val = {
+    manha: { inicio: document.getElementById('cfg-manha-ini').value, fim: document.getElementById('cfg-manha-fim').value },
+    tarde: { inicio: document.getElementById('cfg-tarde-ini').value, fim: document.getElementById('cfg-tarde-fim').value }
+  };
+  try {
+    const existing = await sb('config', { select: 'chave', filter: { 'chave': 'eq.horario_funcionamento' } });
+    if (existing.length) await sb('config', { method: 'PATCH', filter: { 'chave': 'eq.horario_funcionamento' }, body: { valor: val, updated_at: new Date().toISOString() } });
+    else await sbInsert('config', { chave: 'horario_funcionamento', valor: val, descricao: 'Horário de funcionamento' });
+    toast('Horário guardado.');
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+async function saveParametros() {
+  const seg = parseInt(document.getElementById('cfg-faltas-seg').value);
+  const mens = parseInt(document.getElementById('cfg-faltas-mens').value);
+  try {
+    for (const [chave, valor] of [['limiar_faltas_seguidas', seg], ['limiar_faltas_mensais', mens]]) {
+      const existing = await sb('config', { select: 'chave', filter: { 'chave': 'eq.' + chave } });
+      if (existing.length) await sb('config', { method: 'PATCH', filter: { 'chave': 'eq.' + chave }, body: { valor, updated_at: new Date().toISOString() } });
+      else await sbInsert('config', { chave, valor, descricao: '' });
+    }
+    toast('Limiares guardados.');
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+function piscinaNome(p) {
+  if (!p) return '—';
+  const m = { refojos: 'Refojos', arco_baulhe: 'Arco de Baúlhe', ambas: 'Ambas' };
+  return m[p] || p;
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const parts = d.split('-');
+  if (parts.length === 3) return parts[2] + '/' + parts[1] + '/' + parts[0];
+  return d;
+}
+
+function fmtDatetime(d) {
+  if (!d) return '—';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('pt-PT') + ' ' + dt.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+}
+
+function fmtTime(t) {
+  if (!t) return '—';
+  return t.substring(0, 5);
+}
+
+function canEditAll() {
+  return currentUser && (currentUser.papel === 'admin' || currentUser.papel === 'coordenador' || currentUser.papel === 'recepcao' || currentUser.papel === 'professor');
+}
+
+// ── MODAL HELPERS ──────────────────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.remove('hidden');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+function clearModal(id) {
+  const modal = document.getElementById(id);
+  modal.querySelectorAll('input[type=text], input[type=number], input[type=date], input[type=time], input[type=datetime-local], input[type=email], textarea').forEach(el => { el.value = ''; });
+  modal.querySelectorAll('input[type=checkbox]').forEach(el => { el.checked = false; });
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) overlay.classList.add('hidden');
+  });
+});
+
+// ── TABS ───────────────────────────────────────────────────────────────────
+function switchTab(btn, panelId) {
+  const parent = btn.closest('.tabs');
+  if (!parent) return;
+  parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const container = parent.nextElementSibling ? parent.parentElement : parent.closest('.card, .modal-body, .page-body');
+  if (container) {
+    container.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    const panel = document.getElementById(panelId);
+    if (panel) panel.classList.add('active');
+  }
+}
+
+// ── TOAST ──────────────────────────────────────────────────────────────────
+let toastTimer = null;
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  const inner = document.getElementById('toast-inner');
+  inner.textContent = msg;
+  inner.style.background = type === 'error' ? 'var(--red-500)' : type === 'warn' ? 'var(--amber-500)' : 'var(--gray-900)';
+  el.style.display = 'block';
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+(function() {
+  const saved = sessionStorage.getItem('piscinas_user');
+  if (saved) {
+    try { currentUser = JSON.parse(saved); initApp(); } catch (e) { sessionStorage.removeItem('piscinas_user'); }
+  }
+})();
+</script>
+</body>
+</html>
