@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SportProf">
+<meta name="theme-color" content="#1a56a0">
+<title>SportProf — Gestão de Educação Física</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231a56a0'/><text x='50' y='42' font-family='system-ui,sans-serif' font-size='30' font-weight='700' fill='%23fff' text-anchor='middle' dominant-baseline='middle'>S</text><text x='50' y='70' font-family='system-ui,sans-serif' font-size='15' font-weight='500' fill='%23a8c8f0' text-anchor='middle' dominant-baseline='middle'>PROF</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#1a56a0;--brand2:#2268c4;--brand-light:#e8f0fb;
+  --green:#1a7a45;--green-light:#e6f4ec;
+  --orange:#c45c1a;--orange-light:#fdf0e8;
+  --red:#c41a1a;--red-light:#fce8e8;
+  --yellow:#a07a1a;--yellow-light:#fdf8e6;
+  --gray:#6b7280;--gray-light:#f1f5f9;
+  --bg:#f7f9fc;--surface:#fff;
+  --border:#e2e8f0;--border2:#cbd5e1;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.05);
+  --shadow-lg:0 4px 16px rgba(0,0,0,.12);
+  --r:10px;--r-sm:6px;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;padding-bottom:env(safe-area-inset-bottom,0);overflow-x:hidden}
+
+/* ── LOADING ── */
+#loading{position:fixed;inset:0;background:var(--brand);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity .4s}
+#loading.hide{opacity:0;pointer-events:none}
+.loading-logo{color:#fff;font-size:1.6rem;font-weight:700;letter-spacing:-.02em;margin-bottom:8px}
+.loading-sub{color:rgba(255,255,255,.6);font-size:.85rem}
+.loading-bar{width:200px;height:3px;background:rgba(255,255,255,.2);border-radius:2px;margin-top:24px;overflow:hidden}
+.loading-bar-fill{height:100%;background:#fff;border-radius:2px;animation:loadbar 1.2s ease forwards}
+@keyframes loadbar{from{width:0}to{width:100%}}
+
+/* ── LOGIN ── */
+#login-screen{display:none;min-height:100vh;background:linear-gradient(135deg,#0f2a5c 0%,#1a56a0 60%,#1e3a6b 100%);align-items:center;justify-content:center;padding:20px}
+#login-screen.show{display:flex}
+.login-box{background:#fff;border-radius:16px;padding:40px 36px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.login-logo{margin-bottom:28px}
+.login-logo h1{font-size:1.4rem;font-weight:700;color:var(--brand);line-height:1.2}
+.login-logo p{font-size:.8rem;color:var(--text3);margin-top:4px}
+.login-logo .badge{display:inline-block;background:var(--brand);color:#fff;font-size:.6rem;font-weight:600;padding:2px 8px;border-radius:20px;margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:.75rem;font-weight:600;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.field input{width:100%;padding:10px 12px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-family:var(--font);font-size:.9rem;outline:none;transition:border-color .15s}
+.field input:focus{border-color:var(--brand)}
+.btn-login{width:100%;padding:11px;background:var(--brand);color:#fff;border:none;border-radius:var(--r-sm);font-family:var(--font);font-size:.9rem;font-weight:600;cursor:pointer;transition:background .15s;margin-top:4px}
+.btn-login:hover{background:var(--brand2)}
+.login-err{color:var(--red);font-size:.78rem;text-align:center;margin-top:8px;display:none}
+
+/* ── APP SHELL ── */
+#app{display:none;min-height:100vh;flex-direction:column}
+#app.show{display:flex}
+.topbar{background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+@supports(padding-top:env(safe-area-inset-top)){.topbar{padding-top:env(safe-area-inset-top);height:calc(52px + env(safe-area-inset-top));align-items:flex-end;padding-bottom:10px}}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-brand{font-weight:700;font-size:.95rem;letter-spacing:-.01em}
+.ano-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:500}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.user-chip{display:flex;align-items:center;gap:6px;font-size:.78rem;opacity:.85}
+.papel-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.btn-sm{padding:4px 10px;border-radius:var(--r-sm);font-family:var(--font);font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s;border:none}
+.btn-ghost-w{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff}.btn-ghost-w:hover{background:rgba(255,255,255,.25)}
+
+.nav{background:#fff;border-bottom:1px solid var(--border);display:flex;padding:0 4px;gap:0;overflow-x:auto;position:sticky;top:52px;z-index:99;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+@supports(padding-top:env(safe-area-inset-top)){.nav{top:calc(52px + env(safe-area-inset-top))}}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{position:relative;padding:10px 12px;background:none;border:none;font-family:var(--font);font-size:.75rem;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px;flex-shrink:0}
+.nav-btn.active{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
+.nav-btn:hover:not(.active){color:var(--text)}
+
+.main{flex:1;padding:20px;max-width:1440px;margin:0 auto;width:100%}
+
+/* ── GENERIC COMPONENTS ── */
+.card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
+.card-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.card-hdr h2{font-size:.95rem;font-weight:600;color:var(--text)}
+.card-hdr p{font-size:.75rem;color:var(--text3);margin-top:2px}
+.card-body{padding:18px}
+
+.btn{padding:7px 14px;border-radius:var(--r-sm);font-family:var(--font);font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s;border:none;display:inline-flex;align-items:center;gap:5px}
+.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand2)}
+.btn-success{background:var(--green);color:#fff}.btn-success:hover{opacity:.9}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{opacity:.9}
+.btn-outline{background:#fff;border:1.5px solid var(--border2);color:var(--text)}.btn-outline:hover{border-color:var(--brand);color:var(--brand)}
+.btn-xs{padding:3px 8px;font-size:.7rem}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.inp{width:100%;padding:8px 11px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-family:var(--font);font-size:.85rem;outline:none;transition:border-color .15s;background:#fff}
+.inp:focus{border-color:var(--brand)}
+.inp-sm{padding:5px 9px;font-size:.78rem}
+.select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:.68rem;font-weight:600}
+.tag{display:inline-block;padding:2px 7px;border-radius:var(--r-sm);font-size:.7rem;font-weight:500}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
+.flex{display:flex;align-items:center;gap:8px}
+.flex-wrap{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.flex-between{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.empty{text-align:center;padding:28px;color:var(--text3);font-size:.85rem}
+.loading-mini{text-align:center;padding:24px;color:var(--text3);font-size:.82rem}
+.hidden{display:none!important}
+.page{display:none}.page.active{display:block}
+.sep{border:none;border-top:1px solid var(--border);margin:14px 0}
+
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+table th{background:var(--brand);color:#fff;padding:8px 10px;text-align:left;font-size:.72rem;font-weight:600}
+table th:first-child{border-radius:0}
+table td{padding:7px 10px;border-bottom:1px solid var(--border)}
+table tr.clickrow{cursor:pointer}
+table tr.clickrow:hover td{background:var(--gray-light)}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ── MODAL ── */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;padding:20px}
+.modal-ov.open{display:flex}
+.modal{background:#fff;border-radius:14px;padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal.modal-lg{max-width:720px}
+.modal h3{font-size:1rem;font-weight:600;margin-bottom:16px;color:var(--brand)}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.field-row{margin-bottom:12px}
+.field-row label{display:block;font-size:.72rem;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+
+/* ── STATS ── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:#fff;border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow);border-left:3px solid var(--brand)}
+.stat.g{border-left-color:var(--green)}.stat.o{border-left-color:var(--orange)}.stat.r{border-left-color:var(--red)}.stat.y{border-left-color:var(--yellow)}
+.stat-val{font-size:1.8rem;font-weight:700;color:var(--brand);line-height:1}
+.stat.g .stat-val{color:var(--green)}.stat.o .stat-val{color:var(--orange)}.stat.r .stat-val{color:var(--red)}.stat.y .stat-val{color:var(--yellow)}
+.stat-lbl{font-size:.67rem;color:var(--text3);margin-top:3px;font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+
+/* ── HORARIO (grelha de calendário semanal, estilo Piscinas) ── */
+.cal-wrap{font-family:inherit;user-select:none;background:#fff;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;position:relative}
+.cal-wrap::after{content:'';position:absolute;top:0;right:0;bottom:0;width:18px;background:linear-gradient(to right,rgba(255,255,255,0),rgba(0,0,0,.06));pointer-events:none;z-index:3}
+.cal-scroll{overflow-x:auto;overflow-y:auto;max-height:600px;-webkit-overflow-scrolling:touch}
+.cal-inner{min-width:526px}
+.cal-head{display:flex;margin-left:46px;border-bottom:2px solid var(--brand);position:sticky;top:0;z-index:2;background:var(--brand)}
+.cal-th{flex:1;text-align:center;padding:8px 4px;font-size:.72rem;font-weight:700;color:#fff;background:var(--brand);border-left:1px solid rgba(255,255,255,.15)}
+.cal-body{display:flex;padding-top:8px;padding-bottom:14px}
+.cal-hora-col{width:46px;flex-shrink:0;position:relative}
+.cal-hora-lbl{position:absolute;right:6px;left:0;text-align:right;font-size:.62rem;font-weight:600;color:var(--text3);white-space:nowrap;font-family:var(--mono)}
+.cal-dias-wrap{flex:1;position:relative}
+.cal-hline{position:absolute;left:0;right:0;border-top:1px solid var(--border);pointer-events:none}
+.cal-hline-half{border-top:1px dashed #eef2f7}
+.cal-dia-col{position:absolute;top:0;bottom:0}
+.cal-dia-sep{position:absolute;top:0;bottom:0;right:0;width:1px;background:var(--border)}
+.cal-ev{position:absolute;border-radius:6px;cursor:pointer;transition:opacity .12s,transform .12s;border:1px solid rgba(255,255,255,.3);color:#fff;padding:4px 6px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.cal-ev:hover{opacity:.9;transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+.cal-ev .cal-ev-nome{font-size:.7rem;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-ev .cal-ev-hora{font-size:.6rem;opacity:.9;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-ev .cal-ev-local{font-size:.58rem;opacity:.8;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── FICHA DE TURMA ── */
+.turma-hdr{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);padding:18px 20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px}
+.turma-hdr h2{font-size:1.2rem;font-weight:700;color:var(--brand)}
+.turma-hdr .meta{font-size:.78rem;color:var(--text3);margin-top:4px}
+.subtab-row{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:0}
+.subtab-btn{padding:8px 14px;border:none;background:none;font-family:var(--font);font-size:.78rem;font-weight:600;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.subtab-btn.active{color:var(--brand);border-bottom-color:var(--brand)}
+.subpage{display:none}.subpage.active{display:block}
+
+/* ── ASSIDUIDADE ── */
+.estado-btn{padding:4px 10px;border-radius:20px;border:1.5px solid var(--border2);background:#fff;font-size:.68rem;font-weight:600;cursor:pointer;transition:all .15s;color:var(--text2)}
+.estado-btn.active.presente{background:var(--green-light);border-color:var(--green);color:var(--green)}
+.estado-btn.active.falta{background:var(--red-light);border-color:var(--red);color:var(--red)}
+.estado-btn.active.falta_justificada{background:var(--yellow-light);border-color:var(--yellow);color:var(--yellow)}
+.estado-btn.active.atraso{background:var(--orange-light);border-color:var(--orange);color:var(--orange)}
+
+/* ── AVALIACAO ── */
+.nivel-pill{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border2);background:#fff;font-size:.75rem;font-weight:700;cursor:pointer;transition:all .15s;color:var(--text2)}
+.nivel-pill.active{background:var(--brand);border-color:var(--brand);color:#fff}
+.nivel-row{display:flex;gap:4px}
+
+@media(max-width:640px){
+  .main{padding:12px}
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .turma-hdr{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="loading-logo">SportProf</div>
+  <div class="loading-sub">Gestão de Educação Física</div>
+  <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="badge">Educação Física</div>
+      <h1>SportProf<br><span style="font-size:.7em;opacity:.85">Gestão de Turmas</span></h1>
+      <p>Sistema de gestão para professores</p>
+    </div>
+    <div class="field">
+      <label>Código de acesso</label>
+      <input type="password" id="login-code" placeholder="Código de acesso..." autocomplete="off" autocapitalize="none">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Entrar</button>
+    <div class="login-err" id="login-err">Código inválido. Tente novamente.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-brand">SportProf</div>
+      <div class="ano-badge" id="ano-badge">—</div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-chip"><span class="papel-dot" id="papel-dot"></span><span id="user-nome"></span></div>
+      <button class="btn-sm btn-ghost-w" onclick="openModalPerfil()">Perfil</button>
+      <button class="btn-sm btn-ghost-w" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+
+  <div class="nav" id="nav-row">
+    <button class="nav-btn active" data-page="horario" onclick="showPage('horario')">📅 Horário</button>
+    <button class="nav-btn" data-page="turmas" onclick="showPage('turmas')">🎓 Turmas</button>
+    <button class="nav-btn" data-page="relatorios" onclick="showPage('relatorios')">📊 Relatórios</button>
+    <button class="nav-btn" id="nav-admin" data-page="admin" onclick="showPage('admin')">⚙️ Admin</button>
+  </div>
+
+  <div class="main">
+
+    <!-- HORÁRIO -->
+    <div class="page active" id="page-horario">
+      <div class="card-hdr" style="background:none;border:none;padding:0 0 14px">
+        <div><h2 style="font-size:1.1rem">O meu horário</h2><p>As turmas que leciona, por dia da semana. Clique numa turma para abrir a ficha.</p></div>
+      </div>
+      <div id="horario-list"><div class="loading-mini">A carregar...</div></div>
+      <div class="stats-row" id="horario-stats" style="margin-top:16px"></div>
+    </div>
+
+    <!-- TURMAS -->
+    <div class="page" id="page-turmas">
+      <div class="card-hdr" style="background:none;border:none;padding:0 0 14px">
+        <div><h2 style="font-size:1.1rem">As minhas turmas</h2><p>Clique numa turma para gerir alunos, assiduidade e avaliação.</p></div>
+        <button class="btn btn-primary" onclick="openModalTurma()">+ Nova turma</button>
+      </div>
+      <div id="turmas-list"><div class="loading-mini">A carregar...</div></div>
+    </div>
+
+    <!-- FICHA DE TURMA -->
+    <div class="page" id="page-ficha-turma">
+      <button class="btn btn-outline btn-xs" style="margin-bottom:14px" onclick="showPage('turmas')">← Voltar às turmas</button>
+      <div class="turma-hdr">
+        <div>
+          <h2 id="ft-nome">—</h2>
+          <div class="meta" id="ft-meta">—</div>
+        </div>
+        <div class="flex-wrap">
+          <button class="btn btn-outline btn-xs" onclick="openModalTurma(CURRENT_TURMA_ID)">Editar turma</button>
+          <button class="btn btn-danger btn-xs" onclick="arquivarTurma(CURRENT_TURMA_ID)">Arquivar</button>
+        </div>
+      </div>
+      <div class="subtab-row">
+        <button class="subtab-btn active" data-sub="alunos" onclick="showSubpage('alunos')">Alunos</button>
+        <button class="subtab-btn" data-sub="assiduidade" onclick="showSubpage('assiduidade')">Assiduidade</button>
+        <button class="subtab-btn" data-sub="unidades" onclick="showSubpage('unidades')">Unidades didáticas</button>
+        <button class="subtab-btn" data-sub="avaliacao" onclick="showSubpage('avaliacao')">Avaliação</button>
+      </div>
+
+      <div class="subpage active" id="sub-alunos">
+        <div class="flex-between" style="margin-bottom:12px">
+          <input type="text" class="inp" id="aluno-search" placeholder="Pesquisar aluno..." style="max-width:240px" oninput="renderAlunosTurma()">
+          <button class="btn btn-primary btn-xs" onclick="openModalAluno()">+ Adicionar aluno</button>
+        </div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Nº</th><th>Nome</th><th>Data nasc.</th><th>Sexo</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="alunos-tb"><tr><td colspan="6"><div class="loading-mini">A carregar...</div></td></tr></tbody>
+        </table></div>
+      </div>
+
+      <div class="subpage" id="sub-assiduidade">
+        <div class="flex-wrap" style="margin-bottom:14px">
+          <label style="font-size:.78rem;font-weight:600;color:var(--text2)">Data:</label>
+          <input type="date" class="inp" id="assid-data" style="max-width:170px" onchange="renderAssiduidade()">
+        </div>
+        <div class="presenca-stats stats-row" id="assid-stats"></div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Nome</th><th>Estado</th><th>Observações</th></tr></thead>
+          <tbody id="assid-tb"><tr><td colspan="3"><div class="loading-mini">A carregar...</div></td></tr></tbody>
+        </table></div>
+      </div>
+
+      <div class="subpage" id="sub-unidades">
+        <div class="flex-between" style="margin-bottom:14px">
+          <p style="font-size:.78rem;color:var(--text3)">Planeamento por modalidade e período letivo.</p>
+          <button class="btn btn-primary btn-xs" onclick="openModalUD()">+ Nova unidade didática</button>
+        </div>
+        <div id="ud-pesos-aviso"></div>
+        <div id="ud-list"><div class="loading-mini">A carregar...</div></div>
+      </div>
+
+      <div class="subpage" id="sub-avaliacao">
+        <div class="flex-wrap" style="margin-bottom:14px">
+          <label style="font-size:.78rem;font-weight:600;color:var(--text2)">Período:</label>
+          <select class="inp select" id="aval-periodo" style="max-width:200px" onchange="renderAvaliacaoPeriodo()"></select>
+        </div>
+        <div id="aval-pesos-aviso"></div>
+        <div id="aval-componentes-soltos"></div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Nome</th><th id="aval-th-nota">Nota final (calculada)</th><th>Detalhe</th><th>Observações</th></tr></thead>
+          <tbody id="aval-tb"><tr><td colspan="4"><div class="loading-mini">A carregar...</div></td></tr></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- RELATÓRIOS -->
+    <div class="page" id="page-relatorios">
+      <div class="card-hdr" style="background:none;border:none;padding:0 0 14px">
+        <div><h2 style="font-size:1.1rem">Relatórios</h2><p>Exportação de avaliações, assiduidade e turmas, com filtros.</p></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>🎓 Turmas</h2><p>Lista de turmas e respetivos alunos.</p></div>
+        <div class="card-body">
+          <div class="grid2">
+            <div class="field-row"><label>Turma</label>
+              <select class="inp select" id="rel-turmas-turma"><option value="">Todas as turmas</option></select>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-xs" onclick="exportarRelatorio('turmas')">Exportar CSV</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>✅ Assiduidade</h2><p>Registos de presenças, faltas e atrasos.</p></div>
+        <div class="card-body">
+          <div class="grid4">
+            <div class="field-row"><label>Turma</label>
+              <select class="inp select" id="rel-assid-turma"><option value="">Todas</option></select>
+            </div>
+            <div class="field-row"><label>Aluno</label>
+              <select class="inp select" id="rel-assid-aluno"><option value="">Todos</option></select>
+            </div>
+            <div class="field-row"><label>De</label><input class="inp" type="date" id="rel-assid-de"></div>
+            <div class="field-row"><label>Até</label><input class="inp" type="date" id="rel-assid-ate"></div>
+          </div>
+          <button class="btn btn-primary btn-xs" onclick="exportarRelatorio('assiduidade')">Exportar CSV</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>📊 Avaliação</h2><p>Notas finais por período.</p></div>
+        <div class="card-body">
+          <div class="grid4">
+            <div class="field-row"><label>Turma</label>
+              <select class="inp select" id="rel-aval-turma"><option value="">Todas</option></select>
+            </div>
+            <div class="field-row"><label>Aluno</label>
+              <select class="inp select" id="rel-aval-aluno"><option value="">Todos</option></select>
+            </div>
+            <div class="field-row"><label>Período</label>
+              <select class="inp select" id="rel-aval-periodo"><option value="">Todos</option></select>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-xs" onclick="exportarRelatorio('avaliacao')">Exportar CSV</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN -->
+    <div class="page" id="page-admin">
+      <div class="card-hdr" style="background:none;border:none;padding:0 0 14px">
+        <div><h2 style="font-size:1.1rem">Administração</h2><p>Gestão de professores e anos letivos.</p></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Professores</h2><button class="btn btn-primary btn-xs" onclick="openModalUtilizador()">+ Novo professor</button></div>
+        <div class="card-body" style="padding:0">
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Nome</th><th>Código</th><th>Papel</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="utilizadores-tb"><tr><td colspan="5"><div class="loading-mini">A carregar...</div></td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Anos letivos</h2><button class="btn btn-primary btn-xs" onclick="openModalAnoLetivo()">+ Novo ano letivo</button></div>
+        <div class="card-body" style="padding:0">
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Nome</th><th>Início</th><th>Fim</th><th>Tipo</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="anos-tb"><tr><td colspan="6"><div class="loading-mini">A carregar...</div></td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Componentes de avaliação (Comportamento, Assiduidade...)</h2><button class="btn btn-primary btn-xs" onclick="openModalComponenteSolto()">+ Novo componente</button></div>
+        <div class="card-body">
+          <p style="font-size:.78rem;color:var(--text3);margin-bottom:10px">Componentes avaliados por nível 1-5, com peso fixo para todos os períodos do ano letivo ativo. Junto com o peso das modalidades de cada período, a soma tem de ser 100%.</p>
+          <div id="componentes-soltos-aviso" style="margin-bottom:10px"></div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Nome</th><th>Peso (%)</th><th></th></tr></thead>
+            <tbody id="componentes-soltos-tb"><tr><td colspan="3"><div class="loading-mini">A carregar...</div></td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTÓRICO -->
+    <div class="page" id="page-historico">
+      <div class="card-hdr" style="background:none;border:none;padding:0 0 14px">
+        <div><h2 style="font-size:1.1rem">Histórico</h2><p>Turmas arquivadas de anos letivos anteriores.</p></div>
+      </div>
+      <div id="historico-list"><div class="loading-mini">A carregar...</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAIS -->
+<div class="modal-ov" id="modal-turma">
+  <div class="modal">
+    <h3 id="mt-title">Nova Turma</h3>
+    <input type="hidden" id="mt-id">
+    <div class="field-row"><label>Nome da turma</label><input class="inp" id="mt-nome" placeholder="Ex: 7º A"></div>
+    <div class="grid2">
+      <div class="field-row"><label>Nível de ensino</label>
+        <select class="inp select" id="mt-nivel">
+          <option value="2_ciclo">2º ciclo</option>
+          <option value="3_ciclo">3º ciclo</option>
+          <option value="secundario">Secundário</option>
+        </select>
+      </div>
+      <div class="field-row"><label>Ano de escolaridade</label><input class="inp" type="number" id="mt-ano-escolaridade" placeholder="Ex: 7"></div>
+    </div>
+    <div class="sep"></div>
+    <label style="display:block;font-size:.72rem;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Horário semanal</label>
+    <div id="mt-horario-rows"></div>
+    <button class="btn btn-outline btn-xs" style="margin-top:6px" onclick="addHorarioRow()">+ Adicionar bloco de horário</button>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-xs" onclick="closeModal('modal-turma')">Cancelar</button>
+      <button class="btn btn-primary btn-xs" onclick="saveTurma()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-aluno">
+  <div class="modal">
+    <h3>Adicionar Aluno</h3>
+    <input type="hidden" id="ma-id">
+    <div class="field-row"><label>Nome</label><input class="inp" id="ma-nome" placeholder="Nome completo"></div>
+    <div class="grid2">
+      <div class="field-row"><label>Número</label><input class="inp" id="ma-numero" placeholder="Nº processo"></div>
+      <div class="field-row"><label>Sexo</label>
+        <select class="inp select" id="ma-sexo">
+          <option value="">—</option>
+          <option value="M">Masculino</option>
+          <option value="F">Feminino</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row"><label>Data de nascimento</label><input class="inp" type="date" id="ma-nascimento"></div>
+    <div class="field-row"><label>Observações</label><textarea class="inp" id="ma-obs" rows="2"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-xs" onclick="closeModal('modal-aluno')">Cancelar</button>
+      <button class="btn btn-primary btn-xs" onclick="saveAluno()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-ud">
+  <div class="modal">
+    <h3 id="mud-title">Nova Unidade Didática</h3>
+    <input type="hidden" id="mud-id">
+    <div class="field-row"><label>Modalidade</label><input class="inp" id="mud-modalidade" placeholder="Ex: Voleibol"></div>
+    <div class="field-row"><label>Período</label>
+      <select class="inp select" id="mud-periodo"></select>
+    </div>
+    <div class="grid2">
+      <div class="field-row"><label>Data início</label><input class="inp" type="date" id="mud-inicio"></div>
+      <div class="field-row"><label>Data fim</label><input class="inp" type="date" id="mud-fim"></div>
+    </div>
+    <div class="field-row"><label>Nº de aulas previstas</label><input class="inp" type="number" id="mud-aulas"></div>
+    <div class="field-row"><label>Peso desta modalidade no período (%)</label><input class="inp" type="number" min="0" max="100" step="0.1" id="mud-peso" placeholder="Ex: 40"></div>
+    <div class="sep"></div>
+    <label style="display:block;font-size:.72rem;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Critérios de avaliação (grelha PNEF)</label>
+    <div id="mud-criterios-rows"></div>
+    <button class="btn btn-outline btn-xs" style="margin-top:6px" onclick="addCriterioRow()">+ Adicionar critério</button>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-xs" onclick="closeModal('modal-ud')">Cancelar</button>
+      <button class="btn btn-primary btn-xs" onclick="saveUD()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-grelha">
+  <div class="modal modal-lg">
+    <h3 id="mg-title">Grelha de avaliação</h3>
+    <div class="tbl-wrap"><table id="mg-table"></table></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-xs" onclick="closeModal('modal-grelha')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-utilizador">
+  <div class="modal">
+    <h3 id="mu-title">Novo Professor</h3>
+    <input type="hidden" id="mu-id">
+    <div class="field-row"><label>Nome</label><input class="inp" id="mu-nome" placeholder="Nome completo"></div>
+    <div class="field-row"><label>Código de acesso</label><input class="inp" id="mu-codigo" placeholder="Ex: prof123"></div>
+    <div class="field-row"><label>Papel</label>
+      <select class="inp select" id="mu-papel">
+        <option value="professor">Professor</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-xs" onclick="closeModal('modal-utilizador')">Cancelar</button>
+      <button class="btn btn-primary btn-xs" onclick="saveUtilizador()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-ano-letivo">
+  <div class="modal">
+    <h3 id="mal-title">Novo Ano Letivo</h3>
+    <input type="hidden" id="mal-id">
+    <div class="field-row"><label>Nome</label><input class="inp" id="mal-nome" placeholder="Ex: 2026/2027"></div>
+    <div class="grid2">
+      <div class="field-row"><label>Data início</label><input class="inp" type="date" id="mal-inicio"></div>
+      <div class="field-row"><label>Data fim</label><input class="inp" type="date" id="mal-fim"></div>
+    </div>
+    <div class="field-row"><label>Tipo de avaliação</label>
+      <select class="inp select" id="mal-tipo-periodo">
+        <option value="trimestre">3 períodos (trimestres)</option>
+        <option value="semestre">2 períodos (semestres)</option>
+      </select>
+    </div>
+    <p style="font-size:.72rem;color:var(--text3);margin-bottom:8px" id="mal-aviso">Serão criados os períodos automaticamente com base nestas datas; pode ajustar as datas de cada período depois, no botão "Períodos".</p>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-xs" onclick="closeModal('modal-ano-letivo')">Cancelar</button>
+      <button class="btn btn-primary btn-xs" onclick="saveAnoLetivo()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-componente-solto">
+  <div class="modal">
+    <h3 id="mcs-title">Novo Componente de Avaliação</h3>
+    <input type="hidden" id="mcs-id">
+    <div class="field-row"><label>Nome</label><input class="inp" id="mcs-nome" placeholder="Ex: Comportamento"></div>
+    <div class="field-row"><label>Peso no período (%)</label><input class="inp" type="number" min="0" max="100" step="0.1" id="mcs-peso" placeholder="Ex: 10"></div>
+    <p style="font-size:.72rem;color:var(--text3);margin-bottom:8px">Este componente é avaliado por nível 1-5 por aluno em cada período, e aplica-se a todas as turmas do ano letivo ativo.</p>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-xs" onclick="closeModal('modal-componente-solto')">Cancelar</button>
+      <button class="btn btn-primary btn-xs" onclick="saveComponenteSolto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-periodos">
+  <div class="modal">
+    <h3 id="mper-title">Períodos do Ano Letivo</h3>
+    <input type="hidden" id="mper-ano-id">
+    <p style="font-size:.72rem;color:var(--text3);margin-bottom:12px">Defina a data de início e fim de cada período/semestre.</p>
+    <div id="mper-rows"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-xs" onclick="closeModal('modal-periodos')">Cancelar</button>
+      <button class="btn btn-primary btn-xs" onclick="savePeriodos()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-perfil">
+  <div class="modal">
+    <h3>O meu perfil</h3>
+    <div class="field-row"><label>Nome</label><input class="inp" id="mp-nome" placeholder="Nome completo"></div>
+    <div class="field-row"><label>Código de acesso</label><input class="inp" id="mp-codigo" placeholder="Código de acesso"></div>
+    <p style="font-size:.72rem;color:var(--text3);margin-bottom:8px">Ao alterar o código, terá de usar o novo código para entrar da próxima vez.</p>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-xs" onclick="closeModal('modal-perfil')">Cancelar</button>
+      <button class="btn btn-primary btn-xs" onclick="savePerfil()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
