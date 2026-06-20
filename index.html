@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>GestEq</title>
+<style>
+:root {
+  --verde: #2d6a4f;
+  --verde2: #40916c;
+  --verde-claro: #52b788;
+  --verde-pale: #d8f3dc;
+  --azul-menu: #1a2744;
+  --azul-menu2: #243357;
+  --azul-menu-ativo: #2e4278;
+  --azul-menu-titulo: #8899bb;
+  --cinza-escuro: #1a1a1a;
+  --cinza: #444;
+  --cinza-medio: #888;
+  --cinza-claro: #e8e8e8;
+  --fundo: #f4f6f4;
+  --branco: #fff;
+  --vermelho: #c0392b;
+  --vermelho-pale: #fdecea;
+  --amarelo: #e67e22;
+  --amarelo-pale: #fef3e2;
+  --azul: #2471a3;
+  --azul-pale: #eaf4fb;
+  --sombra: 0 2px 10px rgba(0,0,0,0.10);
+  --sombra-forte: 0 4px 24px rgba(0,0,0,0.22);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --fonte: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  --topo-h: 54px;
+}
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html,body { height:100%; }
+body { font-family:var(--fonte); background:var(--fundo); color:var(--cinza-escuro); font-size:15px; overflow-x:hidden; }
+button { font-family:var(--fonte); cursor:pointer; -webkit-appearance:none; }
+
+/* DIAGNÓSTICO */
+#diag { position:fixed; bottom:0; left:0; right:0; background:#111; color:#0f0; font-family:monospace; font-size:11px; padding:6px 10px; max-height:100px; overflow-y:auto; z-index:9999; display:none; }
+
+/* TOPO */
+#topo { position:fixed; top:0; left:0; right:0; height:var(--topo-h); background:var(--azul-menu); display:flex; align-items:center; padding:0 14px; gap:12px; z-index:150; box-shadow:var(--sombra); }
+#btn-menu { background:none; border:none; color:#fff; font-size:22px; padding:4px 6px; line-height:1; flex-shrink:0; }
+#topo-info { flex:1; min-width:0; }
+#topo-eq-nome { font-size:15px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#topo-eq-tipo { font-size:11px; color:rgba(255,255,255,0.6); margin-top:1px; }
+#btn-sair { background:rgba(255,255,255,0.12); border:none; color:#fff; padding:6px 13px; border-radius:20px; font-size:12px; font-weight:600; flex-shrink:0; }
+
+/* OVERLAY */
+#menu-overlay { position:fixed; inset:0; background:rgba(0,0,0,0); z-index:200; pointer-events:none; transition:background 0.25s; }
+#menu-overlay.visivel { background:rgba(0,0,0,0.5); pointer-events:all; }
+
+/* MENU LATERAL */
+#menu-lateral { position:fixed; top:0; left:0; bottom:0; width:286px; background:var(--azul-menu); z-index:201; transform:translateX(-100%); transition:transform 0.27s cubic-bezier(0.4,0,0.2,1); display:flex; flex-direction:column; overflow:hidden; }
+#menu-lateral.aberto { transform:translateX(0); }
+
+#menu-topo { padding:20px 16px 14px; flex-shrink:0; border-bottom:1px solid rgba(255,255,255,0.07); }
+#menu-logo { font-size:22px; font-weight:800; color:#fff; letter-spacing:-0.3px; }
+#menu-logo-sub { font-size:10px; color:rgba(255,255,255,0.5); margin-top:2px; letter-spacing:0.3px; }
+#menu-util { margin-top:14px; background:rgba(255,255,255,0.08); border-radius:9px; padding:10px 12px; display:flex; align-items:center; gap:10px; }
+#menu-util-avatar { width:34px; height:34px; border-radius:50%; background:var(--verde); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; color:#fff; flex-shrink:0; }
+#menu-util-nome { font-size:13px; font-weight:600; color:#fff; }
+#menu-util-perfil { font-size:11px; color:rgba(255,255,255,0.5); margin-top:1px; text-transform:capitalize; }
+
+#menu-corpo { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:8px 0 24px; }
+
+.menu-grupo-titulo { font-size:10px; font-weight:700; color:var(--azul-menu-titulo); text-transform:uppercase; letter-spacing:0.9px; padding:18px 16px 6px; }
+.menu-item { display:flex; align-items:center; gap:10px; padding:10px 16px; border:none; background:none; width:100%; text-align:left; cursor:pointer; border-left:3px solid transparent; }
+.menu-item:active { background:rgba(255,255,255,0.06); }
+.menu-item.ativo { background:var(--azul-menu-ativo); border-left-color:var(--verde-claro); }
+.menu-item-icone { font-size:18px; width:24px; text-align:center; flex-shrink:0; }
+.menu-item-nome { font-size:13px; color:rgba(255,255,255,0.8); line-height:1.3; }
+.menu-item.ativo .menu-item-nome { color:#fff; font-weight:600; }
+.menu-sep { height:1px; background:rgba(255,255,255,0.07); margin:8px 16px; }
+
+/* CONTEÚDO */
+#conteudo { padding-top:var(--topo-h); min-height:100vh; }
+#area-eq { padding:14px; padding-bottom:40px; }
+
+/* ECRÃ CARREGAMENTO */
+#ecra-carregar { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; gap:16px; }
+.spinner { width:36px; height:36px; border:3px solid var(--cinza-claro); border-top-color:var(--verde); border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* LOGIN */
+#ecra-login { display:none; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:24px; background:var(--azul-menu); }
+.login-card { background:var(--branco); border-radius:16px; box-shadow:var(--sombra-forte); padding:32px 24px; width:100%; max-width:360px; }
+.login-logo { text-align:center; margin-bottom:28px; }
+.login-logo-nome { font-size:32px; font-weight:800; color:var(--azul-menu); letter-spacing:-0.5px; }
+.login-logo-sub { font-size:11px; color:var(--cinza-medio); margin-top:4px; }
+.campo-label { display:block; font-size:11px; font-weight:700; color:var(--cinza); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px; }
+.campo-input { width:100%; padding:13px 14px; border:1.5px solid var(--cinza-claro); border-radius:var(--radius-sm); font-size:17px; font-family:var(--fonte); background:var(--fundo); color:var(--cinza-escuro); outline:none; -webkit-appearance:none; text-transform:uppercase; letter-spacing:2px; }
+.campo-input:focus { border-color:var(--verde-claro); }
+.btn-primario { width:100%; background:var(--azul-menu); color:#fff; border:none; border-radius:var(--radius-sm); padding:14px; font-size:15px; font-weight:700; margin-top:18px; }
+.btn-primario:active { opacity:0.85; }
+.erro-msg { color:var(--vermelho); font-size:13px; text-align:center; margin-top:12px; min-height:18px; }
+
+/* RESPONSÁVEL */
+.resp-card { background:var(--branco); border-radius:var(--radius); padding:12px 14px; margin-bottom:10px; display:flex; align-items:center; gap:10px; box-shadow:var(--sombra); }
+.resp-icone { font-size:22px; }
+.resp-label { font-size:10px; font-weight:700; color:var(--cinza-medio); text-transform:uppercase; letter-spacing:0.4px; }
+.resp-nome { font-size:15px; font-weight:700; color:var(--cinza-escuro); margin-top:2px; }
+
+/* CARD MÓDULO */
+.modulo-card { background:var(--branco); border-radius:var(--radius); box-shadow:var(--sombra); margin-bottom:10px; overflow:hidden; }
+.modulo-header { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; cursor:pointer; user-select:none; -webkit-user-select:none; }
+.modulo-header-esq { display:flex; align-items:center; gap:10px; }
+.modulo-icone { width:36px; height:36px; border-radius:9px; background:var(--fundo); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.modulo-nome { font-size:15px; font-weight:600; color:var(--cinza-escuro); }
+.modulo-seta { font-size:12px; color:var(--cinza-medio); transition:transform 0.2s; flex-shrink:0; }
+.modulo-seta.aberto { transform:rotate(180deg); }
+.modulo-corpo { display:none; border-top:1.5px solid var(--cinza-claro); padding:14px; }
+.modulo-corpo.aberto { display:block; }
+
+/* SUBTABS */
+.subtabs { display:flex; gap:6px; margin-bottom:14px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.subtabs::-webkit-scrollbar { display:none; }
+.subtab-btn { padding:7px 14px; border-radius:20px; font-size:13px; font-weight:600; border:none; background:var(--cinza-claro); color:var(--cinza); white-space:nowrap; flex-shrink:0; }
+.subtab-btn.ativo { background:var(--azul-menu); color:#fff; }
+
+/* ESCALA */
+.escala-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.escala-sem-label { font-size:13px; font-weight:600; color:var(--cinza-escuro); }
+.btn-nav { background:var(--cinza-claro); border:none; border-radius:7px; padding:7px 12px; font-size:13px; color:var(--cinza-escuro); font-weight:600; }
+.escala-dia { background:var(--fundo); border-radius:9px; padding:10px 12px; margin-bottom:7px; }
+.escala-dia-titulo { font-size:11px; font-weight:700; color:var(--cinza-medio); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+.escala-turno { display:flex; justify-content:space-between; align-items:center; background:var(--branco); border-radius:7px; padding:8px 10px; margin-bottom:4px; }
+.escala-turno-nome { font-size:13px; font-weight:500; }
+.escala-turno-hora { font-size:12px; color:var(--cinza-medio); }
+.escala-sem-turno { font-size:12px; color:var(--cinza-medio); text-align:center; padding:6px; }
+
+/* CHECKLIST */
+.check-subtipo-titulo { font-size:12px; font-weight:700; color:var(--cinza-medio); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
+.check-item { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--cinza-claro); }
+.check-item:last-child { border-bottom:none; }
+.check-box { width:24px; height:24px; border:2px solid var(--cinza-claro); border-radius:6px; background:var(--branco); flex-shrink:0; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; }
+.check-box.marcado { background:var(--verde); border-color:var(--verde); color:#fff; }
+.check-texto { font-size:14px; color:var(--cinza-escuro); flex:1; line-height:1.3; }
+.check-nao-conf { border:none; background:none; color:var(--vermelho); font-size:11px; font-weight:700; padding:4px 8px; border-radius:5px; background:var(--vermelho-pale); cursor:pointer; }
+
+/* ÁGUA */
+.agua-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.agua-row-label { flex:1; }
+.agua-row-label-nome { font-size:13px; font-weight:600; color:var(--cinza-escuro); }
+.agua-row-label-range { font-size:11px; color:var(--cinza-medio); margin-top:1px; }
+.agua-inp { width:90px; flex:none; padding:10px 12px; border:1.5px solid var(--cinza-claro); border-radius:8px; font-size:15px; font-family:var(--fonte); background:var(--fundo); color:var(--cinza-escuro); -webkit-appearance:none; outline:none; text-align:center; }
+.agua-inp:focus { border-color:var(--verde-claro); }
+
+/* RESERVAS */
+.cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.cal-mes { font-size:15px; font-weight:700; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:14px; }
+.cal-cab { text-align:center; font-size:10px; font-weight:700; color:var(--cinza-medio); text-transform:uppercase; padding:4px 0; }
+.cal-dia { text-align:center; padding:8px 2px; border-radius:7px; font-size:14px; cursor:pointer; }
+.cal-dia.vazio { pointer-events:none; }
+.cal-dia.hoje { background:var(--azul-menu); color:#fff; font-weight:700; }
+.cal-dia.tem-res { background:var(--verde-pale); color:var(--verde); font-weight:600; }
+.cal-dia:active { background:var(--cinza-claro); }
+
+/* DDS */
+.dds-seccao { background:var(--branco); border-radius:var(--radius); box-shadow:var(--sombra); margin-bottom:10px; overflow:hidden; }
+.dds-seccao-header { display:flex; align-items:center; justify-content:space-between; padding:13px 16px; cursor:pointer; user-select:none; -webkit-user-select:none; }
+.dds-seccao-esq { display:flex; align-items:center; gap:10px; }
+.dds-seccao-nome { font-size:14px; font-weight:700; color:var(--cinza-escuro); }
+.dds-badge { background:var(--azul-menu); color:#fff; font-size:11px; font-weight:700; border-radius:10px; padding:2px 8px; }
+.dds-seccao-corpo { display:none; border-top:1.5px solid var(--cinza-claro); padding:12px; }
+.dds-seccao-corpo.aberto { display:block; }
+.dds-card { background:var(--fundo); border-radius:9px; padding:12px; margin-bottom:8px; }
+.dds-card-topo { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; }
+.dds-num { font-size:12px; font-weight:700; color:var(--cinza-medio); }
+.dds-data { font-size:12px; color:var(--cinza-medio); }
+.dds-desc { font-size:14px; color:var(--cinza-escuro); line-height:1.4; margin-bottom:7px; }
+.dds-rodape { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; }
+.dds-brigada { font-size:12px; color:var(--cinza-medio); }
+.dds-dias { font-size:11px; font-weight:700; color:var(--amarelo); }
+.dds-eq { font-size:11px; color:var(--cinza-medio); }
+
+/* MEMORANDO INTERNO (por equipamento) */
+.memo-card { background:var(--fundo); border-radius:9px; padding:11px; margin-bottom:7px; }
+.memo-topo { display:flex; justify-content:space-between; margin-bottom:5px; }
+.memo-data-txt { font-size:12px; color:var(--cinza-medio); }
+.memo-desc { font-size:13px; color:var(--cinza-escuro); line-height:1.4; margin-bottom:5px; }
+
+/* UTILITÁRIOS */
+.tag { display:inline-block; font-size:11px; font-weight:600; padding:3px 9px; border-radius:10px; text-transform:uppercase; letter-spacing:0.3px; }
+.tag-verde { background:var(--verde-pale); color:var(--verde); }
+.tag-cinza { background:var(--cinza-claro); color:var(--cinza); }
+.tag-vermelho { background:var(--vermelho-pale); color:var(--vermelho); }
+.tag-amarelo { background:var(--amarelo-pale); color:var(--amarelo); }
+.tag-azul { background:var(--azul-pale); color:var(--azul); }
+.btn-sm { display:inline-block; padding:9px 14px; border-radius:8px; font-size:13px; font-weight:600; border:none; }
+.btn-verde { background:var(--verde); color:#fff; }
+.btn-azul { background:var(--azul-menu); color:#fff; }
+.btn-cinza { background:var(--cinza-claro); color:var(--cinza-escuro); }
+.btn-vermelho { background:var(--vermelho); color:#fff; }
+.btn-bloco { width:100%; padding:12px; font-size:14px; }
+.vazio { text-align:center; padding:24px 16px; color:var(--cinza-medio); font-size:14px; }
+hr.sep { border:none; border-top:1.5px solid var(--cinza-claro); margin:12px 0; }
+.campo-group { margin-bottom:12px; }
+.campo-textarea { width:100%; padding:11px 13px; border:1.5px solid var(--cinza-claro); border-radius:var(--radius-sm); font-size:14px; font-family:var(--fonte); background:var(--fundo); color:var(--cinza-escuro); -webkit-appearance:none; outline:none; resize:vertical; min-height:72px; }
+.campo-textarea:focus { border-color:var(--verde-claro); }
+.campo-select { width:100%; padding:12px 13px; border:1.5px solid var(--cinza-claro); border-radius:var(--radius-sm); font-size:14px; font-family:var(--fonte); background:var(--fundo); color:var(--cinza-escuro); -webkit-appearance:none; outline:none; }
+.campo-select:focus { border-color:var(--verde-claro); }
+.campo-input-sm { width:100%; padding:11px 13px; border:1.5px solid var(--cinza-claro); border-radius:var(--radius-sm); font-size:14px; font-family:var(--fonte); background:var(--fundo); color:var(--cinza-escuro); -webkit-appearance:none; outline:none; text-transform:none; letter-spacing:0; }
+.campo-input-sm:focus { border-color:var(--verde-claro); }
+.form-card { background:var(--branco); border-radius:var(--radius); box-shadow:var(--sombra); padding:14px; margin-bottom:12px; }
+.form-titulo { font-size:14px; font-weight:700; color:var(--cinza-escuro); margin-bottom:12px; }
+.row-btns { display:flex; gap:8px; margin-top:10px; }
+.row-btns button { flex:1; }
+.erro-inline { background:var(--vermelho-pale); color:var(--vermelho); border-radius:8px; padding:10px 12px; font-size:13px; margin-bottom:12px; }
+</style>
+</head>
+<body>
+<div id="diag"></div>
+
+<!-- TOPO -->
+<div id="topo" style="display:none">
+  <button id="btn-menu" onclick="abrirMenu()">☰</button>
+  <div id="topo-info">
+    <div id="topo-eq-nome">GestEq</div>
+    <div id="topo-eq-tipo">Cabeceiras de Basto</div>
+  </div>
+  <button id="btn-sair" onclick="fazerSair()">Sair</button>
+</div>
+
+<div id="menu-overlay" onclick="fecharMenu()"></div>
+
+<!-- MENU LATERAL -->
+<div id="menu-lateral">
+  <div id="menu-topo">
+    <div id="menu-logo">GestEq</div>
+    <div id="menu-logo-sub">GESTÃO DE EQUIPAMENTOS · CABECEIRAS DE BASTO</div>
+    <div id="menu-util">
+      <div id="menu-util-avatar">?</div>
+      <div>
+        <div id="menu-util-nome">—</div>
+        <div id="menu-util-perfil">—</div>
+      </div>
+    </div>
+  </div>
+  <div id="menu-corpo"></div>
+</div>
+
+<!-- CONTEÚDO -->
+<div id="conteudo">
+  <div id="ecra-carregar">
+    <div class="spinner"></div>
+    <div style="color:var(--cinza-medio);font-size:14px">A carregar...</div>
+  </div>
+  <div id="ecra-login">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="login-logo-nome">GestEq</div>
+        <div class="login-logo-sub">Gestão de Equipamentos · Cabeceiras de Basto</div>
+      </div>
+      <label class="campo-label" for="inp-codigo">Código de acesso</label>
+      <input class="campo-input" id="inp-codigo" type="text" placeholder="XX-0000" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+      <button class="btn-primario" onclick="fazerLogin()">Entrar</button>
+      <div class="erro-msg" id="login-erro"></div>
+    </div>
+  </div>
+  <div id="area-eq" style="display:none"></div>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+var SB_URL = 'https://jpojyhvocspksumljslx.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impwb2p5aHZvY3Nwa3N1bWxqc2x4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NzE3NDUsImV4cCI6MjA5NzQ0Nzc0NX0.qwAyl_zBx31Z6a3KbaHns8gWceRrjQPcdN3RDBTkGkA';
+var SESSAO_HORAS = 8;
+var diagAtivo = (window.location.search.indexOf('diag') !== -1);
+
+function log(msg) {
+  if (!diagAtivo) return;
+  var d = document.getElementById('diag');
+  if (!d) return;
+  d.style.display = 'block';
+  var l = document.createElement('div');
+  l.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  d.appendChild(l);
+  d.scrollTop = d.scrollHeight;
+}
+
+// ── ESTADO ────────────────────────────────────────────────────────────────────
+var app = { utilizador: null, equipamentos: [], eqAtivo: null };
+
+// ── GRUPOS ────────────────────────────────────────────────────────────────────
+var GRUPOS = [
+  { id: 'pavilhoes', nome: 'Pavilhões', icone: '🏟️', tipos: ['pavilhao'] },
+  { id: 'pisc_cob', nome: 'Piscinas Cobertas', icone: '🏊', tipos: ['piscina_coberta'] },
+  { id: 'pisc_desc', nome: 'Piscinas Descobertas', icone: '🌊', tipos: ['piscina_descoberta'] },
+  { id: 'complexo', nome: 'Complexo Vinha de Mouros', icone: '🌿', tipos: ['complexo', 'ceavm'] },
+  { id: 'outros', nome: 'Outros', icone: '🏠', tipos: ['casa_juventude'] }
+];
+
+var TIPO_LABELS = {
+  'pavilhao': 'Pavilhão Gimnodesportivo',
+  'piscina_coberta': 'Piscina Municipal Coberta',
+  'piscina_descoberta': 'Piscina Municipal Descoberta',
+  'complexo': 'Complexo de Vinha de Mouros',
+  'ceavm': 'Centro de Educação Ambiental (CEAVM)',
+  'casa_juventude': 'Casa da Juventude'
+};
+
+var MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+var MESES_C = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+var DIAS_PT = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+var DIAS_C = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+// ── SUPABASE ──────────────────────────────────────────────────────────────────
+function sbGet(tabela, params) {
+  return fetch(SB_URL + '/rest/v1/' + tabela + '?' + (params || ''), {
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' }
+  }).then(function(r) { return r.json(); });
+}
+
+function sbPost(tabela, corpo) {
+  return fetch(SB_URL + '/rest/v1/' + tabela, {
+    method: 'POST',
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+    body: JSON.stringify(corpo)
+  }).then(function(r) { return r.json(); });
+}
+
+function sbPatch(tabela, filtro, corpo) {
+  return fetch(SB_URL + '/rest/v1/' + tabela + '?' + filtro, {
+    method: 'PATCH',
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+    body: JSON.stringify(corpo)
+  }).then(function(r) { return r.json(); });
+}
+
+// ── SESSÃO ────────────────────────────────────────────────────────────────────
+function guardarSessao(uid) {
+  try { localStorage.setItem('gestEqSessao', JSON.stringify({ uid: uid, exp: new Date().getTime() + SESSAO_HORAS * 3600000 })); } catch(e) {}
+}
+function lerSessao() {
+  try {
+    var raw = localStorage.getItem('gestEqSessao');
+    if (!raw) return null;
+    var o = JSON.parse(raw);
+    if (!o || !o.uid || !o.exp) return null;
+    if (new Date().getTime() > o.exp) { localStorage.removeItem('gestEqSessao'); return null; }
+    return o.uid;
+  } catch(e) { return null; }
+}
+function limparSessao() { try { localStorage.removeItem('gestEqSessao'); } catch(e) {} }
+
+// ── ECRÃS ─────────────────────────────────────────────────────────────────────
+function mostrarEcra(qual) {
+  document.getElementById('ecra-carregar').style.display = 'none';
+  document.getElementById('ecra-login').style.display = 'none';
+  document.getElementById('area-eq').style.display = 'none';
+  document.getElementById('topo').style.display = 'none';
+  if (qual === 'carregar') { document.getElementById('ecra-carregar').style.display = 'flex'; }
+  else if (qual === 'login') { document.getElementById('ecra-login').style.display = 'flex'; }
+  else if (qual === 'principal') { document.getElementById('topo').style.display = 'flex'; document.getElementById('area-eq').style.display = 'block'; }
+}
+
+// ── MENU ──────────────────────────────────────────────────────────────────────
+function abrirMenu() { document.getElementById('menu-lateral').classList.add('aberto'); document.getElementById('menu-overlay').classList.add('visivel'); }
+function fecharMenu() { document.getElementById('menu-lateral').classList.remove('aberto'); document.getElementById('menu-overlay').classList.remove('visivel'); }
+
+function renderMenu() {
+  var corpo = document.getElementById('menu-corpo');
+  corpo.innerHTML = '';
+  var u = app.utilizador;
+  var inicial = (u.nome || u.codigo_visivel || '?').charAt(0).toUpperCase();
+  document.getElementById('menu-util-avatar').textContent = inicial;
+  document.getElementById('menu-util-nome').textContent = u.nome || u.codigo_visivel;
+  document.getElementById('menu-util-perfil').textContent = u.perfil.replace('_', ' ');
+
+  for (var g = 0; g < GRUPOS.length; g++) {
+    var grupo = GRUPOS[g];
+    var eqsG = [];
+    for (var i = 0; i < app.equipamentos.length; i++) {
+      for (var t = 0; t < grupo.tipos.length; t++) {
+        if (app.equipamentos[i].tipo === grupo.tipos[t]) { eqsG.push(app.equipamentos[i]); break; }
+      }
+    }
+    if (!eqsG.length) continue;
+    var titulo = document.createElement('div');
+    titulo.className = 'menu-grupo-titulo';
+    titulo.textContent = grupo.nome;
+    corpo.appendChild(titulo);
+    for (var j = 0; j < eqsG.length; j++) {
+      (function(eq, grp) {
+        var item = document.createElement('button');
+        item.className = 'menu-item';
+        item.id = 'menu-item-' + eq.id;
+        var ic = document.createElement('span');
+        ic.className = 'menu-item-icone';
+        ic.textContent = grp.icone;
+        var nm = document.createElement('span');
+        nm.className = 'menu-item-nome';
+        nm.textContent = eq.nome;
+        item.appendChild(ic);
+        item.appendChild(nm);
+        item.onclick = function() { seleccionarEq(eq.id); fecharMenu(); };
+        corpo.appendChild(item);
+      })(eqsG[j], grupo);
+    }
+  }
+
+  var sep1 = document.createElement('div');
+  sep1.className = 'menu-sep';
+  corpo.appendChild(sep1);
+
+  // DDS (não funcionário)
+  if (u.perfil !== 'funcionario') {
+    adicionarMenuAcao(corpo, '📨', 'Memorandos DDS', function() { seleccionarDDS(); fecharMenu(); });
+  }
+
+  // Painel checklists (admin/supervisor)
+  if (u.perfil === 'admin' || u.perfil === 'supervisor') {
+    adicionarMenuAcao(corpo, '✅', 'Painel de Checklists', function() { seleccionarPainelChecklists(); fecharMenu(); });
+  }
+
+  // Admin
+  if (u.perfil === 'admin') {
+    var sep2 = document.createElement('div');
+    sep2.className = 'menu-sep';
+    corpo.appendChild(sep2);
+    var tAdm = document.createElement('div');
+    tAdm.className = 'menu-grupo-titulo';
+    tAdm.textContent = 'Administração';
+    corpo.appendChild(tAdm);
+    adicionarMenuAcao(corpo, '👥', 'Utilizadores', function() { seleccionarAdmin('utilizadores'); fecharMenu(); });
+    adicionarMenuAcao(corpo, '🏢', 'Equipamentos', function() { seleccionarAdmin('equipamentos'); fecharMenu(); });
+    adicionarMenuAcao(corpo, '✅', 'Gerir Checklists', function() { seleccionarAdmin('checklists'); fecharMenu(); });
+  }
+}
+
+function adicionarMenuAcao(pai, icone, texto, fn) {
+  var btn = document.createElement('button');
+  btn.className = 'menu-item';
+  var ic = document.createElement('span');
+  ic.className = 'menu-item-icone';
+  ic.textContent = icone;
+  var nm = document.createElement('span');
+  nm.className = 'menu-item-nome';
+  nm.textContent = texto;
+  btn.appendChild(ic);
+  btn.appendChild(nm);
+  btn.onclick = fn;
+  pai.appendChild(btn);
+}
+
+function marcarMenuAtivo(id) {
+  var items = document.querySelectorAll('.menu-item');
+  for (var i = 0; i < items.length; i++) items[i].classList.remove('ativo');
+  var el = document.getElementById('menu-item-' + id);
+  if (el) el.classList.add('ativo');
+}
+
+// ── INÍCIO ────────────────────────────────────────────────────────────────────
+function iniciar() {
+  log('iniciar');
+  mostrarEcra('carregar');
+  var uid = lerSessao();
+  if (!uid) { mostrarEcra('login'); return; }
+  sbGet('utilizadores', 'id=eq.' + uid + '&select=*')
+    .then(function(dados) {
+      if (!dados || !dados.length || !dados[0].ativo) { limparSessao(); mostrarEcra('login'); return; }
+      app.utilizador = dados[0];
+      return carregarEquipamentos();
+    })
+    .catch(function(e) { log('erro init: ' + e); mostrarEcra('login'); });
+}
+
+function carregarEquipamentos() {
+  var u = app.utilizador;
+  if (u.perfil === 'responsavel_dds') { app.equipamentos = []; arrancarApp(); return; }
+  if (u.perfil === 'admin' || u.perfil === 'supervisor') {
+    return sbGet('equipamentos', 'select=*&order=nome.asc')
+      .then(function(eqs) { app.equipamentos = eqs || []; arrancarApp(); })
+      .catch(function() { mostrarEcra('login'); });
+  }
+  return sbGet('utilizador_equipamentos',
+    'utilizador_id=eq.' + u.id + '&ativo=eq.true&select=equipamentos(id,nome,tipo,responsavel)'
+  ).then(function(rels) {
+    var eqs = [];
+    if (rels) for (var i = 0; i < rels.length; i++) if (rels[i].equipamentos) eqs.push(rels[i].equipamentos);
+    app.equipamentos = eqs;
+    arrancarApp();
+  }).catch(function() { mostrarEcra('login'); });
+}
+
+function arrancarApp() {
+  mostrarEcra('principal');
+  renderMenu();
+  if (app.utilizador.perfil === 'responsavel_dds') { seleccionarDDS(); return; }
+  if (app.equipamentos.length) { seleccionarEq(app.equipamentos[0].id); }
+  else { definirTopo('GestEq', 'Sem equipamentos atribuídos'); document.getElementById('area-eq').innerHTML = '<div class="vazio">Nenhum equipamento atribuído. Contacta o administrador.</div>'; }
+}
+
+function definirTopo(nome, tipo) {
+  document.getElementById('topo-eq-nome').textContent = nome;
+  document.getElementById('topo-eq-tipo').textContent = tipo || '';
+}
+
+// ── SELECCIONAR EQ ────────────────────────────────────────────────────────────
+function seleccionarEq(eqId) {
+  app.eqAtivo = eqId;
+  var eq = null;
+  for (var i = 0; i < app.equipamentos.length; i++) if (app.equipamentos[i].id === eqId) { eq = app.equipamentos[i]; break; }
+  if (!eq) return;
+  definirTopo(eq.nome, TIPO_LABELS[eq.tipo] || eq.tipo);
+  marcarMenuAtivo(eqId);
+  renderAreaEq(eq);
+}
+
+function seleccionarDDS() { definirTopo('Memorandos DDS', 'Gestão de pedidos'); marcarMenuAtivo('dds'); renderDDS(); }
+function seleccionarPainelChecklists() { definirTopo('Painel de Checklists', 'Supervisão'); marcarMenuAtivo('chklpainel'); renderPainelChecklists(); }
+function seleccionarAdmin(sub) { definirTopo('Administração', sub); marcarMenuAtivo('admin-' + sub); renderAdmin(sub); }
+
+// ── RENDER ÁREA EQUIPAMENTO ───────────────────────────────────────────────────
+function renderAreaEq(eq) {
+  var area = document.getElementById('area-eq');
+  area.innerHTML = '';
+
+  // Responsável
+  if (eq.responsavel) {
+    var rc = document.createElement('div');
+    rc.className = 'resp-card';
+    var ri = document.createElement('div');
+    ri.className = 'resp-icone';
+    ri.textContent = '👤';
+    var rd = document.createElement('div');
+    var rl = document.createElement('div');
+    rl.className = 'resp-label';
+    rl.textContent = 'Responsável';
+    var rn = document.createElement('div');
+    rn.className = 'resp-nome';
+    rn.textContent = eq.responsavel;
+    rd.appendChild(rl);
+    rd.appendChild(rn);
+    rc.appendChild(ri);
+    rc.appendChild(rd);
+    area.appendChild(rc);
+  }
+
+  var modulos = getModulos(eq.tipo);
+  for (var i = 0; i < modulos.length; i++) area.appendChild(criarCard(modulos[i], eq));
+}
+
+function getModulos(tipo) {
+  var chk = { id: 'checklists', nome: 'Checklists', icone: '✅' };
+  var esc = { id: 'escala', nome: 'Escala', icone: '📅' };
+  var escPD = { id: 'escala_pd', nome: 'Escalas', icone: '📅' };
+  var res = { id: 'reservas', nome: 'Reservas', icone: '📆' };
+  var agua = { id: 'agua', nome: 'Parâmetros da Água', icone: '💧' };
+  var memo = { id: 'memo_interno', nome: 'Memorando Interno', icone: '📝' };
+  var rel = { id: 'relatorios', nome: 'Relatórios', icone: '📊' };
+
+  if (tipo === 'pavilhao') return [res, esc, chk, memo, rel];
+  if (tipo === 'piscina_coberta') return [esc, chk, agua, memo, rel];
+  if (tipo === 'piscina_descoberta') return [escPD, chk, agua, memo, rel];
+  if (tipo === 'ceavm') return [res, esc, chk, memo, rel];
+  return [esc, chk, memo, rel];
+}
+
+// ── CARD COLAPSÁVEL ───────────────────────────────────────────────────────────
+function criarCard(modulo, eq) {
+  var card = document.createElement('div');
+  card.className = 'modulo-card';
+  var header = document.createElement('div');
+  header.className = 'modulo-header';
+  var esq = document.createElement('div');
+  esq.className = 'modulo-header-esq';
+  var ic = document.createElement('div');
+  ic.className = 'modulo-icone';
+  ic.textContent = modulo.icone;
+  var nm = document.createElement('div');
+  nm.className = 'modulo-nome';
+  nm.textContent = modulo.nome;
+  esq.appendChild(ic);
+  esq.appendChild(nm);
+  var seta = document.createElement('div');
+  seta.className = 'modulo-seta';
+  seta.textContent = '▾';
+  header.appendChild(esq);
+  header.appendChild(seta);
+  var corpo = document.createElement('div');
+  corpo.className = 'modulo-corpo';
+  var pronto = false;
+  header.onclick = function() {
+    var ab = corpo.classList.contains('aberto');
+    if (ab) { corpo.classList.remove('aberto'); seta.classList.remove('aberto'); }
+    else {
+      corpo.classList.add('aberto'); seta.classList.add('aberto');
+      if (!pronto) { pronto = true; carregarModulo(modulo.id, eq, corpo); }
+    }
+  };
+  card.appendChild(header);
+  card.appendChild(corpo);
+  return card;
+}
+
+function carregarModulo(id, eq, corpo) {
+  corpo.innerHTML = '';
+  if (id === 'escala') { renderEscala(eq, corpo); return; }
+  if (id === 'escala_pd') { renderEscalaPD(eq, corpo); return; }
+  if (id === 'checklists') { renderChecklists(eq, corpo); return; }
+  if (id === 'agua') { renderAgua(eq, corpo); return; }
+  if (id === 'reservas') { renderReservas(eq, corpo); return; }
+  if (id === 'memo_interno') { renderMemoInterno(eq, corpo); return; }
+  if (id === 'relatorios') { renderRelatorios(eq, corpo); return; }
+  var m = document.createElement('div');
+  m.className = 'vazio';
+  m.textContent = 'Em desenvolvimento.';
+  corpo.appendChild(m);
+}
+
+// ── DATAS ─────────────────────────────────────────────────────────────────────
+function dataISO(d) {
+  var mm = d.getMonth() + 1;
+  var dd = d.getDate();
+  return d.getFullYear() + '-' + (mm < 10 ? '0' + mm : mm) + '-' + (dd < 10 ? '0' + dd : dd);
+}
+function inicioSemana(d) {
+  var c = new Date(d); c.setHours(0,0,0,0);
+  var dw = c.getDay();
+  c.setDate(c.getDate() - (dw === 0 ? 6 : dw - 1));
+  return c;
+}
+function addDias(d, n) { var c = new Date(d); c.setDate(c.getDate() + n); return c; }
+function diasEntre(d1, d2) { return Math.floor((d2 - d1) / 86400000); }
+
+// ── MÓDULO: ESCALA ────────────────────────────────────────────────────────────
+function renderEscala(eq, corpo) { renderEscalaSem(eq, corpo, inicioSemana(new Date()), null); }
+
+function renderEscalaSem(eq, corpo, semI, tipoEscala) {
+  corpo.innerHTML = '';
+  var semF = addDias(semI, 6);
+  var nav = document.createElement('div');
+  nav.className = 'escala-nav';
+  var bA = document.createElement('button');
+  bA.className = 'btn-nav';
+  bA.textContent = '‹ Anterior';
+  bA.onclick = function() { renderEscalaSem(eq, corpo, addDias(semI, -7), tipoEscala); };
+  var lbl = document.createElement('div');
+  lbl.className = 'escala-sem-label';
+  lbl.textContent = semI.getDate() + ' ' + MESES_C[semI.getMonth()] + ' — ' + semF.getDate() + ' ' + MESES_C[semF.getMonth()];
+  var bD = document.createElement('button');
+  bD.className = 'btn-nav';
+  bD.textContent = 'Seguinte ›';
+  bD.onclick = function() { renderEscalaSem(eq, corpo, addDias(semI, 7), tipoEscala); };
+  nav.appendChild(bA); nav.appendChild(lbl); nav.appendChild(bD);
+  corpo.appendChild(nav);
+
+  var load = document.createElement('div');
+  load.className = 'vazio';
+  load.textContent = 'A carregar...';
+  corpo.appendChild(load);
+
+  var params = 'equipamento_id=eq.' + eq.id + '&data=gte.' + dataISO(semI) + '&data=lte.' + dataISO(semF) + '&select=*,utilizadores(nome)&order=data.asc,hora_inicio.asc';
+  if (tipoEscala) params = params + '&tipo_escala=eq.' + tipoEscala;
+
+  sbGet('escalas', params).then(function(turnos) {
+    corpo.removeChild(load);
+    for (var d = 0; d < 7; d++) {
+      var dia = addDias(semI, d);
+      var iso = dataISO(dia);
+      var tDia = [];
+      if (turnos) for (var t = 0; t < turnos.length; t++) if (turnos[t].data === iso) tDia.push(turnos[t]);
+      var dDiv = document.createElement('div');
+      dDiv.className = 'escala-dia';
+      var dTit = document.createElement('div');
+      dTit.className = 'escala-dia-titulo';
+      dTit.textContent = DIAS_PT[dia.getDay()] + ', ' + dia.getDate() + ' ' + MESES_C[dia.getMonth()];
+      dDiv.appendChild(dTit);
+      if (!tDia.length) {
+        var s = document.createElement('div');
+        s.className = 'escala-sem-turno';
+        s.textContent = 'Sem turnos';
+        dDiv.appendChild(s);
+      } else {
+        for (var ti = 0; ti < tDia.length; ti++) {
+          var tr = document.createElement('div');
+          tr.className = 'escala-turno';
+          var tn = document.createElement('div');
+          tn.className = 'escala-turno-nome';
+          tn.textContent = (tDia[ti].utilizadores && tDia[ti].utilizadores.nome) ? tDia[ti].utilizadores.nome : '—';
+          var th = document.createElement('div');
+          th.className = 'escala-turno-hora';
+          th.textContent = (tDia[ti].hora_inicio || '') + (tDia[ti].hora_fim ? ' – ' + tDia[ti].hora_fim : '');
+          tr.appendChild(tn); tr.appendChild(th);
+          dDiv.appendChild(tr);
+        }
+      }
+      corpo.appendChild(dDiv);
+    }
+  }).catch(function() { load.textContent = 'Erro ao carregar.'; });
+}
+
+// ── MÓDULO: ESCALA PISCINAS DESCOBERTAS ──────────────────────────────────────
+function renderEscalaPD(eq, corpo) {
+  var tipos = [
+    { id: 'manutencao', label: 'Manutenção da Água', sub: 'Período da manhã' },
+    { id: 'recepcao', label: 'Recepção', sub: 'Seg–Dom · 14h–20h' },
+    { id: 'nadador_salvador', label: 'Nadadores Salvadores', sub: 'Seg–Dom · 14h–20h' }
+  ];
+  for (var i = 0; i < tipos.length; i++) {
+    (function(tipo) {
+      var bloco = document.createElement('div');
+      bloco.style.marginBottom = '20px';
+      var t = document.createElement('div');
+      t.style.cssText = 'font-size:13px;font-weight:700;color:var(--verde);margin-bottom:2px;';
+      t.textContent = tipo.label;
+      var s = document.createElement('div');
+      s.style.cssText = 'font-size:11px;color:var(--cinza-medio);margin-bottom:10px;';
+      s.textContent = tipo.sub;
+      bloco.appendChild(t);
+      bloco.appendChild(s);
+      renderEscalaSem(eq, bloco, inicioSemana(new Date()), tipo.id);
+      corpo.appendChild(bloco);
+      if (tipo.id !== 'nadador_salvador') {
+        var sep = document.createElement('hr');
+        sep.className = 'sep';
+        corpo.appendChild(sep);
+      }
+    })(tipos[i]);
+  }
+}
+
+// ── MÓDULO: CHECKLISTS ────────────────────────────────────────────────────────
+function renderChecklists(eq, corpo) {
+  var tabs = [
+    { id: 'inicio', label: 'Início de Turno', tipo: 'turno' },
+    { id: 'fim', label: 'Fim de Turno', tipo: 'turno' },
+    { id: 'verificacao', label: 'Verificação', tipo: 'verificacao' }
+  ];
+  var subtabs = document.createElement('div');
+  subtabs.className = 'subtabs';
+  var conteudo = document.createElement('div');
+
+  for (var i = 0; i < tabs.length; i++) {
+    (function(tab, idx) {
+      var btn = document.createElement('button');
+      btn.className = 'subtab-btn' + (idx === 0 ? ' ativo' : '');
+      btn.textContent = tab.label;
+      btn.onclick = function() {
+        var btns = subtabs.querySelectorAll('.subtab-btn');
+        for (var b = 0; b < btns.length; b++) btns[b].classList.remove('ativo');
+        btn.classList.add('ativo');
+        conteudo.innerHTML = '';
+        renderChecklistForm(eq, conteudo, tab.id, tab.tipo);
+      };
+      subtabs.appendChild(btn);
+    })(tabs[i], i);
+  }
+
+  corpo.appendChild(subtabs);
+  corpo.appendChild(conteudo);
+  renderChecklistForm(eq, conteudo, 'inicio', 'turno');
+}
+
+function renderChecklistForm(eq, conteudo, momento, tipo_checklist) {
+  conteudo.innerHTML = '';
+  var load = document.createElement('div');
+  load.className = 'vazio';
+  load.textContent = 'A carregar...';
+  conteudo.appendChild(load);
+
+  sbGet('checklist_itens',
+    'equipamento_id=eq.' + eq.id + '&momento=eq.' + momento + '&ativo=eq.true&order=ordem.asc'
+  ).then(function(itens) {
+    conteudo.removeChild(load);
+
+    if (!itens || !itens.length) {
+      var msg = document.createElement('div');
+      msg.className = 'vazio';
+      msg.textContent = 'Sem itens configurados. O administrador deve configurar esta checklist.';
+      conteudo.appendChild(msg);
+      return;
+    }
+
+    var estado = {};
+    for (var i = 0; i < itens.length; i++) estado[itens[i].id] = true;
+
+    for (var j = 0; j < itens.length; j++) {
+      (function(item) {
+        var linha = document.createElement('div');
+        linha.className = 'check-item';
+        var box = document.createElement('div');
+        box.className = 'check-box marcado';
+        box.textContent = '✓';
+        var txt = document.createElement('div');
+        txt.className = 'check-texto';
+        txt.textContent = item.descricao;
+        box.onclick = function() {
+          estado[item.id] = !estado[item.id];
+          if (estado[item.id]) { box.classList.add('marcado'); box.textContent = '✓'; }
+          else { box.classList.remove('marcado'); box.textContent = ''; }
+        };
+        linha.appendChild(box);
+        linha.appendChild(txt);
+        conteudo.appendChild(linha);
+      })(itens[j]);
+    }
+
+    var sep = document.createElement('hr');
+    sep.className = 'sep';
+    sep.style.marginTop = '12px';
+    conteudo.appendChild(sep);
+
+    var gObs = document.createElement('div');
+    gObs.className = 'campo-group';
+    var lObs = document.createElement('label');
+    lObs.className = 'campo-label';
+    lObs.textContent = 'Observações';
+    var obs = document.createElement('textarea');
+    obs.className = 'campo-textarea';
+    obs.placeholder = 'Notas adicionais...';
+    obs.rows = 2;
+    gObs.appendChild(lObs);
+    gObs.appendChild(obs);
+    conteudo.appendChild(gObs);
+
+    var btn = document.createElement('button');
+    btn.className = 'btn-sm btn-azul btn-bloco';
+    btn.textContent = 'Guardar Checklist';
+    btn.onclick = function() { guardarChecklist(eq, itens, estado, obs.value, momento, tipo_checklist, btn); };
+    conteudo.appendChild(btn);
+
+  }).catch(function() { load.textContent = 'Erro ao carregar.'; });
+}
+
+function guardarChecklist(eq, itens, estado, observacoes, momento, tipo_checklist, btn) {
+  var registos = [];
+  var agora = new Date().toISOString();
+  for (var i = 0; i < itens.length; i++) {
+    registos.push({
+      checklist_item_id: itens[i].id,
+      equipamento_id: eq.id,
+      utilizador_id: app.utilizador.id,
+      conforme: estado[itens[i].id],
+      momento: momento,
+      tipo_checklist: tipo_checklist,
+      data_registo: agora,
+      observacoes: observacoes || null
+    });
+  }
+  btn.textContent = 'A guardar...';
+  btn.disabled = true;
+  sbPost('checklists_registo', registos)
+    .then(function() {
+      btn.textContent = '✓ Guardado';
+      btn.style.background = 'var(--verde)';
+      setTimeout(function() { btn.textContent = 'Guardar Checklist'; btn.style.background = ''; btn.disabled = false; }, 2500);
+    })
+    .catch(function() { btn.textContent = 'Erro — tenta novamente'; btn.disabled = false; });
+}
+
+// ── MÓDULO: ÁGUA ──────────────────────────────────────────────────────────────
+function renderAgua(eq, corpo) {
+  var load = document.createElement('div');
+  load.className = 'vazio';
+  load.textContent = 'A carregar...';
+  corpo.appendChild(load);
+
+  sbGet('parametros_agua_config', 'equipamento_id=eq.' + eq.id + '&order=ordem.asc')
+    .then(function(params) {
+      corpo.removeChild(load);
+      if (!params || !params.length) {
+        var msg = document.createElement('div');
+        msg.className = 'vazio';
+        msg.textContent = 'Sem parâmetros configurados.';
+        corpo.appendChild(msg);
+        return;
+      }
+
+      for (var i = 0; i < params.length; i++) {
+        (function(p) {
+          var row = document.createElement('div');
+          row.className = 'agua-row';
+          var label = document.createElement('div');
+          label.className = 'agua-row-label';
+          var ln = document.createElement('div');
+          ln.className = 'agua-row-label-nome';
+          ln.textContent = p.nome;
+          var lr = document.createElement('div');
+          lr.className = 'agua-row-label-range';
+          lr.textContent = (p.minimo !== null ? p.minimo : '—') + ' – ' + (p.maximo !== null ? p.maximo : '—') + (p.unidade ? ' ' + p.unidade : '');
+          label.appendChild(ln);
+          label.appendChild(lr);
+          var inp = document.createElement('input');
+          inp.className = 'agua-inp';
+          inp.type = 'number';
+          inp.step = '0.01';
+          inp.id = 'agua-' + p.id;
+          inp.placeholder = p.unidade || '';
+          row.appendChild(label);
+          row.appendChild(inp);
+          corpo.appendChild(row);
+        })(params[i]);
+      }
+
+      var gObs = document.createElement('div');
+      gObs.className = 'campo-group';
+      gObs.style.marginTop = '8px';
+      var lObs = document.createElement('label');
+      lObs.className = 'campo-label';
+      lObs.textContent = 'Observações';
+      var obs = document.createElement('textarea');
+      obs.className = 'campo-textarea';
+      obs.placeholder = 'Notas...';
+      obs.rows = 2;
+      gObs.appendChild(lObs);
+      gObs.appendChild(obs);
+      corpo.appendChild(gObs);
+
+      var btn = document.createElement('button');
+      btn.className = 'btn-sm btn-azul btn-bloco';
+      btn.style.marginTop = '4px';
+      btn.textContent = 'Registar Parâmetros';
+      btn.onclick = function() {
+        var regs = [];
+        for (var i = 0; i < params.length; i++) {
+          var inp = document.getElementById('agua-' + params[i].id);
+          if (inp && inp.value !== '') regs.push({ parametro_id: params[i].id, equipamento_id: eq.id, utilizador_id: app.utilizador.id, valor: parseFloat(inp.value), data_registo: new Date().toISOString(), observacoes: obs.value || null });
+        }
+        if (!regs.length) { alert('Introduz pelo menos um valor.'); return; }
+        btn.textContent = 'A guardar...'; btn.disabled = true;
+        sbPost('parametros_agua_registo', regs).then(function() {
+          btn.textContent = '✓ Registado'; btn.style.background = 'var(--verde)';
+          setTimeout(function() { btn.textContent = 'Registar Parâmetros'; btn.style.background = ''; btn.disabled = false; for (var i = 0; i < params.length; i++) { var inp = document.getElementById('agua-' + params[i].id); if (inp) inp.value = ''; } obs.value = ''; }, 2500);
+        }).catch(function() { btn.textContent = 'Erro'; btn.disabled = false; });
+      };
+      corpo.appendChild(btn);
+    }).catch(function() { load.textContent = 'Erro ao carregar.'; });
+}
+
+// ── MÓDULO: RESERVAS ──────────────────────────────────────────────────────────
+function renderReservas(eq, corpo) {
+  var hoje = new Date();
+  renderCalMes(eq, corpo, hoje.getFullYear(), hoje.getMonth());
+}
+
+function renderCalMes(eq, corpo, ano, mes) {
+  corpo.innerHTML = '';
+  var nav = document.createElement('div');
+  nav.className = 'cal-nav';
+  var pM = mes - 1; var pA = ano; if (pM < 0) { pM = 11; pA--; }
+  var nM = mes + 1; var nA = ano; if (nM > 11) { nM = 0; nA++; }
+  var bA = document.createElement('button'); bA.className = 'btn-nav'; bA.textContent = '‹';
+  bA.onclick = function() { renderCalMes(eq, corpo, pA, pM); };
+  var lbl = document.createElement('div'); lbl.className = 'cal-mes'; lbl.textContent = MESES_PT[mes] + ' ' + ano;
+  var bD = document.createElement('button'); bD.className = 'btn-nav'; bD.textContent = '›';
+  bD.onclick = function() { renderCalMes(eq, corpo, nA, nM); };
+  nav.appendChild(bA); nav.appendChild(lbl); nav.appendChild(bD);
+  corpo.appendChild(nav);
+
+  var grid = document.createElement('div');
+  grid.className = 'cal-grid';
+  var cabDias = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  for (var c = 0; c < 7; c++) { var cab = document.createElement('div'); cab.className = 'cal-cab'; cab.textContent = cabDias[c]; grid.appendChild(cab); }
+
+  var prim = new Date(ano, mes, 1).getDay();
+  var offset = (prim === 0) ? 6 : prim - 1;
+  var diasMes = new Date(ano, mes + 1, 0).getDate();
+  var hojeISO = dataISO(new Date());
+
+  for (var v = 0; v < offset; v++) { var vz = document.createElement('div'); vz.className = 'cal-dia vazio'; grid.appendChild(vz); }
+
+  for (var d = 1; d <= diasMes; d++) {
+    (function(dia) {
+      var mm = mes + 1;
+      var dISO = ano + '-' + (mm < 10 ? '0' + mm : mm) + '-' + (dia < 10 ? '0' + dia : dia);
+      var dDiv = document.createElement('div');
+      dDiv.className = 'cal-dia';
+      if (dISO === hojeISO) dDiv.classList.add('hoje');
+      dDiv.textContent = dia;
+      dDiv.onclick = function() { abrirDiaReservas(eq, dISO, painelDia); };
+      grid.appendChild(dDiv);
+    })(d);
+  }
+  corpo.appendChild(grid);
+
+  var painelDia = document.createElement('div');
+  corpo.appendChild(painelDia);
+
+  // marcar dias com reservas
+  var mm2 = mes + 1;
+  var ini = ano + '-' + (mm2 < 10 ? '0' + mm2 : mm2) + '-01';
+  var fim = ano + '-' + (mm2 < 10 ? '0' + mm2 : mm2) + '-' + (diasMes < 10 ? '0' + diasMes : diasMes);
+  sbGet('reservas', 'equipamento_id=eq.' + eq.id + '&data=gte.' + ini + '&data=lte.' + fim + '&select=data')
+    .then(function(res) {
+      if (!res || !res.length) return;
+      var mapa = {};
+      for (var i = 0; i < res.length; i++) mapa[res[i].data] = true;
+      var dias2 = grid.querySelectorAll('.cal-dia:not(.vazio)');
+      for (var j = 0; j < dias2.length; j++) {
+        var dia2 = parseInt(dias2[j].textContent, 10);
+        var mm3 = mes + 1;
+        var dISO2 = ano + '-' + (mm3 < 10 ? '0' + mm3 : mm3) + '-' + (dia2 < 10 ? '0' + dia2 : dia2);
+        if (mapa[dISO2] && !dias2[j].classList.contains('hoje')) dias2[j].classList.add('tem-res');
+      }
+    }).catch(function() {});
+}
+
+function abrirDiaReservas(eq, dISO, painel) {
+  painel.innerHTML = '';
+  var tit = document.createElement('div');
+  tit.style.cssText = 'font-size:14px;font-weight:700;margin-bottom:10px;color:var(--cinza-escuro);';
+  tit.textContent = 'Reservas — ' + dISO;
+  painel.appendChild(tit);
+
+  var load = document.createElement('div');
+  load.className = 'vazio';
+  load.style.padding = '10px';
+  load.textContent = '...';
+  painel.appendChild(load);
+
+  sbGet('reservas', 'equipamento_id=eq.' + eq.id + '&data=eq.' + dISO + '&select=*&order=hora_inicio.asc')
+    .then(function(res) {
+      painel.removeChild(load);
+      if (!res || !res.length) {
+        var sem = document.createElement('div');
+        sem.style.cssText = 'font-size:13px;color:var(--cinza-medio);margin-bottom:10px;';
+        sem.textContent = 'Sem reservas para este dia.';
+        painel.appendChild(sem);
+      } else {
+        for (var i = 0; i < res.length; i++) {
+          var r = res[i];
+          var card = document.createElement('div');
+          card.style.cssText = 'background:var(--verde-pale);border-radius:8px;padding:10px 12px;margin-bottom:8px;';
+          var rtopo = document.createElement('div');
+          rtopo.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;';
+          var rn = document.createElement('div');
+          rn.style.cssText = 'font-size:14px;font-weight:600;color:var(--cinza-escuro);';
+          rn.textContent = r.entidade || r.nome || '—';
+          var rh = document.createElement('div');
+          rh.style.cssText = 'font-size:12px;color:var(--verde);font-weight:700;';
+          rh.textContent = (r.hora_inicio || '') + (r.hora_fim ? '–' + r.hora_fim : '');
+          rtopo.appendChild(rn); rtopo.appendChild(rh);
+          card.appendChild(rtopo);
+          if (r.espaco || r.num_pessoas) {
+            var re = document.createElement('div');
+            re.style.cssText = 'font-size:12px;color:var(--cinza-medio);';
+            re.textContent = (r.espaco || '') + (r.num_pessoas ? ' · ' + r.num_pessoas + ' pessoas' : '');
+            card.appendChild(re);
+          }
+          painel.appendChild(card);
+        }
+      }
+      var btnN = document.createElement('button');
+      btnN.className = 'btn-sm btn-azul btn-bloco';
+      btnN.textContent = '+ Nova Reserva';
+      btnN.onclick = function() { abrirFormReserva(eq, dISO, painel, btnN); };
+      painel.appendChild(btnN);
+    }).catch(function() { load.textContent = 'Erro.'; });
+}
+
+function abrirFormReserva(eq, dISO, painel, btnN) {
+  btnN.style.display = 'none';
+  var form = document.createElement('div');
+  form.className = 'form-card';
+  form.style.marginTop = '10px';
+  var ft = document.createElement('div');
+  ft.className = 'form-titulo';
+  ft.textContent = 'Nova Reserva — ' + dISO;
+  form.appendChild(ft);
+
+  function campo(lbl, ph, tipo) {
+    var g = document.createElement('div'); g.className = 'campo-group';
+    var l = document.createElement('label'); l.className = 'campo-label'; l.textContent = lbl;
+    var i = document.createElement('input'); i.type = tipo || 'text'; i.className = 'campo-input-sm'; i.placeholder = ph;
+    g.appendChild(l); g.appendChild(i); form.appendChild(g); return i;
+  }
+  function campoHora(lbl) {
+    var g = document.createElement('div'); g.className = 'campo-group';
+    var l = document.createElement('label'); l.className = 'campo-label'; l.textContent = lbl;
+    var i = document.createElement('input'); i.type = 'time'; i.className = 'campo-input-sm';
+    g.appendChild(l); g.appendChild(i); form.appendChild(g); return i;
+  }
+
+  var inpEnt = campo('Entidade / Nome', 'Ex: Clube X');
+  var inpHI = campoHora('Hora início');
+  var inpHF = campoHora('Hora fim');
+  var inpEsp = null;
+  if (eq.tipo === 'pavilhao') {
+    var ge = document.createElement('div'); ge.className = 'campo-group';
+    var le = document.createElement('label'); le.className = 'campo-label'; le.textContent = 'Espaço';
+    var se = document.createElement('select'); se.className = 'campo-select';
+    var ops = ['Campo Principal', 'Sala de Ginástica'];
+    for (var oi = 0; oi < ops.length; oi++) { var op = document.createElement('option'); op.value = ops[oi]; op.textContent = ops[oi]; se.appendChild(op); }
+    ge.appendChild(le); ge.appendChild(se); form.appendChild(ge); inpEsp = se;
+  }
+  var inpPes = null;
+  if (eq.tipo === 'ceavm') { inpPes = campo('Nº de pessoas', '0', 'number'); }
+  var inpObs = document.createElement('textarea');
+  var go = document.createElement('div'); go.className = 'campo-group';
+  var lo = document.createElement('label'); lo.className = 'campo-label'; lo.textContent = 'Observações';
+  inpObs.className = 'campo-textarea'; inpObs.rows = 2; inpObs.placeholder = 'Notas...';
+  go.appendChild(lo); go.appendChild(inpObs); form.appendChild(go);
+
+  var bts = document.createElement('div'); bts.className = 'row-btns';
+  var bc = document.createElement('button'); bc.className = 'btn-sm btn-cinza'; bc.textContent = 'Cancelar';
+  bc.onclick = function() { painel.removeChild(form); btnN.style.display = ''; };
+  var bg = document.createElement('button'); bg.className = 'btn-sm btn-azul'; bg.textContent = 'Guardar';
+  bg.onclick = function() {
+    if (!inpEnt.value.trim()) { alert('Introduz o nome.'); return; }
+    bg.textContent = '...'; bg.disabled = true;
+    sbPost('reservas', { equipamento_id: eq.id, utilizador_id: app.utilizador.id, data: dISO, hora_inicio: inpHI.value || null, hora_fim: inpHF.value || null, entidade: inpEnt.value.trim(), espaco: inpEsp ? inpEsp.value : null, num_pessoas: inpPes ? (parseInt(inpPes.value) || null) : null, observacoes: inpObs.value.trim() || null })
+      .then(function() { painel.innerHTML = ''; abrirDiaReservas(eq, dISO, painel); })
+      .catch(function() { bg.textContent = 'Erro'; bg.disabled = false; });
+  };
+  bts.appendChild(bc); bts.appendChild(bg); form.appendChild(bts);
+  painel.appendChild(form);
+}
+
+// ── MÓDULO: MEMORANDO INTERNO ─────────────────────────────────────────────────
+function renderMemoInterno(eq, corpo) {
+  var load = document.createElement('div'); load.className = 'vazio'; load.textContent = 'A carregar...';
+  corpo.appendChild(load);
+
+  sbGet('memorandos_reparacao', 'equipamento_id=eq.' + eq.id + '&select=*&order=created_at.desc&limit=15')
+    .then(function(memos) {
+      corpo.removeChild(load);
+      var btnN = document.createElement('button');
+      btnN.className = 'btn-sm btn-azul btn-bloco';
+      btnN.style.marginBottom = '12px';
+      btnN.textContent = '+ Novo Pedido / Memorando';
+      btnN.onclick = function() { abrirFormMemo(eq, corpo, lista); };
+      corpo.appendChild(btnN);
+      var lista = document.createElement('div');
+      if (!memos || !memos.length) {
+        var sem = document.createElement('div'); sem.className = 'vazio'; sem.textContent = 'Sem pedidos registados.'; lista.appendChild(sem);
+      } else {
+        for (var i = 0; i < memos.length; i++) lista.appendChild(criarCardMemo(memos[i]));
+      }
+      corpo.appendChild(lista);
+    }).catch(function() { load.textContent = 'Erro.'; });
+}
+
+function criarCardMemo(memo) {
+  var card = document.createElement('div');
+  card.className = 'memo-card';
+  var topo = document.createElement('div');
+  topo.className = 'memo-topo';
+  var data = document.createElement('div');
+  data.className = 'memo-data-txt';
+  data.textContent = memo.data || (memo.created_at ? memo.created_at.substring(0,10) : '—');
+  var est = document.createElement('span');
+  var ec = 'tag-amarelo';
+  if (memo.estado === 'reforco_pedido') ec = 'tag-azul';
+  if (memo.estado === 'concluido') ec = 'tag-verde';
+  est.className = 'tag ' + ec;
+  est.textContent = memo.estado === 'reforco_pedido' ? 'Reforço' : (memo.estado || 'pendente');
+  topo.appendChild(data); topo.appendChild(est);
+  card.appendChild(topo);
+  var desc = document.createElement('div');
+  desc.className = 'memo-desc';
+  desc.textContent = memo.descricao || '—';
+  card.appendChild(desc);
+  if (memo.estado !== 'concluido') {
+    var dataRef = memo.data ? new Date(memo.data) : new Date(memo.created_at);
+    var dias = diasEntre(dataRef, new Date());
+    if (dias > 0) {
+      var d = document.createElement('div');
+      d.style.cssText = 'font-size:11px;font-weight:700;color:var(--amarelo);';
+      d.textContent = dias + (dias === 1 ? ' dia em aberto' : ' dias em aberto');
+      card.appendChild(d);
+    }
+  }
+  return card;
+}
+
+function abrirFormMemo(eq, corpo, lista) {
+  var form = document.createElement('div');
+  form.className = 'form-card';
+  form.style.marginBottom = '12px';
+  var ft = document.createElement('div'); ft.className = 'form-titulo'; ft.textContent = 'Novo Pedido — ' + eq.nome;
+  form.appendChild(ft);
+
+  var gDesc = document.createElement('div'); gDesc.className = 'campo-group';
+  var lDesc = document.createElement('label'); lDesc.className = 'campo-label'; lDesc.textContent = 'Descrição do pedido';
+  var desc = document.createElement('textarea'); desc.className = 'campo-textarea'; desc.rows = 3; desc.placeholder = 'Descreve o pedido ou problema...';
+  gDesc.appendChild(lDesc); gDesc.appendChild(desc); form.appendChild(gDesc);
+
+  var gUrg = document.createElement('div'); gUrg.className = 'campo-group';
+  var lUrg = document.createElement('label'); lUrg.className = 'campo-label'; lUrg.textContent = 'Urgência';
+  var selUrg = document.createElement('select'); selUrg.className = 'campo-select';
+  var urgs = [['medio','Médio'],['urgente','Urgente'],['baixo','Baixo']];
+  for (var ui = 0; ui < urgs.length; ui++) { var op = document.createElement('option'); op.value = urgs[ui][0]; op.textContent = urgs[ui][1]; selUrg.appendChild(op); }
+  gUrg.appendChild(lUrg); gUrg.appendChild(selUrg); form.appendChild(gUrg);
+
+  var gObs = document.createElement('div'); gObs.className = 'campo-group';
+  var lObs = document.createElement('label'); lObs.className = 'campo-label'; lObs.textContent = 'Observações';
+  var obs = document.createElement('textarea'); obs.className = 'campo-textarea'; obs.rows = 2; obs.placeholder = 'Info adicional...';
+  gObs.appendChild(lObs); gObs.appendChild(obs); form.appendChild(gObs);
+
+  var bts = document.createElement('div'); bts.className = 'row-btns';
+  var bc = document.createElement('button'); bc.className = 'btn-sm btn-cinza'; bc.textContent = 'Cancelar';
+  bc.onclick = function() { corpo.removeChild(form); };
+  var bg = document.createElement('button'); bg.className = 'btn-sm btn-azul'; bg.textContent = 'Enviar';
+  bg.onclick = function() {
+    if (!desc.value.trim()) { alert('Descreve o pedido.'); return; }
+    bg.textContent = '...'; bg.disabled = true;
+    sbPost('memorandos_reparacao', { equipamento_id: eq.id, utilizador_id: app.utilizador.id, descricao: desc.value.trim(), urgencia: selUrg.value, observacoes: obs.value.trim() || null, estado: 'pendente', data: dataISO(new Date()) })
+      .then(function(res) {
+        corpo.removeChild(form);
+        if (res && res.length) {
+          if (lista.firstChild && lista.firstChild.className === 'vazio') lista.innerHTML = '';
+          if (lista.firstChild) lista.insertBefore(criarCardMemo(res[0]), lista.firstChild);
+          else lista.appendChild(criarCardMemo(res[0]));
+        }
+      }).catch(function() { bg.textContent = 'Erro'; bg.disabled = false; });
+  };
+  bts.appendChild(bc); bts.appendChild(bg); form.appendChild(bts);
+  corpo.insertBefore(form, corpo.firstChild);
+}
+
+// ── MÓDULO: RELATÓRIOS ────────────────────────────────────────────────────────
+function renderRelatorios(eq, corpo) {
+  var msg = document.createElement('div'); msg.className = 'vazio'; msg.textContent = 'Relatórios em desenvolvimento.'; corpo.appendChild(msg);
+}
+
+// ── DDS CENTRAL ───────────────────────────────────────────────────────────────
+function renderDDS() {
+  var area = document.getElementById('area-eq');
+  area.innerHTML = '';
+
+  var btns = document.createElement('div');
+  btns.style.cssText = 'display:flex;gap:8px;margin-bottom:16px;';
+  var btnN = document.createElement('button');
+  btnN.className = 'btn-sm btn-azul';
+  btnN.style.flex = '1';
+  btnN.textContent = '+ Novo Memorando';
+  btnN.onclick = function() { abrirFormDDS(area); };
+  btns.appendChild(btnN);
+  area.appendChild(btns);
+
+  var seccoes = [
+    { id: 'recebidos', label: '📥 Recebidos dos Equipamentos', filtro: function(m) { return !m.criado_por_dds && m.estado === 'pendente' && !m.aprovado_dds; } },
+    { id: 'criados', label: '✏️ Criados por Mim', filtro: function(m) { return m.criado_por_dds && m.estado === 'pendente' && !m.aprovado_dds; } },
+    { id: 'aenviar', label: '📤 A Enviar para os Serviços', filtro: function(m) { return m.estado === 'reforco_pedido' && m.aprovado_dds; } },
+    { id: 'emcurso', label: '🔄 Enviados / Em Curso', filtro: function(m) { return m.estado === 'pendente' && m.aprovado_dds; } },
+    { id: 'arquivo', label: '📁 Arquivo', filtro: function(m) { return m.estado === 'concluido'; } }
+  ];
+
+  var loadG = document.createElement('div'); loadG.className = 'vazio'; loadG.textContent = 'A carregar...';
+  area.appendChild(loadG);
+
+  sbGet('memorandos_dds', 'select=*,equipamentos(nome)&order=data.desc')
+    .then(function(todos) {
+      area.removeChild(loadG);
+      if (todos && todos.error) {
+        var err = document.createElement('div');
+        err.className = 'erro-inline';
+        err.textContent = 'Erro ao carregar: ' + JSON.stringify(todos);
+        area.appendChild(err);
+        return;
+      }
+      var memos = todos || [];
+      for (var s = 0; s < seccoes.length; s++) {
+        (function(sec) {
+          var filtrados = [];
+          for (var i = 0; i < memos.length; i++) if (sec.filtro(memos[i])) filtrados.push(memos[i]);
+          area.appendChild(criarSeccaoDDS(sec.id, sec.label, filtrados));
+        })(seccoes[s]);
+      }
+    })
+    .catch(function(e) { loadG.textContent = 'Erro ao carregar memorandos.'; });
+}
+
+function criarSeccaoDDS(id, label, memos) {
+  var sec = document.createElement('div');
+  sec.className = 'dds-seccao';
+  var header = document.createElement('div');
+  header.className = 'dds-seccao-header';
+  var esq = document.createElement('div');
+  esq.className = 'dds-seccao-esq';
+  var nm = document.createElement('div');
+  nm.className = 'dds-seccao-nome';
+  nm.textContent = label;
+  var badge = document.createElement('span');
+  badge.className = 'dds-badge';
+  badge.textContent = memos.length;
+  esq.appendChild(nm);
+  var seta = document.createElement('div');
+  seta.className = 'modulo-seta';
+  seta.textContent = '▾';
+  header.appendChild(esq);
+  header.appendChild(badge);
+  header.appendChild(seta);
+  var corpo = document.createElement('div');
+  corpo.className = 'dds-seccao-corpo';
+
+  header.onclick = function() {
+    var ab = corpo.classList.contains('aberto');
+    if (ab) { corpo.classList.remove('aberto'); seta.classList.remove('aberto'); }
+    else { corpo.classList.add('aberto'); seta.classList.add('aberto'); }
+  };
+
+  if (!memos.length) {
+    var sem = document.createElement('div'); sem.className = 'vazio'; sem.style.padding = '12px'; sem.textContent = 'Sem memorandos nesta secção.'; corpo.appendChild(sem);
+  } else {
+    for (var i = 0; i < memos.length; i++) corpo.appendChild(criarCardDDS(memos[i]));
+  }
+
+  sec.appendChild(header);
+  sec.appendChild(corpo);
+  return sec;
+}
+
+function criarCardDDS(memo) {
+  var card = document.createElement('div');
+  card.className = 'dds-card';
+  var topo = document.createElement('div');
+  topo.className = 'dds-card-topo';
+  var esq = document.createElement('div');
+  var num = document.createElement('div'); num.className = 'dds-num'; num.textContent = memo.numero ? 'N.º ' + memo.numero : '—';
+  var dat = document.createElement('div'); dat.className = 'dds-data'; dat.textContent = memo.data || '—';
+  esq.appendChild(num); esq.appendChild(dat);
+  var ec = 'tag-amarelo';
+  if (memo.estado === 'reforco_pedido') ec = 'tag-azul';
+  if (memo.estado === 'concluido') ec = 'tag-verde';
+  var est = document.createElement('span'); est.className = 'tag ' + ec;
+  var eTxts = { 'pendente': 'Pendente', 'reforco_pedido': 'Reforço', 'concluido': 'Concluído' };
+  est.textContent = eTxts[memo.estado] || memo.estado;
+  topo.appendChild(esq); topo.appendChild(est);
+  card.appendChild(topo);
+  var desc = document.createElement('div'); desc.className = 'dds-desc'; desc.textContent = memo.descricao || '—'; card.appendChild(desc);
+  var rod = document.createElement('div'); rod.className = 'dds-rodape';
+  if (memo.brigada) { var b = document.createElement('div'); b.className = 'dds-brigada'; b.textContent = 'Brigada: ' + memo.brigada; rod.appendChild(b); }
+  if (memo.equipamentos && memo.equipamentos.nome) { var en = document.createElement('div'); en.className = 'dds-eq'; en.textContent = memo.equipamentos.nome; rod.appendChild(en); }
+  if (memo.estado !== 'concluido') {
+    var dr = memo.data ? new Date(memo.data) : (memo.created_at ? new Date(memo.created_at) : new Date());
+    var dias = diasEntre(dr, new Date());
+    if (dias > 0) { var dd = document.createElement('div'); dd.className = 'dds-dias'; dd.textContent = dias + (dias === 1 ? ' dia' : ' dias'); rod.appendChild(dd); }
+  } else if (memo.data_conclusao) {
+    var dc = document.createElement('div'); dc.style.cssText = 'font-size:12px;color:var(--verde);'; dc.textContent = 'Concluído: ' + memo.data_conclusao; rod.appendChild(dc);
+  }
+  card.appendChild(rod);
+  if (memo.observacoes) { var obs = document.createElement('div'); obs.style.cssText = 'font-size:12px;color:var(--cinza);margin-top:7px;font-style:italic;'; obs.textContent = memo.observacoes; card.appendChild(obs); }
+  return card;
+}
+
+function abrirFormDDS(area) {
+  var form = document.createElement('div');
+  form.className = 'form-card';
+  var ft = document.createElement('div'); ft.className = 'form-titulo'; ft.textContent = 'Novo Memorando DDS';
+  form.appendChild(ft);
+
+  function campo(lbl, ph, tipo) {
+    var g = document.createElement('div'); g.className = 'campo-group';
+    var l = document.createElement('label'); l.className = 'campo-label'; l.textContent = lbl;
+    var i = document.createElement('input'); i.type = tipo || 'text'; i.className = 'campo-input-sm'; i.placeholder = ph;
+    g.appendChild(l); g.appendChild(i); form.appendChild(g); return i;
+  }
+
+  var inpNum = campo('Número', 'Ex: 001/2026');
+  var inpDat = campo('Data', '', 'date'); inpDat.value = dataISO(new Date());
+
+  var gDesc = document.createElement('div'); gDesc.className = 'campo-group';
+  var lDesc = document.createElement('label'); lDesc.className = 'campo-label'; lDesc.textContent = 'Descrição';
+  var desc = document.createElement('textarea'); desc.className = 'campo-textarea'; desc.rows = 3; desc.placeholder = 'Descreve o pedido...';
+  gDesc.appendChild(lDesc); gDesc.appendChild(desc); form.appendChild(gDesc);
+
+  var inpBrig = campo('Brigada', 'Ex: Brigada de Manutenção');
+
+  var gEq = document.createElement('div'); gEq.className = 'campo-group';
+  var lEq = document.createElement('label'); lEq.className = 'campo-label'; lEq.textContent = 'Equipamento (opcional)';
+  var selEq = document.createElement('select'); selEq.className = 'campo-select';
+  var opV = document.createElement('option'); opV.value = ''; opV.textContent = '— Geral —'; selEq.appendChild(opV);
+  for (var ei = 0; ei < app.equipamentos.length; ei++) { var opE = document.createElement('option'); opE.value = app.equipamentos[ei].id; opE.textContent = app.equipamentos[ei].nome; selEq.appendChild(opE); }
+  gEq.appendChild(lEq); gEq.appendChild(selEq); form.appendChild(gEq);
+
+  var gObs = document.createElement('div'); gObs.className = 'campo-group';
+  var lObs = document.createElement('label'); lObs.className = 'campo-label'; lObs.textContent = 'Observações';
+  var obs = document.createElement('textarea'); obs.className = 'campo-textarea'; obs.rows = 2; obs.placeholder = 'Notas...';
+  gObs.appendChild(lObs); gObs.appendChild(obs); form.appendChild(gObs);
+
+  var bts = document.createElement('div'); bts.className = 'row-btns';
+  var bc = document.createElement('button'); bc.className = 'btn-sm btn-cinza'; bc.textContent = 'Cancelar';
+  bc.onclick = function() { area.removeChild(form); };
+  var bg = document.createElement('button'); bg.className = 'btn-sm btn-azul'; bg.textContent = 'Guardar';
+  bg.onclick = function() {
+    if (!desc.value.trim()) { alert('Introduz a descrição.'); return; }
+    bg.textContent = '...'; bg.disabled = true;
+    sbPost('memorandos_dds', { numero: inpNum.value.trim() || null, data: inpDat.value || dataISO(new Date()), descricao: desc.value.trim(), brigada: inpBrig.value.trim() || null, equipamento_id: selEq.value || null, observacoes: obs.value.trim() || null, estado: 'pendente', aprovado_dds: false, criado_por: app.utilizador.id, criado_por_dds: true })
+      .then(function() { area.removeChild(form); renderDDS(); })
+      .catch(function() { bg.textContent = 'Erro'; bg.disabled = false; });
+  };
+  bts.appendChild(bc); bts.appendChild(bg); form.appendChild(bts);
+  area.insertBefore(form, area.firstChild);
+}
+
+// ── PAINEL CHECKLISTS (ADMIN/SUPERVISOR) ──────────────────────────────────────
+function renderPainelChecklists() {
+  var area = document.getElementById('area-eq');
+  area.innerHTML = '';
+  var load = document.createElement('div'); load.className = 'vazio'; load.textContent = 'A carregar...'; area.appendChild(load);
+
+  sbGet('checklists_registo',
+    'select=*,utilizadores(nome),equipamentos(nome),checklist_itens(descricao)&order=data_registo.desc&limit=50'
+  ).then(function(regs) {
+    area.removeChild(load);
+    if (!regs || !regs.length) {
+      var sem = document.createElement('div'); sem.className = 'vazio'; sem.textContent = 'Sem checklists registadas.'; area.appendChild(sem); return;
+    }
+    // agrupar por equipamento+data+momento+utilizador
+    var grupos = [];
+    var mapa = {};
+    for (var i = 0; i < regs.length; i++) {
+      var r = regs[i];
+      var key = (r.equipamento_id || '') + '|' + (r.data_registo ? r.data_registo.substring(0,10) : '') + '|' + (r.momento || '') + '|' + (r.utilizador_id || '');
+      if (!mapa[key]) { mapa[key] = { key: key, eqNome: r.equipamentos ? r.equipamentos.nome : '—', utilNome: r.utilizadores ? r.utilizadores.nome : '—', momento: r.momento || '—', data: r.data_registo ? r.data_registo.substring(0,10) : '—', itens: [] }; grupos.push(mapa[key]); }
+      mapa[key].itens.push(r);
+    }
+    for (var g = 0; g < grupos.length; g++) {
+      var grp = grupos[g];
+      var card = document.createElement('div'); card.className = 'modulo-card'; card.style.marginBottom = '8px';
+      var header = document.createElement('div'); header.className = 'modulo-header';
+      var esq = document.createElement('div'); esq.className = 'modulo-header-esq';
+      var ic = document.createElement('div'); ic.className = 'modulo-icone'; ic.textContent = '✅';
+      var info = document.createElement('div');
+      var nm = document.createElement('div'); nm.className = 'modulo-nome'; nm.textContent = grp.eqNome;
+      var sub = document.createElement('div'); sub.style.cssText = 'font-size:12px;color:var(--cinza-medio);margin-top:2px;'; sub.textContent = grp.utilNome + ' · ' + grp.momento + ' · ' + grp.data;
+      info.appendChild(nm); info.appendChild(sub);
+      esq.appendChild(ic); esq.appendChild(info);
+      var seta = document.createElement('div'); seta.className = 'modulo-seta'; seta.textContent = '▾';
+      header.appendChild(esq); header.appendChild(seta);
+      var corpo = document.createElement('div'); corpo.className = 'modulo-corpo';
+      var aberto = false;
+      header.onclick = function(grpLocal, corpoLocal, setaLocal) {
+        return function() {
+          aberto = !aberto;
+          if (aberto) { corpoLocal.classList.add('aberto'); setaLocal.classList.add('aberto'); }
+          else { corpoLocal.classList.remove('aberto'); setaLocal.classList.remove('aberto'); }
+        };
+      }(grp, corpo, seta);
+      for (var ii = 0; ii < grp.itens.length; ii++) {
+        var item = grp.itens[ii];
+        var linha = document.createElement('div'); linha.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--cinza-claro);';
+        var ck = document.createElement('div');
+        ck.style.cssText = 'width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;';
+        if (item.conforme) { ck.style.background = 'var(--verde)'; ck.style.color = '#fff'; ck.textContent = '✓'; }
+        else { ck.style.background = 'var(--vermelho-pale)'; ck.style.color = 'var(--vermelho)'; ck.textContent = '✗'; }
+        var tx = document.createElement('div'); tx.style.cssText = 'font-size:13px;color:var(--cinza-escuro);'; tx.textContent = (item.checklist_itens && item.checklist_itens.descricao) ? item.checklist_itens.descricao : '—';
+        linha.appendChild(ck); linha.appendChild(tx); corpo.appendChild(linha);
+      }
+      if (grp.itens[0] && grp.itens[0].observacoes) {
+        var obsl = document.createElement('div'); obsl.style.cssText = 'font-size:12px;color:var(--cinza);margin-top:8px;font-style:italic;'; obsl.textContent = 'Obs: ' + grp.itens[0].observacoes; corpo.appendChild(obsl);
+      }
+      card.appendChild(header); card.appendChild(corpo); area.appendChild(card);
+    }
+  }).catch(function() { load.textContent = 'Erro ao carregar.'; });
+}
+
+// ── ADMIN ─────────────────────────────────────────────────────────────────────
+function renderAdmin(sub) {
+  var area = document.getElementById('area-eq');
+  area.innerHTML = '';
+  var msg = document.createElement('div'); msg.className = 'vazio'; msg.textContent = 'Administração — ' + sub + ' — em desenvolvimento.'; area.appendChild(msg);
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────────────────────
+function fazerLogin() {
+  var inp = document.getElementById('inp-codigo');
+  var erro = document.getElementById('login-erro');
+  var codigo = inp.value.trim().toUpperCase();
+  erro.textContent = '';
+  if (!codigo) { erro.textContent = 'Introduz o teu código de acesso.'; return; }
+  sbGet('utilizadores', 'codigo_visivel=eq.' + encodeURIComponent(codigo) + '&select=*')
+    .then(function(dados) {
+      if (!dados || !dados.length) { erro.textContent = 'Código inválido.'; return; }
+      var u = dados[0];
+      if (!u.ativo) { erro.textContent = 'Conta inactiva.'; return; }
+      guardarSessao(u.id);
+      app.utilizador = u;
+      return carregarEquipamentos();
+    })
+    .catch(function() { erro.textContent = 'Erro de ligação.'; });
+}
+
+function fazerSair() {
+  limparSessao(); app.utilizador = null; app.equipamentos = []; app.eqAtivo = null;
+  fecharMenu(); mostrarEcra('login');
+  var inp = document.getElementById('inp-codigo'); if (inp) inp.value = '';
+}
+
+document.getElementById('inp-codigo').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' || e.keyCode === 13) fazerLogin();
+});
+
+iniciar();
+</script>
+</body>
+</html>
