@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GestEq</title>
+<style>
+  :root {
+    --verde: #2d6a4f;
+    --verde-claro: #52b788;
+    --verde-pale: #d8f3dc;
+    --cinza-escuro: #1b1b1b;
+    --cinza: #4a4a4a;
+    --cinza-medio: #888;
+    --cinza-claro: #e8e8e8;
+    --branco: #ffffff;
+    --fundo: #f5f7f5;
+    --vermelho: #c0392b;
+    --amarelo: #e67e22;
+    --azul: #2471a3;
+    --sombra: 0 2px 8px rgba(0,0,0,0.10);
+    --radius: 10px;
+    --fonte: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--fonte);
+    background: var(--fundo);
+    color: var(--cinza-escuro);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+
+  /* ── DIAGNÓSTICO ── */
+  #diag {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #111;
+    color: #0f0;
+    font-family: monospace;
+    font-size: 11px;
+    padding: 6px 10px;
+    max-height: 120px;
+    overflow-y: auto;
+    z-index: 9999;
+    display: none;
+  }
+
+  /* ── TOPO ── */
+  #topo {
+    background: var(--verde);
+    color: var(--branco);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    height: 54px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--sombra);
+  }
+  #topo-titulo {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  #topo-sub {
+    font-size: 11px;
+    opacity: 0.75;
+    margin-top: 1px;
+  }
+  #btn-sair {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: var(--fonte);
+  }
+  #btn-sair:active { background: rgba(255,255,255,0.25); }
+
+  /* ── ECRÃ CARREGAMENTO ── */
+  #ecra-carregar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+    gap: 16px;
+  }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--cinza-claro);
+    border-top-color: var(--verde);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── LOGIN ── */
+  #ecra-login {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 90vh;
+    padding: 24px;
+  }
+  .login-card {
+    background: var(--branco);
+    border-radius: var(--radius);
+    box-shadow: var(--sombra);
+    padding: 32px 28px;
+    width: 100%;
+    max-width: 360px;
+  }
+  .login-logo {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .login-logo-nome {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--verde);
+    letter-spacing: -0.5px;
+  }
+  .login-logo-sub {
+    font-size: 12px;
+    color: var(--cinza-medio);
+    margin-top: 2px;
+  }
+  .campo-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--cinza);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .campo-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--cinza-claro);
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: var(--fonte);
+    background: var(--fundo);
+    color: var(--cinza-escuro);
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .campo-input:focus { border-color: var(--verde-claro); }
+  .btn-primario {
+    width: 100%;
+    background: var(--verde);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: var(--fonte);
+    cursor: pointer;
+    margin-top: 20px;
+    -webkit-appearance: none;
+  }
+  .btn-primario:active { background: #1e4d38; }
+  .erro-msg {
+    color: var(--vermelho);
+    font-size: 13px;
+    text-align: center;
+    margin-top: 14px;
+    min-height: 18px;
+  }
+
+  /* ── NAVEGAÇÃO EQUIPAMENTOS ── */
+  #ecra-principal { display: none; }
+
+  #nav-eq {
+    background: var(--branco);
+    border-bottom: 1.5px solid var(--cinza-claro);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    white-space: nowrap;
+    padding: 0 12px;
+  }
+  #nav-eq::-webkit-scrollbar { display: none; }
+
+  .nav-eq-btn {
+    display: inline-block;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--cinza-medio);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    white-space: nowrap;
+    font-family: var(--fonte);
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+  .nav-eq-btn.ativo {
+    color: var(--verde);
+    border-bottom-color: var(--verde);
+    font-weight: 700;
+  }
+
+  /* ── CONTEÚDO EQUIPAMENTO ── */
+  #area-eq {
+    padding: 16px;
+    padding-bottom: 80px;
+  }
+
+  .eq-titulo {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--verde);
+    margin-bottom: 4px;
+  }
+  .eq-tipo {
+    font-size: 12px;
+    color: var(--cinza-medio);
+    margin-bottom: 20px;
+  }
+
+  /* ── CARDS / MÓDULOS ── */
+  .modulo-card {
+    background: var(--branco);
+    border-radius: var(--radius);
+    box-shadow: var(--sombra);
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .modulo-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .modulo-header-esq {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .modulo-icone {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--verde-pale);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .modulo-nome {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--cinza-escuro);
+  }
+  .modulo-seta {
+    font-size: 12px;
+    color: var(--cinza-medio);
+    transition: transform 0.2s;
+  }
+  .modulo-seta.aberto { transform: rotate(180deg); }
+  .modulo-corpo {
+    display: none;
+    border-top: 1.5px solid var(--cinza-claro);
+    padding: 16px;
+  }
+  .modulo-corpo.aberto { display: block; }
+
+  /* ── ADMIN BADGE ── */
+  #badge-perfil {
+    font-size: 11px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+    padding: 3px 9px;
+    color: #fff;
+  }
+
+  /* ── MENSAGEM VAZIO ── */
+  .vazio {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--cinza-medio);
+    font-size: 14px;
+  }
+
+  /* ── ADMIN ACESSO ── */
+  #btn-admin {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--verde-pale);
+    color: var(--verde);
+    border: none;
+    border-radius: 20px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--fonte);
+    cursor: pointer;
+    margin: 12px 0 0 0;
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 200;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-caixa {
+    background: var(--branco);
+    border-radius: 16px 16px 0 0;
+    padding: 24px 20px 32px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-titulo {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--cinza-escuro);
+  }
+  .modal-fechar {
+    float: right;
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: var(--cinza-medio);
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 0 4px 8px;
+  }
+
+  /* ── UTILITÁRIOS ── */
+  .mt8 { margin-top: 8px; }
+  .mt16 { margin-top: 16px; }
+  .mt24 { margin-top: 24px; }
+  .texto-verde { color: var(--verde); }
+  .texto-vermelho { color: var(--vermelho); }
+  .texto-cinza { color: var(--cinza-medio); }
+  .negrito { font-weight: 700; }
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .tag-verde { background: var(--verde-pale); color: var(--verde); }
+  .tag-cinza { background: var(--cinza-claro); color: var(--cinza); }
+  .tag-vermelho { background: #fdecea; color: var(--vermelho); }
+  .tag-amarelo { background: #fef3e2; color: var(--amarelo); }
+  .tag-azul { background: #eaf4fb; color: var(--azul); }
+
+  .btn-sm {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--fonte);
+    cursor: pointer;
+    border: none;
+    -webkit-appearance: none;
+  }
+  .btn-verde { background: var(--verde); color: #fff; }
+  .btn-cinza { background: var(--cinza-claro); color: var(--cinza-escuro); }
+  .btn-vermelho { background: var(--vermelho); color: #fff; }
+
+  hr.sep { border: none; border-top: 1.5px solid var(--cinza-claro); margin: 12px 0; }
+</style>
+</head>
+<body>
+
+<!-- DIAGNÓSTICO (activar com ?diag na URL) -->
+<div id="diag"></div>
+
+<!-- TOPO -->
+<div id="topo" style="display:none;">
+  <div>
+    <div id="topo-titulo">GestEq</div>
+    <div id="topo-sub">Cabeceiras de Basto</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span id="badge-perfil"></span>
+    <button id="btn-sair" onclick="fazerSair()">Sair</button>
+  </div>
+</div>
+
+<!-- ECRÃ: CARREGAMENTO -->
+<div id="ecra-carregar">
+  <div class="spinner"></div>
+  <div style="color:var(--cinza-medio);font-size:14px;">A carregar...</div>
+</div>
+
+<!-- ECRÃ: LOGIN -->
+<div id="ecra-login" style="display:none;">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-nome">GestEq</div>
+      <div class="login-logo-sub">Gestão de Equipamentos · Cabeceiras de Basto</div>
+    </div>
+    <label class="campo-label" for="inp-codigo">Código de acesso</label>
+    <input class="campo-input" id="inp-codigo" type="text" placeholder="XX-0000" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+    <button class="btn-primario" onclick="fazerLogin()">Entrar</button>
+    <div class="erro-msg" id="login-erro"></div>
+  </div>
+</div>
+
+<!-- ECRÃ: PRINCIPAL -->
+<div id="ecra-principal">
+  <!-- nav equipamentos -->
+  <div id="nav-eq"></div>
+  <!-- área conteúdo -->
+  <div id="area-eq"></div>
+</div>
+
+<script>
+// ─── CONFIGURAÇÃO ───────────────────────────────────────────────────────────
+var SB_URL = 'https://jpojyhvocspksumljslx.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impwb2p5aHZvY3Nwa3N1bWxqc2x4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NzE3NDUsImV4cCI6MjA5NzQ0Nzc0NX0.qwAyl_zBx31Z6a3KbaHns8gWceRrjQPcdN3RDBTkGkA';
+var SESSAO_HORAS = 8;
+
+// ─── DIAGNÓSTICO ─────────────────────────────────────────────────────────────
+var diagAtivo = (window.location.search.indexOf('diag') !== -1);
+function log(msg) {
+  if (!diagAtivo) return;
+  var d = document.getElementById('diag');
+  if (!d) return;
+  d.style.display = 'block';
+  var linha = document.createElement('div');
+  linha.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  d.appendChild(linha);
+  d.scrollTop = d.scrollHeight;
+}
+
+// ─── ESTADO GLOBAL ───────────────────────────────────────────────────────────
+var estadoApp = {
+  utilizador: null,
+  equipamentos: [],
+  eqAtivo: null
+};
+
+// ─── SUPABASE FETCH ──────────────────────────────────────────────────────────
+function sbGet(tabela, params) {
+  var url = SB_URL + '/rest/v1/' + tabela + '?' + (params || '');
+  return fetch(url, {
+    method: 'GET',
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': 'application/json'
+    }
+  }).then(function(r) {
+    return r.json();
+  });
+}
+
+function sbPost(tabela, corpo) {
+  var url = SB_URL + '/rest/v1/' + tabela;
+  return fetch(url, {
+    method: 'POST',
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(corpo)
+  }).then(function(r) {
+    return r.json();
+  });
+}
+
+function sbPatch(tabela, filtro, corpo) {
+  var url = SB_URL + '/rest/v1/' + tabela + '?' + filtro;
+  return fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(corpo)
+  }).then(function(r) {
+    return r.json();
+  });
+}
+
+function sbDelete(tabela, filtro) {
+  var url = SB_URL + '/rest/v1/' + tabela + '?' + filtro;
+  return fetch(url, {
+    method: 'DELETE',
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': 'application/json'
+    }
+  }).then(function(r) {
+    if (r.status === 204) return [];
+    return r.json();
+  });
+}
+
+// ─── SESSÃO ──────────────────────────────────────────────────────────────────
+function guardarSessao(uid) {
+  var exp = new Date().getTime() + SESSAO_HORAS * 3600 * 1000;
+  try {
+    localStorage.setItem('gestEqSessao', JSON.stringify({ uid: uid, exp: exp }));
+  } catch(e) {
+    log('Erro localStorage.setItem: ' + e);
+  }
+}
+
+function lerSessao() {
+  try {
+    var raw = localStorage.getItem('gestEqSessao');
+    if (!raw) return null;
+    var obj = JSON.parse(raw);
+    if (!obj || !obj.uid || !obj.exp) return null;
+    if (new Date().getTime() > obj.exp) {
+      localStorage.removeItem('gestEqSessao');
+      return null;
+    }
+    return obj.uid;
+  } catch(e) {
+    log('Erro lerSessao: ' + e);
+    return null;
+  }
+}
+
+function limparSessao() {
+  try {
+    localStorage.removeItem('gestEqSessao');
+  } catch(e) {}
+}
+
+// ─── ECRÃS ───────────────────────────────────────────────────────────────────
+function mostrarEcra(qual) {
+  document.getElementById('ecra-carregar').style.display = 'none';
+  document.getElementById('ecra-login').style.display = 'none';
+  document.getElementById('ecra-principal').style.display = 'none';
+  document.getElementById('topo').style.display = 'none';
+
+  if (qual === 'carregar') {
+    document.getElementById('ecra-carregar').style.display = 'flex';
+  } else if (qual === 'login') {
+    document.getElementById('ecra-login').style.display = 'flex';
+  } else if (qual === 'principal') {
+    document.getElementById('topo').style.display = 'flex';
+    document.getElementById('ecra-principal').style.display = 'block';
+  }
+}
+
+// ─── INÍCIO ──────────────────────────────────────────────────────────────────
+function iniciar() {
+  log('iniciar()');
+  mostrarEcra('carregar');
+
+  var uid = lerSessao();
+  log('uid sessao: ' + uid);
+
+  if (!uid) {
+    log('sem sessao, mostrar login');
+    mostrarEcra('login');
+    return;
+  }
+
+  log('a carregar utilizador uid=' + uid);
+  sbGet('utilizadores', 'id=eq.' + uid + '&select=*')
+    .then(function(dados) {
+      log('utilizador resposta: ' + JSON.stringify(dados));
+      if (!dados || !dados.length) {
+        limparSessao();
+        mostrarEcra('login');
+        return;
+      }
+      estadoApp.utilizador = dados[0];
+      return carregarEquipamentos();
+    })
+    .catch(function(e) {
+      log('Erro carregar utilizador: ' + e);
+      mostrarEcra('login');
+    });
+}
+
+// ─── CARREGAR EQUIPAMENTOS ───────────────────────────────────────────────────
+function carregarEquipamentos() {
+  log('carregarEquipamentos()');
+  var u = estadoApp.utilizador;
+
+  // admin e supervisor vêem todos
+  if (u.perfil === 'admin' || u.perfil === 'supervisor') {
+    return sbGet('equipamentos', 'select=*&order=nome.asc')
+      .then(function(eqs) {
+        log('equipamentos (todos): ' + (eqs ? eqs.length : 0));
+        estadoApp.equipamentos = eqs || [];
+        arrancarApp();
+      })
+      .catch(function(e) {
+        log('Erro equipamentos: ' + e);
+        mostrarEcra('login');
+      });
+  }
+
+  // DDS só vê módulo DDS (sem equipamentos)
+  if (u.perfil === 'responsavel_dds') {
+    estadoApp.equipamentos = [];
+    arrancarApp();
+    return;
+  }
+
+  // responsavel e funcionario — equipamentos atribuídos
+  return sbGet('utilizador_equipamentos',
+    'utilizador_id=eq.' + u.id + '&ativo=eq.true&select=equipamento_id,equipamentos(id,nome,tipo)'
+  ).then(function(rels) {
+    log('relacoes equip: ' + JSON.stringify(rels));
+    var eqs = [];
+    if (rels && rels.length) {
+      for (var i = 0; i < rels.length; i++) {
+        if (rels[i].equipamentos) {
+          eqs.push(rels[i].equipamentos);
+        }
+      }
+    }
+    estadoApp.equipamentos = eqs;
+    arrancarApp();
+  }).catch(function(e) {
+    log('Erro equip atrib: ' + e);
+    mostrarEcra('login');
+  });
+}
+
+// ─── ARRANCAR APP ────────────────────────────────────────────────────────────
+function arrancarApp() {
+  log('arrancarApp()');
+  var u = estadoApp.utilizador;
+
+  // topo
+  var badge = document.getElementById('badge-perfil');
+  badge.textContent = u.perfil.replace('_', ' ');
+
+  // DDS sem equipamentos
+  if (u.perfil === 'responsavel_dds') {
+    mostrarEcra('principal');
+    renderNavDDS();
+    return;
+  }
+
+  // sem equipamentos atribuídos
+  if (!estadoApp.equipamentos.length) {
+    mostrarEcra('principal');
+    var nav = document.getElementById('nav-eq');
+    nav.innerHTML = '';
+    var area = document.getElementById('area-eq');
+    area.innerHTML = '';
+    var msg = document.createElement('div');
+    msg.className = 'vazio';
+    msg.textContent = 'Nenhum equipamento atribuído.';
+    area.appendChild(msg);
+    return;
+  }
+
+  mostrarEcra('principal');
+  renderNav();
+  seleccionarEq(estadoApp.equipamentos[0].id);
+}
+
+// ─── NAVEGAÇÃO ───────────────────────────────────────────────────────────────
+function renderNav() {
+  var nav = document.getElementById('nav-eq');
+  nav.innerHTML = '';
+  var eqs = estadoApp.equipamentos;
+
+  for (var i = 0; i < eqs.length; i++) {
+    (function(eq) {
+      var btn = document.createElement('button');
+      btn.className = 'nav-eq-btn';
+      btn.id = 'nav-btn-' + eq.id;
+      btn.textContent = eq.nome;
+      btn.onclick = function() { seleccionarEq(eq.id); };
+      nav.appendChild(btn);
+    })(eqs[i]);
+  }
+
+  // admin: botão administração
+  if (estadoApp.utilizador.perfil === 'admin') {
+    var btnAdm = document.createElement('button');
+    btnAdm.className = 'nav-eq-btn';
+    btnAdm.id = 'nav-btn-admin';
+    btnAdm.textContent = '⚙ Admin';
+    btnAdm.onclick = function() { seleccionarAdmin(); };
+    nav.appendChild(btnAdm);
+  }
+}
+
+function renderNavDDS() {
+  var nav = document.getElementById('nav-eq');
+  nav.innerHTML = '';
+  var btn = document.createElement('button');
+  btn.className = 'nav-eq-btn ativo';
+  btn.textContent = 'Memorandos DDS';
+  nav.appendChild(btn);
+
+  var area = document.getElementById('area-eq');
+  area.innerHTML = '';
+  var msg = document.createElement('div');
+  msg.className = 'vazio';
+  msg.textContent = 'Módulo DDS — em desenvolvimento.';
+  area.appendChild(msg);
+}
+
+function seleccionarEq(eqId) {
+  log('seleccionar eq: ' + eqId);
+  estadoApp.eqAtivo = eqId;
+
+  // actualizar nav
+  var btns = document.querySelectorAll('.nav-eq-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.remove('ativo');
+  }
+  var btnAtivo = document.getElementById('nav-btn-' + eqId);
+  if (btnAtivo) {
+    btnAtivo.classList.add('ativo');
+    btnAtivo.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
+
+  // encontrar eq
+  var eq = null;
+  for (var j = 0; j < estadoApp.equipamentos.length; j++) {
+    if (estadoApp.equipamentos[j].id === eqId) {
+      eq = estadoApp.equipamentos[j];
+      break;
+    }
+  }
+  if (!eq) return;
+
+  renderAreaEq(eq);
+}
+
+function seleccionarAdmin() {
+  estadoApp.eqAtivo = null;
+  var btns = document.querySelectorAll('.nav-eq-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.remove('ativo');
+  }
+  var btnAdm = document.getElementById('nav-btn-admin');
+  if (btnAdm) btnAdm.classList.add('ativo');
+
+  var area = document.getElementById('area-eq');
+  area.innerHTML = '';
+  var msg = document.createElement('div');
+  msg.className = 'vazio';
+  msg.textContent = 'Administração — em desenvolvimento.';
+  area.appendChild(msg);
+}
+
+// ─── ÁREA EQUIPAMENTO ────────────────────────────────────────────────────────
+function renderAreaEq(eq) {
+  var area = document.getElementById('area-eq');
+  area.innerHTML = '';
+
+  var titulo = document.createElement('div');
+  titulo.className = 'eq-titulo';
+  titulo.textContent = eq.nome;
+  area.appendChild(titulo);
+
+  var tipo = document.createElement('div');
+  tipo.className = 'eq-tipo';
+  tipo.textContent = tipoLabel(eq.tipo);
+  area.appendChild(tipo);
+
+  var modulos = modulosPorTipo(eq.tipo, estadoApp.utilizador.perfil);
+
+  for (var i = 0; i < modulos.length; i++) {
+    area.appendChild(criarModuloCard(modulos[i], eq));
+  }
+}
+
+function tipoLabel(tipo) {
+  var mapa = {
+    'pavilhao': 'Pavilhão Desportivo',
+    'piscina_coberta': 'Piscina Coberta',
+    'piscina_descoberta': 'Piscina Descoberta',
+    'complexo': 'Complexo',
+    'casa_juventude': 'Casa da Juventude'
+  };
+  return mapa[tipo] || tipo;
+}
+
+function modulosPorTipo(tipo, perfil) {
+  var base = [
+    { id: 'escala', nome: 'Escala Semanal', icone: '📅' },
+    { id: 'checklist_inicio', nome: 'Checklist de Início de Turno', icone: '✅' },
+    { id: 'checklist_termo', nome: 'Checklist de Termo de Turno', icone: '📋' },
+    { id: 'reparacoes', nome: 'Pedidos de Reparação', icone: '🔧' }
+  ];
+
+  if (tipo === 'pavilhao') {
+    base.push({ id: 'reservas', nome: 'Reservas', icone: '📆' });
+  }
+
+  if (tipo === 'piscina_coberta' || tipo === 'piscina_descoberta') {
+    base.push({ id: 'agua', nome: 'Parâmetros da Água', icone: '💧' });
+  }
+
+  if (tipo === 'complexo') {
+    base.push({ id: 'reservas', nome: 'Reservas CEAVM', icone: '📆' });
+  }
+
+  // DDS extra para responsavel e supervisor/admin
+  if (perfil === 'admin' || perfil === 'supervisor' || perfil === 'responsavel') {
+    base.push({ id: 'dds', nome: 'Memorandos DDS', icone: '📨' });
+  }
+
+  return base;
+}
+
+function criarModuloCard(modulo, eq) {
+  var card = document.createElement('div');
+  card.className = 'modulo-card';
+
+  var header = document.createElement('div');
+  header.className = 'modulo-header';
+
+  var esq = document.createElement('div');
+  esq.className = 'modulo-header-esq';
+
+  var icone = document.createElement('div');
+  icone.className = 'modulo-icone';
+  icone.textContent = modulo.icone;
+
+  var nome = document.createElement('div');
+  nome.className = 'modulo-nome';
+  nome.textContent = modulo.nome;
+
+  esq.appendChild(icone);
+  esq.appendChild(nome);
+
+  var seta = document.createElement('div');
+  seta.className = 'modulo-seta';
+  seta.textContent = '▾';
+
+  header.appendChild(esq);
+  header.appendChild(seta);
+
+  var corpo = document.createElement('div');
+  corpo.className = 'modulo-corpo';
+  corpo.id = 'modulo-corpo-' + modulo.id + '-' + eq.id;
+
+  // toggle
+  header.onclick = function() {
+    var aberto = corpo.classList.contains('aberto');
+    if (aberto) {
+      corpo.classList.remove('aberto');
+      seta.classList.remove('aberto');
+    } else {
+      corpo.classList.add('aberto');
+      seta.classList.add('aberto');
+      carregarModulo(modulo.id, eq, corpo);
+    }
+  };
+
+  card.appendChild(header);
+  card.appendChild(corpo);
+  return card;
+}
+
+// ─── CARREGAR MÓDULO ─────────────────────────────────────────────────────────
+function carregarModulo(moduloId, eq, corpo) {
+  // só carrega se ainda não tiver conteúdo
+  if (corpo.dataset.carregado === '1') return;
+  corpo.dataset.carregado = '1';
+
+  var msg = document.createElement('div');
+  msg.className = 'vazio';
+  msg.textContent = 'Módulo em desenvolvimento.';
+  corpo.appendChild(msg);
+
+  // Aqui cada módulo será implementado progressivamente
+  // Por agora mostra placeholder
+}
+
+// ─── LOGIN ───────────────────────────────────────────────────────────────────
+function fazerLogin() {
+  var inp = document.getElementById('inp-codigo');
+  var erro = document.getElementById('login-erro');
+  var codigo = inp.value.trim().toUpperCase();
+
+  erro.textContent = '';
+
+  if (!codigo) {
+    erro.textContent = 'Introduz o teu código de acesso.';
+    return;
+  }
+
+  log('a fazer login com codigo: ' + codigo);
+
+  sbGet('utilizadores', 'codigo_visivel=eq.' + encodeURIComponent(codigo) + '&select=*')
+    .then(function(dados) {
+      log('login resposta: ' + JSON.stringify(dados));
+      if (!dados || !dados.length) {
+        erro.textContent = 'Código inválido. Verifica e tenta novamente.';
+        return;
+      }
+      var u = dados[0];
+      if (!u.ativo) {
+        erro.textContent = 'Conta inactiva. Contacta o administrador.';
+        return;
+      }
+      guardarSessao(u.id);
+      estadoApp.utilizador = u;
+      carregarEquipamentos();
+    })
+    .catch(function(e) {
+      log('Erro login: ' + e);
+      erro.textContent = 'Erro de ligação. Verifica a tua rede.';
+    });
+}
+
+// ─── SAIR ────────────────────────────────────────────────────────────────────
+function fazerSair() {
+  limparSessao();
+  estadoApp.utilizador = null;
+  estadoApp.equipamentos = [];
+  estadoApp.eqAtivo = null;
+  document.getElementById('inp-codigo') && (document.getElementById('inp-codigo').value = '');
+  mostrarEcra('login');
+}
+
+// ─── ENTER NO INPUT ──────────────────────────────────────────────────────────
+document.getElementById('inp-codigo').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' || e.keyCode === 13) {
+    fazerLogin();
+  }
+});
+
+// ─── ARRANCAR ────────────────────────────────────────────────────────────────
+iniciar();
+</script>
+</body>
+</html>
