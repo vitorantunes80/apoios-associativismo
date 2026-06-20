@@ -1,0 +1,2005 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GestEq — Gestão de Equipamentos Municipais</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+  :root {
+    --azul: #1B3A6B;
+    --azul-medio: #2D5FA6;
+    --azul-claro: #4A90D9;
+    --verde: #2A7A4B;
+    --verde-claro: #E8F5EE;
+    --vermelho: #C0392B;
+    --vermelho-claro: #FDECEA;
+    --amarelo: #D4820A;
+    --amarelo-claro: #FEF3E2;
+    --cinza-escuro: #1A1A2E;
+    --cinza: #4A4A6A;
+    --cinza-medio: #8A8AAA;
+    --cinza-claro: #F0F2F8;
+    --branco: #FFFFFF;
+    --borda: #DDE2F0;
+    --sombra: 0 2px 12px rgba(27,58,107,0.10);
+    --sombra-forte: 0 8px 32px rgba(27,58,107,0.18);
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--cinza-claro);
+    color: var(--cinza-escuro);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  h1,h2,h3,h4 { font-family: 'Space Grotesk', sans-serif; }
+
+  /* ===== LOGIN ===== */
+  .login-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--azul) 0%, var(--azul-medio) 60%, var(--azul-claro) 100%);
+    padding: 20px;
+  }
+  .login-card {
+    background: var(--branco);
+    border-radius: var(--radius-lg);
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: var(--sombra-forte);
+    text-align: center;
+  }
+  .login-logo {
+    width: 64px; height: 64px;
+    background: var(--azul);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 28px;
+  }
+  .login-card h1 { font-size: 22px; color: var(--azul); margin-bottom: 4px; }
+  .login-card p { color: var(--cinza-medio); font-size: 13px; margin-bottom: 32px; }
+  .login-card input {
+    width: 100%; padding: 14px 16px;
+    border: 2px solid var(--borda); border-radius: var(--radius);
+    font-size: 18px; letter-spacing: 6px; text-align: center;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 600;
+    color: var(--azul); outline: none; transition: border-color 0.2s;
+    text-transform: uppercase;
+  }
+  .login-card input:focus { border-color: var(--azul-claro); }
+  .login-card input::placeholder { letter-spacing: 2px; font-size: 14px; color: var(--cinza-medio); font-weight: 400; }
+  .btn-login {
+    width: 100%; margin-top: 16px; padding: 14px;
+    background: var(--azul); color: #fff;
+    border: none; border-radius: var(--radius); cursor: pointer;
+    font-size: 15px; font-weight: 600; font-family: 'Space Grotesk', sans-serif;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .btn-login:hover { background: var(--azul-medio); transform: translateY(-1px); }
+  .login-error { color: var(--vermelho); font-size: 13px; margin-top: 12px; }
+
+  /* ===== LAYOUT ===== */
+  .app-layout { display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 260px; min-width: 260px;
+    background: var(--azul);
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0; bottom: 0;
+    z-index: 100; overflow-y: auto;
+    transition: transform 0.3s;
+  }
+  .sidebar-header {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.10);
+  }
+  .sidebar-header .logo-row { display: flex; align-items: center; gap: 12px; }
+  .sidebar-header .logo-icon {
+    width: 40px; height: 40px; background: rgba(255,255,255,0.15);
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .sidebar-header h2 { color: #fff; font-size: 15px; font-weight: 700; line-height: 1.2; }
+  .sidebar-header span { color: rgba(255,255,255,0.5); font-size: 11px; }
+  .sidebar-user {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-user .user-name { color: #fff; font-size: 13px; font-weight: 600; }
+  .sidebar-user .user-role {
+    display: inline-block; margin-top: 4px;
+    padding: 2px 8px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .role-admin { background: #F39C12; color: #000; }
+  .role-supervisor { background: #8E44AD; color: #fff; }
+  .role-responsavel { background: #27AE60; color: #fff; }
+  .role-funcionario { background: #2980B9; color: #fff; }
+
+  .sidebar-nav { flex: 1; padding: 12px 0; }
+  .nav-section { padding: 8px 20px 4px; color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; color: rgba(255,255,255,0.75);
+    cursor: pointer; transition: all 0.15s; font-size: 13px;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-item.active { background: rgba(255,255,255,0.12); color: #fff; border-left-color: var(--azul-claro); font-weight: 600; }
+  .nav-item .nav-icon { width: 18px; text-align: center; font-size: 15px; flex-shrink: 0; }
+  .nav-sub { padding-left: 32px; }
+  .nav-sub .nav-item { font-size: 12px; padding: 8px 20px 8px 8px; }
+
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .btn-sair {
+    width: 100%; padding: 10px; background: rgba(255,255,255,0.08);
+    border: none; border-radius: 8px; color: rgba(255,255,255,0.7);
+    cursor: pointer; font-size: 13px; font-weight: 500;
+    transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-sair:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+  /* MAIN */
+  .main-content {
+    margin-left: 260px;
+    flex: 1; padding: 28px;
+    min-height: 100vh;
+  }
+
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+  }
+  .page-header h1 { font-size: 22px; color: var(--azul); }
+  .page-header p { color: var(--cinza-medio); font-size: 13px; margin-top: 2px; }
+
+  /* CARDS */
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 16px; }
+  .card {
+    background: var(--branco); border-radius: var(--radius-lg);
+    padding: 20px; box-shadow: var(--sombra);
+    border: 1px solid var(--borda); transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .card:hover { box-shadow: var(--sombra-forte); transform: translateY(-2px); }
+  .card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+  .card-icon { font-size: 24px; }
+  .card-badge {
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  }
+  .badge-ativo { background: var(--verde-claro); color: var(--verde); }
+  .badge-sazonal { background: var(--amarelo-claro); color: var(--amarelo); }
+  .card h3 { font-size: 15px; color: var(--azul); margin-bottom: 4px; }
+  .card-local { color: var(--cinza-medio); font-size: 12px; display: flex; align-items: center; gap: 4px; }
+  .card-responsavel { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--borda); font-size: 12px; color: var(--cinza); }
+  .card-responsavel strong { color: var(--azul); }
+  .card-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+
+  /* BOTÕES */
+  .btn {
+    padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer;
+    font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+    transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary { background: var(--azul); color: #fff; }
+  .btn-primary:hover { background: var(--azul-medio); }
+  .btn-secondary { background: var(--cinza-claro); color: var(--cinza); border: 1px solid var(--borda); }
+  .btn-secondary:hover { background: var(--borda); }
+  .btn-success { background: var(--verde); color: #fff; }
+  .btn-success:hover { background: #1e5c38; }
+  .btn-danger { background: var(--vermelho); color: #fff; }
+  .btn-danger:hover { background: #922b21; }
+  .btn-warning { background: var(--amarelo); color: #fff; }
+  .btn-warning:hover { background: #b8700a; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-xs { padding: 3px 8px; font-size: 11px; }
+  .btn-outline { background: transparent; border: 1.5px solid var(--azul); color: var(--azul); }
+  .btn-outline:hover { background: var(--azul); color: #fff; }
+
+  /* TABELAS */
+  .table-wrap { background: var(--branco); border-radius: var(--radius-lg); box-shadow: var(--sombra); border: 1px solid var(--borda); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: var(--cinza-claro); color: var(--cinza); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--borda); }
+  tbody td { padding: 12px 16px; border-bottom: 1px solid var(--borda); font-size: 13px; color: var(--cinza-escuro); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #f8f9fd; }
+
+  /* FORMS */
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--cinza); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px 12px; border: 1.5px solid var(--borda);
+    border-radius: 8px; font-size: 13px; font-family: 'Inter', sans-serif;
+    color: var(--cinza-escuro); outline: none; transition: border-color 0.2s;
+    background: var(--branco);
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--azul-claro); }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; padding: 20px; backdrop-filter: blur(2px);
+  }
+  .modal {
+    background: var(--branco); border-radius: var(--radius-lg);
+    padding: 28px; width: 100%; max-width: 560px;
+    box-shadow: var(--sombra-forte); max-height: 90vh; overflow-y: auto;
+  }
+  .modal-lg { max-width: 760px; }
+  .modal h2 { font-size: 18px; color: var(--azul); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--borda); }
+
+  /* STATUS BADGES */
+  .status { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+  .status-pendente { background: var(--amarelo-claro); color: var(--amarelo); }
+  .status-reforco { background: #EDE7F6; color: #6A1B9A; }
+  .status-concluido { background: var(--verde-claro); color: var(--verde); }
+  .status-confirmada { background: var(--verde-claro); color: var(--verde); }
+  .status-cancelada { background: var(--vermelho-claro); color: var(--vermelho); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--borda); margin-bottom: 20px; flex-wrap: wrap; }
+  .tab {
+    padding: 10px 18px; cursor: pointer; font-size: 13px; font-weight: 600;
+    color: var(--cinza-medio); border-bottom: 2px solid transparent;
+    margin-bottom: -2px; transition: all 0.15s; border-radius: 4px 4px 0 0;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--azul); background: var(--cinza-claro); }
+  .tab.active { color: var(--azul); border-bottom-color: var(--azul); background: #EEF3FF; }
+
+  /* STATS */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 14px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--branco); border-radius: var(--radius); padding: 16px;
+    border: 1px solid var(--borda); box-shadow: var(--sombra);
+  }
+  .stat-card .stat-num { font-size: 28px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; color: var(--azul); }
+  .stat-card .stat-label { font-size: 11px; color: var(--cinza-medio); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+  /* CALENDAR */
+  .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .cal-header h3 { font-size: 16px; color: var(--azul); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .cal-day-header { text-align: center; font-size: 11px; font-weight: 700; color: var(--cinza-medio); padding: 6px 0; text-transform: uppercase; }
+  .cal-day {
+    background: var(--branco); border: 1px solid var(--borda); border-radius: 8px;
+    padding: 8px 6px; min-height: 80px; cursor: pointer; transition: all 0.15s;
+  }
+  .cal-day:hover { border-color: var(--azul-claro); background: #EEF3FF; }
+  .cal-day.other-month { opacity: 0.4; }
+  .cal-day.today { border-color: var(--azul); background: #EEF3FF; }
+  .cal-day-num { font-size: 12px; font-weight: 700; color: var(--cinza); margin-bottom: 4px; }
+  .cal-day.today .cal-day-num { color: var(--azul); }
+  .cal-event {
+    background: var(--azul-claro); color: #fff; border-radius: 4px;
+    padding: 2px 5px; font-size: 10px; margin-bottom: 2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .cal-event.campo { background: var(--azul); }
+  .cal-event.sala { background: var(--verde); }
+  .cal-event.ceavm { background: var(--amarelo); color: #000; }
+
+  /* CHECKLIST */
+  .checklist-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px; border: 1px solid var(--borda); border-radius: 8px;
+    margin-bottom: 8px; background: var(--branco); transition: all 0.15s;
+  }
+  .checklist-item.ok { border-color: var(--verde); background: var(--verde-claro); }
+  .checklist-item.nok { border-color: var(--vermelho); background: var(--vermelho-claro); }
+  .check-toggle { display: flex; gap: 6px; }
+  .check-btn {
+    width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--borda);
+    cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; background: var(--branco);
+  }
+  .check-btn.sim { border-color: var(--verde); color: var(--verde); }
+  .check-btn.sim.active { background: var(--verde); color: #fff; }
+  .check-btn.nao { border-color: var(--vermelho); color: var(--vermelho); }
+  .check-btn.nao.active { background: var(--vermelho); color: #fff; }
+
+  /* WATER PARAMS */
+  .param-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px; border: 1px solid var(--borda); border-radius: 8px;
+    margin-bottom: 8px; background: var(--branco);
+  }
+  .param-name { flex: 1; font-weight: 600; font-size: 13px; }
+  .param-range { font-size: 11px; color: var(--cinza-medio); }
+  .param-input { width: 100px; padding: 6px 10px; border: 1.5px solid var(--borda); border-radius: 6px; font-size: 14px; font-weight: 700; text-align: center; }
+  .param-status { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .param-ok { background: var(--verde-claro); color: var(--verde); }
+  .param-nok { background: var(--vermelho-claro); color: var(--vermelho); }
+
+  /* ALERT */
+  .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  .alert-info { background: #EEF3FF; color: var(--azul); border: 1px solid #C7D7F5; }
+  .alert-success { background: var(--verde-claro); color: var(--verde); border: 1px solid #A8D5B8; }
+  .alert-warning { background: var(--amarelo-claro); color: var(--amarelo); border: 1px solid #F5D6A0; }
+  .alert-error { background: var(--vermelho-claro); color: var(--vermelho); border: 1px solid #F5AEAC; }
+
+  /* ESCALA */
+  .escala-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+  .escala-col-header { text-align: center; font-size: 11px; font-weight: 700; color: var(--cinza-medio); padding: 8px; text-transform: uppercase; }
+  .escala-cell {
+    background: var(--branco); border: 1px solid var(--borda); border-radius: 8px;
+    padding: 8px; min-height: 90px; cursor: pointer; transition: border-color 0.15s;
+  }
+  .escala-cell:hover { border-color: var(--azul-claro); }
+  .escala-turno {
+    background: var(--azul-claro); color: #fff; border-radius: 6px;
+    padding: 4px 6px; font-size: 10px; margin-bottom: 4px;
+  }
+  .escala-turno.manha { background: #F39C12; }
+  .escala-turno.tarde { background: var(--azul-claro); }
+  .escala-turno.noite { background: #6C3483; }
+  .escala-turno.recepcao { background: var(--verde); }
+  .escala-turno.ns { background: #1A5276; }
+
+  /* MEMORANDOS */
+  .dias-contador {
+    display: inline-block; background: var(--azul); color: #fff;
+    border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700;
+  }
+  .dias-contador.urgente { background: var(--vermelho); }
+  .dias-contador.aviso { background: var(--amarelo); }
+
+  /* SECTION BOX */
+  .section-box {
+    background: var(--branco); border-radius: var(--radius-lg);
+    border: 1px solid var(--borda); box-shadow: var(--sombra);
+    margin-bottom: 20px; overflow: hidden;
+  }
+  .section-box-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--borda);
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--cinza-claro);
+  }
+  .section-box-header h3 { font-size: 15px; color: var(--azul); display: flex; align-items: center; gap: 8px; }
+  .section-box-body { padding: 20px; }
+
+  /* TOASTS */
+  .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    background: var(--cinza-escuro); color: #fff;
+    padding: 12px 20px; border-radius: 10px; font-size: 13px;
+    box-shadow: var(--sombra-forte); animation: slideIn 0.3s ease;
+    display: flex; align-items: center; gap: 8px; max-width: 320px;
+  }
+  .toast.success { background: var(--verde); }
+  .toast.error { background: var(--vermelho); }
+  @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* MOBILE */
+  .hamburger { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--azul); border: none; border-radius: 8px; padding: 8px 10px; cursor: pointer; color: #fff; font-size: 18px; }
+  @media (max-width: 768px) {
+    .hamburger { display: flex; }
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .main-content { margin-left: 0; padding: 16px; padding-top: 60px; }
+    .form-row, .form-row-3 { grid-template-columns: 1fr; }
+    .escala-grid { grid-template-columns: repeat(3,1fr); }
+  }
+
+  .loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--cinza-medio); font-size: 14px; gap: 10px; }
+  .spinner { width: 20px; height: 20px; border: 2px solid var(--borda); border-top-color: var(--azul); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--cinza-medio); }
+  .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  .codigo-display {
+    background: var(--cinza-claro); border: 2px dashed var(--borda);
+    border-radius: 10px; padding: 16px; text-align: center; margin: 12px 0;
+  }
+  .codigo-display .codigo { font-size: 28px; font-weight: 700; letter-spacing: 6px; color: var(--azul); font-family: 'Space Grotesk', sans-serif; }
+  .codigo-display p { font-size: 12px; color: var(--cinza-medio); margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div id="hamburger-wrap"></div>
+<div class="toast-container" id="toasts"></div>
+
+<div id="root"></div>
+
+<script>
+// ===== CONFIG =====
+const SUPABASE_URL = 'https://jpojyhvocspksumljslx.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impwb2p5aHZvY3Nwa3N1bWxqc2x4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NzE3NDUsImV4cCI6MjA5NzQ0Nzc0NX0.qwAyl_zBx31Z6a3KbaHns8gWceRrjQPcdN3RDBTkGkA';
+
+// ===== SUPABASE CLIENT =====
+const sb = {
+  async query(table, opts={}) {
+    let url = `${SUPABASE_URL}/rest/v1/${table}?`;
+    if(opts.select) url += `select=${encodeURIComponent(opts.select)}&`;
+    if(opts.filter) Object.entries(opts.filter).forEach(([k,v])=>{ url += `${k}=${encodeURIComponent(v)}&`; });
+    if(opts.order) url += `order=${opts.order}&`;
+    if(opts.limit) url += `limit=${opts.limit}&`;
+    const r = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type':'application/json' }});
+    return r.json();
+  },
+  async insert(table, data) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+      method:'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type':'application/json', 'Prefer':'return=representation' },
+      body: JSON.stringify(data)
+    });
+    return r.json();
+  },
+  async update(table, id, data) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method:'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type':'application/json', 'Prefer':'return=representation' },
+      body: JSON.stringify(data)
+    });
+    return r.json();
+  },
+  async delete(table, id) {
+    await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method:'DELETE', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+  },
+  async rpc(fn, params={}) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+      method:'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type':'application/json' },
+      body: JSON.stringify(params)
+    });
+    return r.json();
+  }
+};
+
+// ===== STATE =====
+let state = {
+  user: null,
+  token: null,
+  page: 'dashboard',
+  selectedEquipamento: null,
+  equipamentos: [],
+  utilizadores: [],
+  modal: null,
+  sidebarOpen: false,
+  tab: 'checklist_inicio',
+  calMonth: new Date().getMonth(),
+  calYear: new Date().getFullYear(),
+  escalaSemana: new Date(),
+};
+
+// ===== AUTH =====
+function hashCode(code) {
+  return CryptoJS.SHA256(code.toUpperCase().trim()).toString();
+}
+
+async function login(code) {
+  const codeClean = code.toUpperCase().trim();
+  const resp = await fetch(SUPABASE_URL+'/rest/v1/utilizadores?codigo_visivel=eq.'+encodeURIComponent(codeClean)+'&ativo=eq.true&select=*', {
+    headers: {'apikey': SUPABASE_KEY, 'Authorization': 'Bearer '+SUPABASE_KEY}
+  });
+  const users = await resp.json();
+  if(!Array.isArray(users)||!users.length) return null;
+  return {user: users[0], token: users[0].id+'_'+Date.now()};
+}
+
+async function checkSession() {
+  const saved = localStorage.getItem('gesteq_session');
+  if(!saved) return false;
+  try {
+    const {uid, exp} = JSON.parse(saved);
+    if(!uid||Date.now()>exp){localStorage.removeItem('gesteq_session');return false;}
+    const resp = await fetch(SUPABASE_URL+'/rest/v1/utilizadores?id=eq.'+uid+'&ativo=eq.true&select=*', {
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    });
+    const users = await resp.json();
+    if(!Array.isArray(users)||!users.length){localStorage.removeItem('gesteq_session');return false;}
+    state.user=users[0];return true;
+  }catch{localStorage.removeItem('gesteq_session');return false;}
+}
+
+async function logout() {
+  // session stored in localStorage only
+  localStorage.removeItem('gesteq_session');
+  state.user = null; state.token = null;
+  render();
+}
+
+// ===== UTILS =====
+function toast(msg, type='') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  const icons = { success:'✅', error:'❌', '':'ℹ️' };
+  t.innerHTML = `${icons[type]||'ℹ️'} ${msg}`;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(()=>t.remove(), 3500);
+}
+
+function toggleSidebar() {
+  state.sidebarOpen = !state.sidebarOpen;
+  document.querySelector('.sidebar')?.classList.toggle('open', state.sidebarOpen);
+}
+
+function navigate(page, eq=null) {
+  state.page = page;
+  if(eq) state.selectedEquipamento = eq;
+  state.sidebarOpen = false;
+  document.querySelector('.sidebar')?.classList.remove('open');
+  render();
+}
+
+function formatDate(d) {
+  if(!d) return '—';
+  return new Date(d).toLocaleDateString('pt-PT');
+}
+
+function diasDesde(data) {
+  if(!data) return null;
+  const hoje = new Date(); const d = new Date(data);
+  return Math.floor((hoje-d)/(1000*60*60*24));
+}
+
+function gerarCodigo() {
+  const letras = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const numeros = '0123456789';
+  let c = '';
+  for(let i=0;i<2;i++) c += letras[Math.floor(Math.random()*letras.length)];
+  c += '-';
+  for(let i=0;i<4;i++) c += numeros[Math.floor(Math.random()*numeros.length)];
+  return c;
+}
+
+const TIPO_ICONE = {
+  pavilhao: '🏟️', piscina_coberta: '🏊', piscina_descoberta: '🌊',
+  complexo: '🌿', casa_juventude: '🏠'
+};
+const TIPO_LABEL = {
+  pavilhao: 'Pavilhão', piscina_coberta: 'Piscina Coberta', piscina_descoberta: 'Piscina Descoberta',
+  complexo: 'Complexo', casa_juventude: 'Casa da Juventude'
+};
+const PERFIL_LABEL = { admin:'Admin', supervisor:'Supervisor', responsavel:'Responsável', funcionario:'Funcionário' };
+
+function canEdit() { return ['admin','supervisor'].includes(state.user?.perfil); }
+function isAdmin() { return state.user?.perfil === 'admin'; }
+function canReservar() { return ['admin','supervisor','responsavel'].includes(state.user?.perfil); }
+
+// ===== RENDER ENGINE =====
+function render() {
+  const root = document.getElementById('root');
+  const hw=document.getElementById('hamburger-wrap');
+  if(!state.user) { root.innerHTML = renderLogin(); if(hw)hw.innerHTML=''; attachLoginEvents(); return; }
+  if(hw)hw.innerHTML='<button class="hamburger" onclick="toggleSidebar()">☰</button>';
+  root.innerHTML = `
+    ${renderSidebar()}
+    <div class="main-content">${renderPage()}</div>
+  `;
+  attachPageEvents();
+}
+
+// ===== LOGIN PAGE =====
+function renderLogin() {
+  return `<div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">🏛️</div>
+      <h1>GestEq</h1>
+      <p>Gestão de Equipamentos Municipais<br>Cabeceiras de Basto</p>
+      <input type="text" id="login-code" placeholder="Ex: ADMIN-0001" maxlength="20" autocomplete="off"/>
+      <button class="btn-login" id="btn-login">Entrar</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>`;
+}
+
+function attachLoginEvents() {
+  const inp = document.getElementById('login-code');
+  const btn = document.getElementById('btn-login');
+  const err = document.getElementById('login-error');
+
+  inp?.addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9-_]/g,''); });
+  inp?.addEventListener('keydown', e => { if(e.key==='Enter') btn.click(); });
+
+  btn?.addEventListener('click', async () => {
+    const code = inp.value.trim();
+    if(!code) { err.textContent = 'Introduza o código de acesso.'; return; }
+    btn.textContent = 'A verificar...'; btn.disabled = true;
+    try {
+      const result = await login(code);
+      if(!result) { err.textContent = 'Código inválido ou conta desativada.'; btn.textContent = 'Entrar'; btn.disabled = false; return; }
+      state.user = result.user; state.token = result.token;
+      localStorage.setItem('gesteq_session', JSON.stringify({uid: result.user.id, exp: Date.now()+8*3600000}));
+      await loadEquipamentos();
+      render();
+    } catch(e) { err.textContent = 'Erro de ligação. Tente novamente.'; btn.textContent = 'Entrar'; btn.disabled = false; }
+  });
+}
+
+// ===== SIDEBAR =====
+function renderSidebar() {
+  const u = state.user;
+  const roleCls = { admin:'role-admin', supervisor:'role-supervisor', responsavel:'role-responsavel', funcionario:'role-funcionario' };
+  return `<div class="sidebar" id="main-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-row">
+        <div class="logo-icon">🏛️</div>
+        <div><h2>GestEq</h2><span>Cab. de Basto</span></div>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-name">${u.nome}</div>
+      <span class="user-role ${roleCls[u.perfil]}">${PERFIL_LABEL[u.perfil]}</span>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">Geral</div>
+      <div class="nav-item ${state.page==='dashboard'?'active':''}" onclick="navigate('dashboard')"><span class="nav-icon">📊</span> Dashboard</div>
+      <div class="nav-item ${state.page==='equipamentos'?'active':''}" onclick="navigate('equipamentos')"><span class="nav-icon">🏛️</span> Equipamentos</div>
+      <div class="nav-item ${state.page==='memorandos_dds'?'active':''}" onclick="navigate('memorandos_dds')"><span class="nav-icon">📋</span> Memorandos DDS</div>
+
+      <div class="nav-section">Pavilhões</div>
+      ${state.equipamentos.filter(e=>e.tipo==='pavilhao').map(e=>`
+        <div class="nav-item nav-sub ${state.selectedEquipamento?.id===e.id&&state.page==='equipamento_detalhe'?'active':''}" onclick="navigate('equipamento_detalhe','${e.id}')">
+          <span class="nav-icon">🏟️</span> ${e.nome.replace('Gimnodesportivo de ','').replace('Gimnodesportivo do ','')}
+        </div>`).join('')}
+
+      <div class="nav-section">Piscinas Cobertas</div>
+      ${state.equipamentos.filter(e=>e.tipo==='piscina_coberta').map(e=>`
+        <div class="nav-item nav-sub ${state.selectedEquipamento?.id===e.id&&state.page==='equipamento_detalhe'?'active':''}" onclick="navigate('equipamento_detalhe','${e.id}')">
+          <span class="nav-icon">🏊</span> ${e.nome.replace('Piscina Municipal Coberta de ','').replace('Piscina Municipal Coberta do ','')}
+        </div>`).join('')}
+
+      <div class="nav-section">Piscinas Descobertas</div>
+      ${state.equipamentos.filter(e=>e.tipo==='piscina_descoberta').map(e=>`
+        <div class="nav-item nav-sub ${state.selectedEquipamento?.id===e.id&&state.page==='equipamento_detalhe'?'active':''}" onclick="navigate('equipamento_detalhe','${e.id}')">
+          <span class="nav-icon">🌊</span> ${e.nome.replace('Piscina Municipal Descoberta de ','').replace('Piscina Municipal Descoberta do ','')}
+        </div>`).join('')}
+
+      <div class="nav-section">Complexo V. Mouros</div>
+      ${state.equipamentos.filter(e=>e.tipo==='complexo').map(e=>`
+        <div class="nav-item nav-sub ${state.selectedEquipamento?.id===e.id&&state.page==='equipamento_detalhe'?'active':''}" onclick="navigate('equipamento_detalhe','${e.id}')">
+          <span class="nav-icon">🌿</span> ${e.nome.replace('Centro de Educação Ambiental de Vinha de Mouros (CEAVM)','CEAVM').substring(0,22)}...
+        </div>`).join('')}
+
+      <div class="nav-section">Outros</div>
+      ${state.equipamentos.filter(e=>e.tipo==='casa_juventude').map(e=>`
+        <div class="nav-item nav-sub ${state.selectedEquipamento?.id===e.id&&state.page==='equipamento_detalhe'?'active':''}" onclick="navigate('equipamento_detalhe','${e.id}')">
+          <span class="nav-icon">🏠</span> Casa da Juventude
+        </div>`).join('')}
+
+      ${isAdmin()?`<div class="nav-section">Administração</div>
+      <div class="nav-item ${state.page==='utilizadores'?'active':''}" onclick="navigate('utilizadores')"><span class="nav-icon">👥</span> Utilizadores</div>
+      <div class="nav-item ${state.page==='config_equipamentos'?'active':''}" onclick="navigate('config_equipamentos')"><span class="nav-icon">⚙️</span> Configurações</div>`:''}
+    </div>
+    <div class="sidebar-footer">
+      <button class="btn-sair" onclick="logout()">🚪 Terminar sessão</button>
+    </div>
+  </div>`;
+}
+
+// ===== PAGES =====
+function renderPage() {
+  switch(state.page) {
+    case 'dashboard': return renderDashboard();
+    case 'equipamentos': return renderEquipamentos();
+    case 'equipamento_detalhe': return renderEquipamentoDetalhe();
+    case 'memorandos_dds': return renderMemorandosDDS();
+    case 'utilizadores': return renderUtilizadores();
+    case 'config_equipamentos': return renderConfigEquipamentos();
+    default: return renderDashboard();
+  }
+}
+
+// ===== DASHBOARD =====
+function renderDashboard() {
+  const total = state.equipamentos.length;
+  const pavilhoes = state.equipamentos.filter(e=>e.tipo==='pavilhao').length;
+  const piscinas = state.equipamentos.filter(e=>e.tipo==='piscina_coberta'||e.tipo==='piscina_descoberta').length;
+  return `
+    <div class="page-header">
+      <div><h1>Dashboard</h1><p>Bem-vindo, ${state.user.nome} — ${new Date().toLocaleDateString('pt-PT',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p></div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Equipamentos</div></div>
+      <div class="stat-card"><div class="stat-num">${pavilhoes}</div><div class="stat-label">Pavilhões</div></div>
+      <div class="stat-card"><div class="stat-num">${piscinas}</div><div class="stat-label">Piscinas</div></div>
+      <div class="stat-card"><div class="stat-num" id="dash-memorandos">—</div><div class="stat-label">Memorandos Pendentes</div></div>
+    </div>
+    <div class="section-box">
+      <div class="section-box-header"><h3>📍 Acesso Rápido</h3></div>
+      <div class="section-box-body">
+        <div class="cards-grid">
+          ${state.equipamentos.slice(0,6).map(e=>`
+            <div class="card" onclick="navigate('equipamento_detalhe','${e.id}')" style="cursor:pointer">
+              <div class="card-header">
+                <span class="card-icon">${TIPO_ICONE[e.tipo]||'🏛️'}</span>
+                <span class="card-badge ${e.sazonal?'badge-sazonal':'badge-ativo'}">${e.sazonal?'Sazonal':'Ativo'}</span>
+              </div>
+              <h3>${e.nome}</h3>
+              <div class="card-local">📍 ${e.localizacao||'—'}</div>
+              ${e.responsavel_nome?`<div class="card-responsavel">Responsável: <strong>${e.responsavel_nome}</strong></div>`:''}
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ===== EQUIPAMENTOS LIST =====
+function renderEquipamentos() {
+  const grupos = {
+    pavilhao: state.equipamentos.filter(e=>e.tipo==='pavilhao'),
+    piscina_coberta: state.equipamentos.filter(e=>e.tipo==='piscina_coberta'),
+    piscina_descoberta: state.equipamentos.filter(e=>e.tipo==='piscina_descoberta'),
+    complexo: state.equipamentos.filter(e=>e.tipo==='complexo'),
+    casa_juventude: state.equipamentos.filter(e=>e.tipo==='casa_juventude'),
+  };
+  return `
+    <div class="page-header">
+      <div><h1>🏛️ Equipamentos</h1><p>Todos os equipamentos municipais</p></div>
+      ${isAdmin()?`<button class="btn btn-primary" id="btn-novo-eq">+ Novo Equipamento</button>`:''}
+    </div>
+    ${Object.entries(grupos).map(([tipo, eqs])=> eqs.length ? `
+      <h3 style="font-size:14px;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;margin-top:20px">${TIPO_ICONE[tipo]} ${TIPO_LABEL[tipo]}S</h3>
+      <div class="cards-grid" style="margin-bottom:8px">
+        ${eqs.map(e=>`
+          <div class="card">
+            <div class="card-header">
+              <span class="card-icon">${TIPO_ICONE[e.tipo]}</span>
+              <span class="card-badge ${e.sazonal?'badge-sazonal':'badge-ativo'}">${e.sazonal?'Sazonal':'Ativo'}</span>
+            </div>
+            <h3>${e.nome}</h3>
+            <div class="card-local">📍 ${e.localizacao||'—'}</div>
+            <div class="card-responsavel">Responsável: <strong>${e.responsavel_nome||'—'}</strong></div>
+            <div class="card-actions">
+              <button class="btn btn-primary btn-sm" onclick="navigate('equipamento_detalhe','${e.id}')">Ver Detalhe</button>
+              ${isAdmin()?`<button class="btn btn-secondary btn-sm" onclick="editEquipamento('${e.id}')">✏️ Editar</button>`:''}
+            </div>
+          </div>`).join('')}
+      </div>` : '').join('')}
+  `;
+}
+
+// ===== EQUIPAMENTO DETALHE =====
+function renderEquipamentoDetalhe() {
+  const eq = state.equipamentos.find(e=>e.id===state.selectedEquipamento) ||
+             state.equipamentos.find(e=>e.id===state.selectedEquipamento?.id);
+  if(!eq) return '<div class="alert alert-error">Equipamento não encontrado.</div>';
+
+  const temReservas = eq.tipo==='pavilhao' || (eq.tipo==='complexo' && eq.nome.includes('CEAVM'));
+  const temAgua = eq.tipo==='piscina_coberta' || eq.tipo==='piscina_descoberta';
+  const temEscalaComplexo = eq.tipo==='piscina_descoberta';
+
+  const tabs = ['checklist_inicio','checklist_termo','escala','relatorios','memorandos_rep'];
+  if(temReservas) tabs.unshift('reservas');
+  if(temAgua) tabs.splice(temReservas?1:0,0,'parametros_agua');
+
+  if(!state.tab || !tabs.includes(state.tab)) state.tab = tabs[0];
+
+  const tabLabels = {
+    reservas:'📅 Reservas', checklist_inicio:'✅ Checklist Início', checklist_termo:'🔚 Checklist Termo',
+    escala:'📆 Escala', relatorios:'📊 Relatórios', memorandos_rep:'🔧 Reparações',
+    parametros_agua:'💧 Parâmetros Água'
+  };
+
+  return `
+    <div class="page-header">
+      <div>
+        <h1>${TIPO_ICONE[eq.tipo]} ${eq.nome}</h1>
+        <p>📍 ${eq.localizacao||'—'} ${eq.sazonal?'· <span style="color:var(--amarelo);font-weight:600">Sazonal (Jul-Ago)</span>':''}</p>
+      </div>
+      ${isAdmin()?`<button class="btn btn-secondary btn-sm" onclick="editEquipamento('${eq.id}')">✏️ Editar</button>`:''}
+    </div>
+    <div class="alert alert-info">
+      👤 Responsável: <strong>${eq.responsavel_nome||'Não definido'}</strong>
+      ${isAdmin()?`<button class="btn btn-xs btn-outline" style="margin-left:12px" onclick="editResponsavel('${eq.id}','${eq.responsavel_nome||''}')">Alterar</button>`:''}
+    </div>
+    <div class="tabs">
+      ${tabs.map(t=>`<div class="tab ${state.tab===t?'active':''}" onclick="setTab('${t}')">${tabLabels[t]}</div>`).join('')}
+    </div>
+    <div id="tab-content">
+      ${renderTabContent(eq)}
+    </div>
+  `;
+}
+
+function setTab(t) { state.tab = t; document.getElementById('tab-content').innerHTML = renderTabContent(state.equipamentos.find(e=>e.id===state.selectedEquipamento)||state.equipamentos.find(e=>e.id===state.selectedEquipamento?.id)); attachTabEvents(); }
+
+function renderTabContent(eq) {
+  switch(state.tab) {
+    case 'reservas': return renderReservas(eq);
+    case 'checklist_inicio': return renderChecklist(eq,'inicio_turno');
+    case 'checklist_termo': return renderChecklist(eq,'termo_turno');
+    case 'escala': return renderEscala(eq);
+    case 'parametros_agua': return renderParametrosAgua(eq);
+    case 'relatorios': return renderRelatorios(eq);
+    case 'memorandos_rep': return renderMemorandosRep(eq);
+    default: return '';
+  }
+}
+
+// ===== RESERVAS =====
+function renderReservas(eq) {
+  const temEspacos = eq.tipo==='pavilhao';
+  const hoje = new Date();
+  const ano = state.calYear; const mes = state.calMonth;
+  const primeiroDia = new Date(ano, mes, 1).getDay();
+  const diasMes = new Date(ano, mes+1, 0).getDate();
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+  return `
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+      ${canReservar()?`<button class="btn btn-primary" id="btn-nova-reserva" data-eq="${eq.id}" data-tem-espacos="${temEspacos}">+ Nova Reserva</button>`:''}
+      <span style="color:var(--cinza-medio);font-size:13px">${temEspacos?'Reservas por campo e sala de ginástica':'Reservas com nº de pessoas'}</span>
+    </div>
+    <div class="section-box">
+      <div class="section-box-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="btn btn-secondary btn-sm" id="cal-prev">‹</button>
+          <h3>${meses[mes]} ${ano}</h3>
+          <button class="btn btn-secondary btn-sm" id="cal-next">›</button>
+        </div>
+        ${temEspacos?`<div style="display:flex;gap:8px;font-size:11px">
+          <span style="background:var(--azul);color:#fff;padding:2px 8px;border-radius:4px">● Campo</span>
+          <span style="background:var(--verde);color:#fff;padding:2px 8px;border-radius:4px">● Sala Ginástica</span>
+        </div>`:''}
+      </div>
+      <div class="section-box-body">
+        <div class="cal-grid">
+          ${dias.map(d=>`<div class="cal-day-header">${d}</div>`).join('')}
+          ${Array.from({length: primeiroDia === 0 ? 0 : primeiroDia}, (_,i)=>`<div class="cal-day other-month"></div>`).join('')}
+          ${Array.from({length:diasMes},(_,i)=>{
+            const dia = i+1;
+            const isToday = dia===hoje.getDate()&&mes===hoje.getMonth()&&ano===hoje.getFullYear();
+            return `<div class="cal-day ${isToday?'today':''}" onclick="verDiaReservas('${eq.id}','${ano}-${String(mes+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}')">
+              <div class="cal-day-num">${dia}</div>
+              <div id="cal-eventos-${ano}-${String(mes+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}"></div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+    <div id="reservas-lista-dia"></div>
+  `;
+}
+
+// ===== CHECKLIST =====
+function renderChecklist(eq, momento) {
+  const label = momento==='inicio_turno'?'Início de Turno':'Termo de Turno';
+  return `
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+      ${isAdmin()?`<button class="btn btn-primary" id="btn-novo-item-check" data-eq="${eq.id}" data-momento="${momento}">+ Adicionar Item</button>`:''}
+      <span style="color:var(--cinza-medio);font-size:13px">Checklist de ${label}</span>
+    </div>
+    <div id="checklist-itens-${momento}">
+      <div class="loading"><div class="spinner"></div> A carregar...</div>
+    </div>
+    <div id="registo-checklist-wrap" style="margin-top:20px"></div>
+  `;
+}
+
+// ===== ESCALA =====
+function renderEscala(eq) {
+  const hoje = new Date(state.escalaSemana);
+  const inicioSemana = new Date(hoje);
+  inicioSemana.setDate(hoje.getDate() - hoje.getDay() + 1);
+  const dias = Array.from({length:7},(_,i)=>{const d=new Date(inicioSemana);d.setDate(inicioSemana.getDate()+i);return d;});
+  const diasNomes = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  const isPiscDescoberta = eq.tipo==='piscina_descoberta';
+
+  return `
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+      ${canEdit()?`<button class="btn btn-primary" id="btn-novo-turno" data-eq="${eq.id}">+ Adicionar Turno</button>`:''}
+      <button class="btn btn-secondary btn-sm" id="escala-prev">‹ Semana</button>
+      <span style="font-weight:600;color:var(--azul)">${dias[0].toLocaleDateString('pt-PT',{day:'numeric',month:'short'})} – ${dias[6].toLocaleDateString('pt-PT',{day:'numeric',month:'short',year:'numeric'})}</span>
+      <button class="btn btn-secondary btn-sm" id="escala-next">Semana ›</button>
+    </div>
+    ${isPiscDescoberta?`<div class="alert alert-info">🌊 Piscina Descoberta: Manutenção manhã · Receção e Nadadores-Salvadores 14h–20h (Seg–Dom)</div>`:''}
+    <div class="section-box">
+      <div class="section-box-body" style="overflow-x:auto">
+        <div class="escala-grid" style="min-width:560px">
+          ${diasNomes.map((d,i)=>`
+            <div class="escala-col-header">
+              <div>${d}</div>
+              <div style="font-size:12px;color:var(--cinza-escuro);font-weight:500">${dias[i].getDate()}/${dias[i].getMonth()+1}</div>
+            </div>`).join('')}
+          ${dias.map((d,i)=>`
+            <div class="escala-cell" id="escala-cell-${d.toISOString().slice(0,10)}">
+              <div style="font-size:10px;color:var(--cinza-medio)">A carregar...</div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ===== PARÂMETROS ÁGUA =====
+function renderParametrosAgua(eq) {
+  return `
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+      ${isAdmin()?`<button class="btn btn-primary" id="btn-novo-param" data-eq="${eq.id}">+ Configurar Parâmetro</button>`:''}
+      <button class="btn btn-success" id="btn-registar-agua" data-eq="${eq.id}">💧 Registar Valores</button>
+    </div>
+    <div id="parametros-lista">
+      <div class="loading"><div class="spinner"></div> A carregar...</div>
+    </div>
+    <div style="margin-top:20px">
+      <h3 style="font-size:15px;color:var(--azul);margin-bottom:12px">📊 Registos de Hoje (${new Date().toLocaleDateString('pt-PT')})</h3>
+      <div id="agua-hoje">
+        <div class="loading"><div class="spinner"></div> A carregar...</div>
+      </div>
+    </div>
+  `;
+}
+
+// ===== RELATÓRIOS =====
+function renderRelatorios(eq) {
+  return `
+    <div class="alert alert-info">📊 Relatórios de checklists submetidas pelos funcionários</div>
+    <div class="section-box">
+      <div class="section-box-header"><h3>📋 Filtros</h3></div>
+      <div class="section-box-body">
+        <div class="form-row">
+          <div class="form-group"><label>Data Início</label><input type="date" id="rel-inicio" value="${new Date(new Date().setDate(1)).toISOString().slice(0,10)}"/></div>
+          <div class="form-group"><label>Data Fim</label><input type="date" id="rel-fim" value="${new Date().toISOString().slice(0,10)}"/></div>
+        </div>
+        <button class="btn btn-primary" id="btn-gerar-rel" data-eq="${eq.id}">🔍 Gerar Relatório</button>
+      </div>
+    </div>
+    <div id="relatorio-resultado" style="margin-top:16px"></div>
+  `;
+}
+
+// ===== MEMORANDOS REPARAÇÃO =====
+function renderMemorandosRep(eq) {
+  return `
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+      <button class="btn btn-primary" id="btn-novo-memo-rep" data-eq="${eq.id}">+ Novo Pedido</button>
+    </div>
+    <div id="memorandos-rep-lista">
+      <div class="loading"><div class="spinner"></div> A carregar...</div>
+    </div>
+  `;
+}
+
+// ===== MEMORANDOS DDS =====
+function renderMemorandosDDS() {
+  return `
+    <div class="page-header">
+      <div><h1>📋 Memorandos DDS</h1><p>Pedidos gerais de serviço à Divisão de Desporto e Saúde</p></div>
+      <button class="btn btn-primary" id="btn-novo-memo-dds">+ Novo Memorando</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="btn btn-secondary btn-sm active-filter" data-filter="todos" id="filter-todos">Todos</button>
+      <button class="btn btn-secondary btn-sm" data-filter="pendente" id="filter-pendente">⏳ Pendentes</button>
+      <button class="btn btn-secondary btn-sm" data-filter="reforco_pedido" id="filter-reforco">🔁 Reforço</button>
+      <button class="btn btn-secondary btn-sm" data-filter="concluido" id="filter-concluido">✅ Concluídos</button>
+    </div>
+    <div id="memorandos-dds-lista">
+      <div class="loading"><div class="spinner"></div> A carregar...</div>
+    </div>
+  `;
+}
+
+// ===== UTILIZADORES =====
+function renderUtilizadores() {
+  return `
+    <div class="page-header">
+      <div><h1>👥 Utilizadores</h1><p>Gestão de acessos ao sistema</p></div>
+      <button class="btn btn-primary" id="btn-novo-user">+ Novo Utilizador</button>
+    </div>
+    <div id="users-lista">
+      <div class="loading"><div class="spinner"></div> A carregar...</div>
+    </div>
+  `;
+}
+
+// ===== CONFIG EQUIPAMENTOS =====
+function renderConfigEquipamentos() {
+  return `
+    <div class="page-header">
+      <div><h1>⚙️ Configurações</h1><p>Gestão de equipamentos e configurações globais</p></div>
+      <button class="btn btn-primary" id="btn-novo-eq-config">+ Novo Equipamento</button>
+    </div>
+    <div id="config-eq-lista">
+      <div class="loading"><div class="spinner"></div> A carregar...</div>
+    </div>
+  `;
+}
+
+// ===== DATA LOADERS =====
+async function loadEquipamentos() {
+  try {
+    const data = await sb.query('equipamentos', { filter: { ativo: 'eq.true' }, order: 'nome.asc' });
+    state.equipamentos = Array.isArray(data) ? data : [];
+  } catch(e) { state.equipamentos = []; }
+}
+
+async function loadChecklistItens(eqId, momento) {
+  const data = await sb.query('checklist_itens', { filter: { equipamento_id: `eq.${eqId}`, momento: `eq.${momento}`, ativo: 'eq.true' }, order: 'ordem.asc' });
+  return Array.isArray(data) ? data : [];
+}
+
+async function loadReservas(eqId, ano, mes) {
+  const inicio = `${ano}-${String(mes+1).padStart(2,'0')}-01`;
+  const fim = `${ano}-${String(mes+1).padStart(2,'0')}-${new Date(ano,mes+1,0).getDate()}`;
+  const data = await sb.query('reservas', { filter: { equipamento_id: `eq.${eqId}`, data: `gte.${inicio}`, 'data': `lte.${fim}` }, order: 'data.asc,hora_inicio.asc' });
+  return Array.isArray(data) ? data : [];
+}
+
+async function loadEscalas(eqId, inicio, fim) {
+  const resp2 = await fetch(SUPABASE_URL+'/rest/v1/escalas?equipamento_id=eq.'+eqId+'&data=gte.'+inicio+'&data=lte.'+fim+'&order=data.asc,hora_inicio.asc&select=*',{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+  const data = await resp2.json();
+  return Array.isArray(data) ? data : [];
+}
+
+async function loadParametros(eqId) {
+  const data = await sb.query('parametros_agua_config', { filter: { equipamento_id: `eq.${eqId}`, ativo: 'eq.true' }, order: 'ordem.asc' });
+  return Array.isArray(data) ? data : [];
+}
+
+async function loadMemorandosRep(eqId) {
+  const data = await sb.query('memorandos_reparacao', { filter: { equipamento_id: `eq.${eqId}` }, order: 'criado_em.desc' });
+  return Array.isArray(data) ? data : [];
+}
+
+async function loadMemorandosDDS(filter='todos') {
+  let f = {};
+  if(filter!=='todos') f.estado = `eq.${filter}`;
+  const data = await sb.query('memorandos_dds', { filter: f, order: 'criado_em.desc' });
+  return Array.isArray(data) ? data : [];
+}
+
+async function loadUtilizadores() {
+  const data = await sb.query('utilizadores', { order: 'nome.asc' });
+  return Array.isArray(data) ? data : [];
+}
+
+// ===== EVENT ATTACHMENT =====
+function attachPageEvents() {
+  // Dashboard load memorandos count
+  if(state.page==='dashboard') {
+    sb.query('memorandos_dds', { filter: { estado: 'eq.pendente' } }).then(d=>{
+      const el = document.getElementById('dash-memorandos');
+      if(el) el.textContent = Array.isArray(d) ? d.length : '—';
+    });
+    sb.query('memorandos_reparacao', { filter: { estado: 'eq.pendente' } }).then(d=>{});
+  }
+
+  // Equipamento detalhe tab events
+  if(state.page==='equipamento_detalhe') {
+    attachTabEvents();
+  }
+
+  // Memorandos DDS
+  if(state.page==='memorandos_dds') {
+    loadAndRenderMemorandosDDS('todos');
+    document.querySelectorAll('[data-filter]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ loadAndRenderMemorandosDDS(btn.dataset.filter); });
+    });
+    document.getElementById('btn-novo-memo-dds')?.addEventListener('click', ()=>openModalMemorandoDDS());
+  }
+
+  // Utilizadores
+  if(state.page==='utilizadores') {
+    loadAndRenderUtilizadores();
+    document.getElementById('btn-novo-user')?.addEventListener('click', ()=>openModalNovoUser());
+  }
+
+  // Config
+  if(state.page==='config_equipamentos') {
+    loadAndRenderConfigEq();
+    document.getElementById('btn-novo-eq-config')?.addEventListener('click', ()=>openModalEquipamento());
+  }
+
+  // Equipamentos list
+  if(state.page==='equipamentos') {
+    document.getElementById('btn-novo-eq')?.addEventListener('click', ()=>openModalEquipamento());
+    document.querySelectorAll('[onclick^="editEquipamento"]').forEach(el=>{
+      const id = el.getAttribute('onclick').match(/'([^']+)'/)[1];
+      el.onclick = ()=>editEquipamento(id);
+    });
+  }
+}
+
+function attachTabEvents() {
+  const eq = state.equipamentos.find(e=>e.id===state.selectedEquipamento) || state.equipamentos.find(e=>e.id===state.selectedEquipamento?.id);
+  if(!eq) return;
+
+  if(state.tab==='reservas') {
+    loadAndRenderCalendario(eq);
+    document.getElementById('btn-nova-reserva')?.addEventListener('click', ()=>openModalReserva(eq));
+    document.getElementById('cal-prev')?.addEventListener('click', ()=>{ if(state.calMonth===0){state.calMonth=11;state.calYear--;}else state.calMonth--; setTab('reservas'); });
+    document.getElementById('cal-next')?.addEventListener('click', ()=>{ if(state.calMonth===11){state.calMonth=0;state.calYear++;}else state.calMonth++; setTab('reservas'); });
+  }
+
+  if(state.tab==='checklist_inicio'||state.tab==='checklist_termo') {
+    const momento = state.tab==='checklist_inicio'?'inicio_turno':'termo_turno';
+    loadAndRenderChecklistItens(eq, momento);
+    document.getElementById('btn-novo-item-check')?.addEventListener('click', ()=>openModalNovoItemCheck(eq, momento));
+  }
+
+  if(state.tab==='escala') {
+    loadAndRenderEscala(eq);
+    document.getElementById('btn-novo-turno')?.addEventListener('click', ()=>openModalNovoTurno(eq));
+    document.getElementById('escala-prev')?.addEventListener('click', ()=>{ state.escalaSemana = new Date(state.escalaSemana.getTime()-7*86400000); setTab('escala'); });
+    document.getElementById('escala-next')?.addEventListener('click', ()=>{ state.escalaSemana = new Date(state.escalaSemana.getTime()+7*86400000); setTab('escala'); });
+  }
+
+  if(state.tab==='parametros_agua') {
+    loadAndRenderParametros(eq);
+    document.getElementById('btn-novo-param')?.addEventListener('click', ()=>openModalNovoParam(eq));
+    document.getElementById('btn-registar-agua')?.addEventListener('click', ()=>openModalRegistarAgua(eq));
+  }
+
+  if(state.tab==='relatorios') {
+    document.getElementById('btn-gerar-rel')?.addEventListener('click', ()=>gerarRelatorio(eq));
+  }
+
+  if(state.tab==='memorandos_rep') {
+    loadAndRenderMemorandosRep(eq);
+    document.getElementById('btn-novo-memo-rep')?.addEventListener('click', ()=>openModalMemorandoRep(eq));
+  }
+}
+
+// ===== ASYNC RENDERERS =====
+async function loadAndRenderCalendario(eq) {
+  const reservas = await loadReservas(eq.id, state.calYear, state.calMonth);
+  reservas.forEach(r=>{
+    const cel = document.getElementById(`cal-eventos-${r.data}`);
+    if(cel) {
+      const cls = r.espaco==='campo'?'campo':r.espaco==='sala_ginastica'?'sala':'';
+      cel.innerHTML += `<div class="cal-event ${cls}" title="${r.nome_entidade}">${r.hora_inicio.slice(0,5)} ${r.nome_entidade.slice(0,10)}</div>`;
+    }
+  });
+}
+
+async function loadAndRenderChecklistItens(eq, momento) {
+  const el = document.getElementById(`checklist-itens-${momento}`);
+  if(!el) return;
+  const itens = await loadChecklistItens(eq.id, momento);
+  if(!itens.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><p>Sem itens de checklist definidos.${isAdmin()?' Adicione itens clicando no botão acima.':''}</p></div>`;
+    return;
+  }
+  const state_checks = {};
+  el.innerHTML = itens.map(item=>`
+    <div class="checklist-item" id="ci-${item.id}">
+      <div class="check-toggle">
+        <button class="check-btn sim" onclick="toggleCheck('${item.id}',true)" title="Conforme">✓</button>
+        <button class="check-btn nao" onclick="toggleCheck('${item.id}',false)" title="Não conforme">✗</button>
+      </div>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:13px">${item.descricao}</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        ${isAdmin()?`<button class="btn btn-xs btn-danger" onclick="deleteCheckItem('${item.id}')">🗑️</button>`:''}
+      </div>
+    </div>`).join('');
+
+  const wrap = document.getElementById('registo-checklist-wrap');
+  if(wrap && itens.length) {
+    wrap.innerHTML = `<button class="btn btn-success" onclick="submeterChecklist('${eq.id}','${momento}')">💾 Submeter Checklist</button>`;
+  }
+}
+
+async function loadAndRenderEscala(eq) {
+  const hoje = new Date(state.escalaSemana);
+  const inicioSemana = new Date(hoje);
+  inicioSemana.setDate(hoje.getDate() - hoje.getDay() + 1);
+  const dias = Array.from({length:7},(_,i)=>{const d=new Date(inicioSemana);d.setDate(inicioSemana.getDate()+i);return d;});
+  const inicio = dias[0].toISOString().slice(0,10);
+  const fim = dias[6].toISOString().slice(0,10);
+  const escalas = await loadEscalas(eq.id, inicio, fim);
+  const utilizadores = await sb.query('utilizadores', {});
+
+  dias.forEach(d=>{
+    const dateStr = d.toISOString().slice(0,10);
+    const cel = document.getElementById(`escala-cell-${dateStr}`);
+    if(!cel) return;
+    const turnos = escalas.filter(e=>e.data===dateStr);
+    if(!turnos.length) { cel.innerHTML = `<div style="font-size:11px;color:var(--cinza-medio);text-align:center;margin-top:20px">—</div>`; return; }
+    cel.innerHTML = turnos.map(t=>{
+      const u = Array.isArray(utilizadores) ? utilizadores.find(x=>x.id===t.utilizador_id) : null;
+      const clsMap = { manha:'manha', tarde:'tarde', noite:'noite', recepcao:'recepcao', nadador_salvador:'ns' };
+      const cls = clsMap[t.funcao]||'';
+      return `<div class="escala-turno ${cls}" title="${u?.nome||'—'}">
+        <div style="font-weight:700">${u?.nome?.split(' ')[0]||'—'}</div>
+        <div style="font-size:9px">${t.hora_inicio||''}${t.hora_fim?'–'+t.hora_fim:''}</div>
+      </div>`;
+    }).join('');
+  });
+}
+
+async function loadAndRenderParametros(eq) {
+  const el = document.getElementById('parametros-lista');
+  if(!el) return;
+  const params = await loadParametros(eq.id);
+  if(!params.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">💧</div><p>Sem parâmetros configurados.${isAdmin()?' Adicione parâmetros acima.':''}</p></div>`;
+  } else {
+    el.innerHTML = `<div class="table-wrap"><table>
+      <thead><tr><th>Parâmetro</th><th>Unidade</th><th>Mínimo</th><th>Máximo</th><th>Estado</th>${isAdmin()?'<th></th>':''}</tr></thead>
+      <tbody>${params.map(p=>`<tr>
+        <td><strong>${p.nome}</strong></td>
+        <td>${p.unidade||'—'}</td>
+        <td>${p.valor_min??'—'}</td>
+        <td>${p.valor_max??'—'}</td>
+        <td><span class="status status-confirmada">Ativo</span></td>
+        ${isAdmin()?`<td><button class="btn btn-xs btn-danger" onclick="deleteParam('${p.id}')">🗑️</button></td>`:''}
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+  }
+
+  // Registos de hoje
+  const hoje = new Date().toISOString().slice(0,10);
+  const elHoje = document.getElementById('agua-hoje');
+  if(elHoje) {
+    const regs = await sb.query('parametros_agua_registo', { filter: { equipamento_id: `eq.${eq.id}`, data: `eq.${hoje}` }, order: 'hora.asc' });
+    if(!Array.isArray(regs)||!regs.length) {
+      elHoje.innerHTML = `<div class="empty-state"><div class="empty-icon">📊</div><p>Sem registos hoje. Clique em "Registar Valores".</p></div>`;
+    } else {
+      elHoje.innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>Hora</th><th>Parâmetro</th><th>Valor</th><th>Observação</th></tr></thead>
+        <tbody>${regs.map(r=>{
+          const p = params.find(x=>x.id===r.parametro_id);
+          const conforme = (!p?.valor_min||r.valor>=p.valor_min)&&(!p?.valor_max||r.valor<=p.valor_max);
+          return `<tr>
+            <td>${r.hora?.slice(0,5)||'—'}</td>
+            <td>${p?.nome||'—'}</td>
+            <td><strong style="color:${conforme?'var(--verde)':'var(--vermelho)'}">${r.valor} ${p?.unidade||''}</strong></td>
+            <td>${r.observacao||'—'}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>`;
+    }
+  }
+}
+
+async function loadAndRenderMemorandosRep(eq) {
+  const el = document.getElementById('memorandos-rep-lista');
+  if(!el) return;
+  const memos = await loadMemorandosRep(eq.id);
+  if(!memos.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔧</div><p>Sem pedidos de reparação.</p></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Nº</th><th>Data</th><th>Descrição</th><th>Brigada</th><th>Estado</th><th>Dias</th><th>Conclusão</th><th></th></tr></thead>
+    <tbody>${memos.map(m=>{
+      const dias = m.data_conclusao ? Math.floor((new Date(m.data_conclusao)-new Date(m.data_pedido))/(1000*60*60*24)) : Math.floor((new Date()-new Date(m.data_pedido))/(1000*60*60*24));
+      const cls = dias>30?'urgente':dias>14?'aviso':'';
+      return `<tr>
+        <td><strong>#${m.numero}</strong></td>
+        <td>${formatDate(m.data_pedido)}</td>
+        <td>${m.descricao}</td>
+        <td>${m.brigada||'—'}</td>
+        <td><span class="status status-${m.estado}">${{pendente:'Pendente',reforco_pedido:'Reforço',concluido:'Concluído'}[m.estado]}</span></td>
+        <td><span class="dias-contador ${cls}">${dias}d</span></td>
+        <td>${m.data_conclusao?formatDate(m.data_conclusao):'—'}</td>
+        <td><button class="btn btn-xs btn-outline" onclick="editMemorandoRep('${m.id}','${eq.id}')">✏️</button></td>
+      </tr>`;}).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+async function loadAndRenderMemorandosDDS(filter='todos') {
+  const el = document.getElementById('memorandos-dds-lista');
+  if(!el) return;
+  const memos = await loadMemorandosDDS(filter);
+  if(!memos.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><p>Sem memorandos ${filter!=='todos'?'neste estado':''}.</p></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Nº</th><th>Data</th><th>Descrição</th><th>Brigada</th><th>Estado</th><th>Dias Aberto</th><th>Conclusão</th><th>Obs.</th><th></th></tr></thead>
+    <tbody>${memos.map(m=>{
+      const dias = m.data_conclusao ? Math.floor((new Date(m.data_conclusao)-new Date(m.data_pedido))/(1000*60*60*24)) : Math.floor((new Date()-new Date(m.data_pedido))/(1000*60*60*24));
+      const cls = dias>30?'urgente':dias>14?'aviso':'';
+      return `<tr>
+        <td><strong>#${m.numero}</strong></td>
+        <td>${formatDate(m.data_pedido)}</td>
+        <td style="max-width:200px">${m.descricao}</td>
+        <td>${m.brigada||'—'}</td>
+        <td><span class="status status-${m.estado}">${{pendente:'⏳ Pendente',reforco_pedido:'🔁 Reforço',concluido:'✅ Concluído'}[m.estado]}</span></td>
+        <td><span class="dias-contador ${cls}">${dias} dias</span></td>
+        <td>${m.data_conclusao?formatDate(m.data_conclusao):'—'}</td>
+        <td style="max-width:150px;font-size:12px">${m.observacoes||'—'}</td>
+        <td><button class="btn btn-xs btn-outline" onclick="editMemorandoDDS('${m.id}')">✏️</button></td>
+      </tr>`;}).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+async function loadAndRenderUtilizadores() {
+  const el = document.getElementById('users-lista');
+  if(!el) return;
+  const users = await loadUtilizadores();
+  const roleCls = { admin:'role-admin', supervisor:'role-supervisor', responsavel:'role-responsavel', funcionario:'role-funcionario' };
+  el.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Nome</th><th>Perfil</th><th>Estado</th><th>Código</th><th>Criado em</th><th>Ações</th></tr></thead>
+    <tbody>${users.map(u=>`<tr>
+      <td><strong>${u.nome}</strong></td>
+      <td><span class="user-role ${roleCls[u.perfil]}">${PERFIL_LABEL[u.perfil]}</span></td>
+      <td><span class="status ${u.ativo?'status-confirmada':'status-cancelada'}">${u.ativo?'Ativo':'Inativo'}</span></td>
+      <td><code style="background:var(--cinza-claro);padding:3px 8px;border-radius:4px;font-size:13px;letter-spacing:2px">${u.codigo_visivel}</code></td>
+      <td style="font-size:12px;color:var(--cinza-medio)">${formatDate(u.criado_em)}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-xs btn-outline" onclick="editUser('${u.id}')">✏️ Editar</button>
+        <button class="btn btn-xs btn-warning" onclick="regenarCodigo('${u.id}')">🔄 Novo Código</button>
+        <button class="btn btn-xs ${u.ativo?'btn-danger':'btn-success'}" onclick="toggleUser('${u.id}',${!u.ativo})">${u.ativo?'🚫 Desativar':'✅ Ativar'}</button>
+        ${u.id!==state.user.id?`<button class="btn btn-xs btn-danger" onclick="deleteUser('${u.id}')">🗑️</button>`:''}
+      </td>
+    </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+async function loadAndRenderConfigEq() {
+  const el = document.getElementById('config-eq-lista');
+  if(!el) return;
+  const eqs = await sb.query('equipamentos', { order: 'tipo.asc,nome.asc' });
+  if(!Array.isArray(eqs)||!eqs.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">🏛️</div><p>Sem equipamentos.</p></div>'; return; }
+  el.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Nome</th><th>Tipo</th><th>Localização</th><th>Responsável</th><th>Sazonal</th><th>Estado</th><th>Ações</th></tr></thead>
+    <tbody>${eqs.map(e=>`<tr>
+      <td><strong>${e.nome}</strong></td>
+      <td>${TIPO_ICONE[e.tipo]} ${TIPO_LABEL[e.tipo]}</td>
+      <td>${e.localizacao||'—'}</td>
+      <td>${e.responsavel_nome||'—'}</td>
+      <td>${e.sazonal?'🌞 Sim':'—'}</td>
+      <td><span class="status ${e.ativo?'status-confirmada':'status-cancelada'}">${e.ativo?'Ativo':'Inativo'}</span></td>
+      <td><button class="btn btn-xs btn-outline" onclick="editEquipamento('${e.id}')">✏️ Editar</button></td>
+    </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+async function gerarRelatorio(eq) {
+  const inicio = document.getElementById('rel-inicio')?.value;
+  const fim = document.getElementById('rel-fim')?.value;
+  const el = document.getElementById('relatorio-resultado');
+  if(!el) return;
+  el.innerHTML = '<div class="loading"><div class="spinner"></div> A gerar relatório...</div>';
+  const escalas = await sb.query('escalas', { filter: { equipamento_id: `eq.${eq.id}`, data: `gte.${inicio}`, 'data': `lte.${fim}` }, order: 'data.asc' });
+  const registos = await sb.query('turno_relatorios', {});
+  const arr = Array.isArray(escalas)?escalas:[];
+  if(!arr.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><p>Sem turnos no período selecionado.</p></div>'; return; }
+  el.innerHTML = `<div class="section-box">
+    <div class="section-box-header"><h3>📊 Relatório ${formatDate(inicio)} – ${formatDate(fim)}</h3></div>
+    <div class="section-box-body">
+      <p style="margin-bottom:12px;color:var(--cinza-medio)">Total de turnos: <strong>${arr.length}</strong></p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Data</th><th>Turno</th><th>Funcionário</th><th>Função</th><th>Horas</th></tr></thead>
+        <tbody>${arr.map(e=>`<tr>
+          <td>${formatDate(e.data)}</td>
+          <td>${{manha:'Manhã',tarde:'Tarde',noite:'Noite',dia_inteiro:'Dia Inteiro'}[e.turno]||e.turno}</td>
+          <td>—</td>
+          <td>${{geral:'Geral',recepcao:'Receção',manutencao_agua:'Manutenção Água',nadador_salvador:'Nadador-Salvador'}[e.funcao]||e.funcao}</td>
+          <td>${e.hora_inicio||'—'} – ${e.hora_fim||'—'}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+    </div>
+  </div>`;
+}
+
+// ===== MODALS =====
+function closeModal() { document.getElementById('app-modal')?.remove(); }
+
+function showModal(html) {
+  closeModal();
+  const div = document.createElement('div');
+  div.id = 'app-modal'; div.className = 'modal-overlay';
+  div.innerHTML = html;
+  div.addEventListener('click', e=>{ if(e.target===div) closeModal(); });
+  document.body.appendChild(div);
+}
+
+function openModalReserva(eq) {
+  const temEspacos = eq.tipo==='pavilhao';
+  showModal(`<div class="modal">
+    <h2>📅 Nova Reserva — ${eq.nome}</h2>
+    <div class="form-group"><label>Entidade / Nome</label><input type="text" id="res-entidade" placeholder="Nome da entidade ou pessoa"/></div>
+    <div class="form-row">
+      <div class="form-group"><label>Data</label><input type="date" id="res-data" value="${new Date().toISOString().slice(0,10)}"/></div>
+      ${temEspacos?`<div class="form-group"><label>Espaço</label><select id="res-espaco"><option value="campo">Campo</option><option value="sala_ginastica">Sala de Ginástica</option></select></div>`:'<div class="form-group"><label>Nº Pessoas</label><input type="number" id="res-npessoas" min="1" placeholder="0"/></div>'}
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Hora Início</label><input type="time" id="res-hinicio"/></div>
+      <div class="form-group"><label>Hora Fim</label><input type="time" id="res-hfim"/></div>
+    </div>
+    <div class="form-group"><label>Contacto</label><input type="text" id="res-contacto" placeholder="Telefone ou email"/></div>
+    <div class="form-group"><label>Observações</label><textarea id="res-obs" rows="2"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="submeterReserva('${eq.id}','${temEspacos}')">💾 Guardar</button>
+    </div>
+  </div>`);
+}
+
+async function submeterReserva(eqId, temEspacos) {
+  const entidade = document.getElementById('res-entidade')?.value?.trim();
+  const data = document.getElementById('res-data')?.value;
+  const hinicio = document.getElementById('res-hinicio')?.value;
+  const hfim = document.getElementById('res-hfim')?.value;
+  if(!entidade||!data||!hinicio||!hfim) { toast('Preencha todos os campos obrigatórios.','error'); return; }
+  const espaco = temEspacos==='true' ? (document.getElementById('res-espaco')?.value||'campo') : 'geral';
+  const npessoas = temEspacos==='true' ? null : parseInt(document.getElementById('res-npessoas')?.value)||null;
+  try {
+    await sb.insert('reservas', { equipamento_id: eqId, espaco, data, hora_inicio: hinicio, hora_fim: hfim, nome_entidade: entidade, contacto: document.getElementById('res-contacto')?.value||null, num_pessoas: npessoas, observacoes: document.getElementById('res-obs')?.value||null, criado_por: state.user.id });
+    closeModal(); toast('Reserva criada com sucesso!','success');
+    setTab('reservas');
+  } catch(e) { toast('Erro ao criar reserva.','error'); }
+}
+
+function verDiaReservas(eqId, data) {
+  const el = document.getElementById('reservas-lista-dia');
+  if(!el) return;
+  el.innerHTML = `<div class="loading"><div class="spinner"></div></div>`;
+  sb.query('reservas', { filter: { equipamento_id: `eq.${eqId}`, data: `eq.${data}` }, order: 'hora_inicio.asc' }).then(reservas=>{
+    const arr = Array.isArray(reservas)?reservas:[];
+    el.innerHTML = `<div class="section-box">
+      <div class="section-box-header"><h3>📅 Reservas de ${formatDate(data)}</h3></div>
+      <div class="section-box-body">
+        ${!arr.length?`<div class="empty-state"><div class="empty-icon">📅</div><p>Sem reservas neste dia.</p></div>`:`
+        <div class="table-wrap"><table>
+          <thead><tr><th>Hora</th><th>Entidade</th><th>Espaço</th><th>Pessoas</th><th>Estado</th><th>Contacto</th><th></th></tr></thead>
+          <tbody>${arr.map(r=>`<tr>
+            <td>${r.hora_inicio?.slice(0,5)} – ${r.hora_fim?.slice(0,5)}</td>
+            <td><strong>${r.nome_entidade}</strong></td>
+            <td>${{campo:'Campo',sala_ginastica:'Sala Ginástica',geral:'Geral'}[r.espaco]||r.espaco}</td>
+            <td>${r.num_pessoas||'—'}</td>
+            <td><span class="status status-${r.estado}">${r.estado}</span></td>
+            <td>${r.contacto||'—'}</td>
+            <td><button class="btn btn-xs btn-danger" onclick="deleteReserva('${r.id}')">🗑️</button></td>
+          </tr>`).join('')}</tbody>
+        </table></div>`}
+      </div>
+    </div>`;
+  });
+}
+
+async function deleteReserva(id) {
+  if(!confirm('Eliminar esta reserva?')) return;
+  await sb.delete('reservas', id);
+  toast('Reserva eliminada.','success');
+  const eq = state.equipamentos.find(e=>e.id===state.selectedEquipamento);
+  if(eq) { loadAndRenderCalendario(eq); }
+}
+
+function openModalNovoItemCheck(eq, momento) {
+  showModal(`<div class="modal">
+    <h2>📋 Novo Item de Checklist</h2>
+    <div class="alert alert-info">Equipamento: <strong>${eq.nome}</strong> · ${momento==='inicio_turno'?'Início de Turno':'Termo de Turno'}</div>
+    <div class="form-group"><label>Descrição do Item</label><textarea id="ci-desc" rows="3" placeholder="Ex: Verificar estado das luzes do pavilhão"></textarea></div>
+    <div class="form-group"><label>Ordem</label><input type="number" id="ci-ordem" value="0" min="0"/></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="submeterItemCheck('${eq.id}','${momento}')">💾 Guardar</button>
+    </div>
+  </div>`);
+}
+
+async function submeterItemCheck(eqId, momento) {
+  const desc = document.getElementById('ci-desc')?.value?.trim();
+  const ordem = parseInt(document.getElementById('ci-ordem')?.value)||0;
+  if(!desc) { toast('Descrição obrigatória.','error'); return; }
+  await sb.insert('checklist_itens', { equipamento_id: eqId, descricao: desc, momento, ordem, criado_por: state.user.id });
+  closeModal(); toast('Item adicionado!','success');
+  const eq = state.equipamentos.find(e=>e.id===eqId);
+  if(eq) loadAndRenderChecklistItens(eq, momento);
+}
+
+async function deleteCheckItem(id) {
+  if(!confirm('Eliminar este item?')) return;
+  await sb.update('checklist_itens', id, { ativo: false });
+  toast('Item removido.','success');
+  const eq = state.equipamentos.find(e=>e.id===state.selectedEquipamento);
+  if(eq) loadAndRenderChecklistItens(eq, state.tab==='checklist_inicio'?'inicio_turno':'termo_turno');
+}
+
+const checkState = {};
+function toggleCheck(itemId, conforme) {
+  checkState[itemId] = conforme;
+  const el = document.getElementById(`ci-${itemId}`);
+  if(!el) return;
+  el.className = `checklist-item ${conforme?'ok':'nok'}`;
+  el.querySelectorAll('.check-btn').forEach(b=>b.classList.remove('active'));
+  const btn = el.querySelector(`.check-btn.${conforme?'sim':'nao'}`);
+  if(btn) btn.classList.add('active');
+}
+
+async function submeterChecklist(eqId, momento) {
+  if(!Object.keys(checkState).length) { toast('Preencha pelo menos um item.','error'); return; }
+  const escala_id = null; // simplified - in production link to current shift
+  for(const [itemId, conforme] of Object.entries(checkState)) {
+    await sb.insert('checklists_registo', { escala_id: null, checklist_item_id: itemId, momento, conforme, registado_por: state.user.id }).catch(()=>{});
+  }
+  toast('Checklist submetida com sucesso!','success');
+  Object.keys(checkState).forEach(k=>delete checkState[k]);
+}
+
+function openModalNovoTurno(eq) {
+  const isPiscDescoberta = eq.tipo==='piscina_descoberta';
+  showModal(`<div class="modal">
+    <h2>📆 Novo Turno — ${eq.nome}</h2>
+    <div class="form-group"><label>Funcionário (Nome)</label><input type="text" id="turno-func" placeholder="Nome do funcionário"/></div>
+    <div class="form-row">
+      <div class="form-group"><label>Data</label><input type="date" id="turno-data" value="${new Date().toISOString().slice(0,10)}"/></div>
+      <div class="form-group"><label>Turno</label><select id="turno-tipo">
+        <option value="manha">Manhã</option>
+        <option value="tarde">Tarde</option>
+        <option value="noite">Noite</option>
+        <option value="dia_inteiro">Dia Inteiro</option>
+      </select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Hora Início</label><input type="time" id="turno-hinicio"/></div>
+      <div class="form-group"><label>Hora Fim</label><input type="time" id="turno-hfim"/></div>
+    </div>
+    ${isPiscDescoberta?`<div class="form-group"><label>Função</label><select id="turno-funcao">
+      <option value="manutencao_agua">Manutenção Água</option>
+      <option value="recepcao">Receção</option>
+      <option value="nadador_salvador">Nadador-Salvador</option>
+      <option value="geral">Geral</option>
+    </select></div>`:`<div class="form-group"><label>Função</label><select id="turno-funcao"><option value="geral">Geral</option></select></div>`}
+    <div class="form-group"><label>Observações</label><textarea id="turno-obs" rows="2"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="submeterTurno('${eq.id}')">💾 Guardar</button>
+    </div>
+  </div>`);
+}
+
+async function submeterTurno(eqId) {
+  const data = document.getElementById('turno-data')?.value;
+  const turno = document.getElementById('turno-tipo')?.value;
+  const hinicio = document.getElementById('turno-hinicio')?.value;
+  const hfim = document.getElementById('turno-hfim')?.value;
+  const funcao = document.getElementById('turno-funcao')?.value||'geral';
+  if(!data) { toast('Data obrigatória.','error'); return; }
+  await sb.insert('escalas', { equipamento_id: eqId, utilizador_id: state.user.id, data, turno, hora_inicio: hinicio||null, hora_fim: hfim||null, funcao, observacoes: document.getElementById('turno-obs')?.value||null, criado_por: state.user.id });
+  closeModal(); toast('Turno adicionado!','success');
+  loadAndRenderEscala(state.equipamentos.find(e=>e.id===eqId));
+}
+
+function openModalNovoParam(eq) {
+  showModal(`<div class="modal">
+    <h2>💧 Novo Parâmetro de Água</h2>
+    <div class="alert alert-info">Equipamento: <strong>${eq.nome}</strong></div>
+    <div class="form-row">
+      <div class="form-group"><label>Nome do Parâmetro</label><input type="text" id="param-nome" placeholder="Ex: pH, Cloro Livre"/></div>
+      <div class="form-group"><label>Unidade</label><input type="text" id="param-unidade" placeholder="Ex: mg/L, ºC"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Valor Mínimo</label><input type="number" step="0.01" id="param-min" placeholder="0.0"/></div>
+      <div class="form-group"><label>Valor Máximo</label><input type="number" step="0.01" id="param-max" placeholder="0.0"/></div>
+    </div>
+    <div class="form-group"><label>Ordem</label><input type="number" id="param-ordem" value="0" min="0"/></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="submeterParam('${eq.id}')">💾 Guardar</button>
+    </div>
+  </div>`);
+}
+
+async function submeterParam(eqId) {
+  const nome = document.getElementById('param-nome')?.value?.trim();
+  if(!nome) { toast('Nome obrigatório.','error'); return; }
+  await sb.insert('parametros_agua_config', { equipamento_id: eqId, nome, unidade: document.getElementById('param-unidade')?.value||null, valor_min: parseFloat(document.getElementById('param-min')?.value)||null, valor_max: parseFloat(document.getElementById('param-max')?.value)||null, ordem: parseInt(document.getElementById('param-ordem')?.value)||0, criado_por: state.user.id });
+  closeModal(); toast('Parâmetro adicionado!','success');
+  loadAndRenderParametros(state.equipamentos.find(e=>e.id===eqId));
+}
+
+async function openModalRegistarAgua(eq) {
+  const params = await loadParametros(eq.id);
+  if(!params.length) { toast('Sem parâmetros configurados para esta piscina.','error'); return; }
+  showModal(`<div class="modal modal-lg">
+    <h2>💧 Registar Parâmetros da Água</h2>
+    <div class="alert alert-info">📅 ${new Date().toLocaleDateString('pt-PT')} · ⏰ ${new Date().toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'})}</div>
+    ${params.map(p=>`
+      <div class="param-row">
+        <div>
+          <div class="param-name">${p.nome}</div>
+          <div class="param-range">${p.valor_min??''}${p.valor_min&&p.valor_max?' – ':''}${p.valor_max??''} ${p.unidade||''}</div>
+        </div>
+        <input type="number" step="0.01" class="param-input" id="regagua-${p.id}" placeholder="—"/>
+        <div class="param-status param-ok" id="regagua-status-${p.id}">✓</div>
+      </div>`).join('')}
+    <div class="form-group" style="margin-top:12px"><label>Observações Gerais</label><textarea id="regagua-obs" rows="2"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-success" onclick="submeterAgua('${eq.id}')">💾 Guardar Registos</button>
+    </div>
+  </div>`);
+
+  params.forEach(p=>{
+    document.getElementById(`regagua-${p.id}`)?.addEventListener('input', e=>{
+      const v = parseFloat(e.target.value);
+      const s = document.getElementById(`regagua-status-${p.id}`);
+      if(!s||isNaN(v)) return;
+      const ok = (!p.valor_min||v>=p.valor_min)&&(!p.valor_max||v<=p.valor_max);
+      s.className = `param-status ${ok?'param-ok':'param-nok'}`;
+      s.textContent = ok?'✓':'✗';
+    });
+  });
+}
+
+async function submeterAgua(eqId) {
+  const params = await loadParametros(eqId);
+  const hoje = new Date().toISOString().slice(0,10);
+  const hora = new Date().toTimeString().slice(0,5);
+  const obs = document.getElementById('regagua-obs')?.value||null;
+  let count = 0;
+  for(const p of params) {
+    const v = parseFloat(document.getElementById(`regagua-${p.id}`)?.value);
+    if(!isNaN(v)) {
+      await sb.insert('parametros_agua_registo', { equipamento_id: eqId, parametro_id: p.id, valor: v, data: hoje, hora, observacao: obs, registado_por: state.user.id });
+      count++;
+    }
+  }
+  closeModal(); toast(`${count} parâmetro(s) registado(s)!`,'success');
+  loadAndRenderParametros(state.equipamentos.find(e=>e.id===eqId));
+}
+
+async function deleteParam(id) {
+  if(!confirm('Eliminar este parâmetro?')) return;
+  await sb.update('parametros_agua_config', id, { ativo: false });
+  toast('Parâmetro removido.','success');
+  const eq = state.equipamentos.find(e=>e.id===state.selectedEquipamento);
+  if(eq) loadAndRenderParametros(eq);
+}
+
+function openModalMemorandoRep(eq) {
+  showModal(`<div class="modal">
+    <h2>🔧 Novo Pedido de Reparação</h2>
+    <div class="alert alert-info">Equipamento: <strong>${eq.nome}</strong></div>
+    <div class="form-group"><label>Descrição do Pedido</label><textarea id="memo-desc" rows="3" placeholder="Descreva o problema/pedido..."></textarea></div>
+    <div class="form-group"><label>Brigada</label><input type="text" id="memo-brigada" placeholder="Ex: Brigada de Manutenção"/></div>
+    <div class="form-group"><label>Observações</label><textarea id="memo-obs" rows="2"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="submeterMemorandoRep('${eq.id}')">💾 Enviar Pedido</button>
+    </div>
+  </div>`);
+}
+
+async function submeterMemorandoRep(eqId) {
+  const desc = document.getElementById('memo-desc')?.value?.trim();
+  if(!desc) { toast('Descrição obrigatória.','error'); return; }
+  await sb.insert('memorandos_reparacao', { equipamento_id: eqId, data_pedido: new Date().toISOString().slice(0,10), descricao: desc, brigada: document.getElementById('memo-brigada')?.value||null, observacoes: document.getElementById('memo-obs')?.value||null, criado_por: state.user.id });
+  closeModal(); toast('Pedido de reparação enviado!','success');
+  loadAndRenderMemorandosRep(state.equipamentos.find(e=>e.id===eqId));
+}
+
+async function editMemorandoRep(id, eqId) {
+  const memos = await sb.query('memorandos_reparacao', { filter: { id: `eq.${id}` } });
+  const m = Array.isArray(memos)&&memos[0];
+  if(!m) return;
+  showModal(`<div class="modal">
+    <h2>🔧 Editar Pedido #${m.numero}</h2>
+    <div class="form-group"><label>Descrição</label><textarea id="em-desc" rows="3">${m.descricao}</textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Brigada</label><input type="text" id="em-brigada" value="${m.brigada||''}"/></div>
+      <div class="form-group"><label>Estado</label><select id="em-estado">
+        <option value="pendente" ${m.estado==='pendente'?'selected':''}>⏳ Pendente</option>
+        <option value="reforco_pedido" ${m.estado==='reforco_pedido'?'selected':''}>🔁 Reforço do Pedido</option>
+        <option value="concluido" ${m.estado==='concluido'?'selected':''}>✅ Concluído</option>
+      </select></div>
+    </div>
+    <div class="form-group"><label>Data de Conclusão</label><input type="date" id="em-conclusao" value="${m.data_conclusao||''}"/></div>
+    <div class="form-group"><label>Observações</label><textarea id="em-obs" rows="2">${m.observacoes||''}</textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarMemorandoRep('${id}','${eqId}')">💾 Guardar</button>
+    </div>
+  </div>`);
+}
+
+async function guardarMemorandoRep(id, eqId) {
+  await sb.update('memorandos_reparacao', id, { descricao: document.getElementById('em-desc')?.value, brigada: document.getElementById('em-brigada')?.value||null, estado: document.getElementById('em-estado')?.value, data_conclusao: document.getElementById('em-conclusao')?.value||null, observacoes: document.getElementById('em-obs')?.value||null });
+  closeModal(); toast('Pedido atualizado!','success');
+  loadAndRenderMemorandosRep(state.equipamentos.find(e=>e.id===eqId));
+}
+
+function openModalMemorandoDDS() {
+  showModal(`<div class="modal">
+    <h2>📋 Novo Memorando DDS</h2>
+    <div class="form-group"><label>Descrição do Pedido</label><textarea id="dds-desc" rows="3" placeholder="Descreva o pedido..."></textarea></div>
+    <div class="form-group"><label>Brigada</label><input type="text" id="dds-brigada" placeholder="Ex: Brigada de Manutenção"/></div>
+    <div class="form-group"><label>Observações</label><textarea id="dds-obs" rows="2"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="submeterMemorandoDDS()">💾 Enviar</button>
+    </div>
+  </div>`);
+}
+
+async function submeterMemorandoDDS() {
+  const desc = document.getElementById('dds-desc')?.value?.trim();
+  if(!desc) { toast('Descrição obrigatória.','error'); return; }
+  await sb.insert('memorandos_dds', { data_pedido: new Date().toISOString().slice(0,10), descricao: desc, brigada: document.getElementById('dds-brigada')?.value||null, observacoes: document.getElementById('dds-obs')?.value||null, criado_por: state.user.id });
+  closeModal(); toast('Memorando enviado!','success');
+  loadAndRenderMemorandosDDS('todos');
+}
+
+async function editMemorandoDDS(id) {
+  const memos = await sb.query('memorandos_dds', { filter: { id: `eq.${id}` } });
+  const m = Array.isArray(memos)&&memos[0];
+  if(!m) return;
+  showModal(`<div class="modal">
+    <h2>📋 Editar Memorando #${m.numero}</h2>
+    <div class="form-group"><label>Descrição</label><textarea id="edds-desc" rows="3">${m.descricao}</textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Brigada</label><input type="text" id="edds-brigada" value="${m.brigada||''}"/></div>
+      <div class="form-group"><label>Estado</label><select id="edds-estado">
+        <option value="pendente" ${m.estado==='pendente'?'selected':''}>⏳ Pendente</option>
+        <option value="reforco_pedido" ${m.estado==='reforco_pedido'?'selected':''}>🔁 Reforço do Pedido</option>
+        <option value="concluido" ${m.estado==='concluido'?'selected':''}>✅ Concluído</option>
+      </select></div>
+    </div>
+    <div class="form-group"><label>Data de Conclusão</label><input type="date" id="edds-conclusao" value="${m.data_conclusao||''}"/></div>
+    <div class="form-group"><label>Observações</label><textarea id="edds-obs" rows="2">${m.observacoes||''}</textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarMemorandoDDS('${id}')">💾 Guardar</button>
+    </div>
+  </div>`);
+}
+
+async function guardarMemorandoDDS(id) {
+  await sb.update('memorandos_dds', id, { descricao: document.getElementById('edds-desc')?.value, brigada: document.getElementById('edds-brigada')?.value||null, estado: document.getElementById('edds-estado')?.value, data_conclusao: document.getElementById('edds-conclusao')?.value||null, observacoes: document.getElementById('edds-obs')?.value||null });
+  closeModal(); toast('Memorando atualizado!','success');
+  loadAndRenderMemorandosDDS('todos');
+}
+
+function openModalEquipamento(id=null) {
+  showModal(`<div class="modal">
+    <h2>${id?'✏️ Editar':'+ Novo'} Equipamento</h2>
+    <div class="form-group"><label>Nome</label><input type="text" id="eq-nome" placeholder="Nome do equipamento"/></div>
+    <div class="form-row">
+      <div class="form-group"><label>Tipo</label><select id="eq-tipo">
+        <option value="pavilhao">🏟️ Pavilhão</option>
+        <option value="piscina_coberta">🏊 Piscina Coberta</option>
+        <option value="piscina_descoberta">🌊 Piscina Descoberta</option>
+        <option value="complexo">🌿 Complexo</option>
+        <option value="casa_juventude">🏠 Casa da Juventude</option>
+      </select></div>
+      <div class="form-group"><label>Localização</label><input type="text" id="eq-local" placeholder="Ex: Refojos"/></div>
+    </div>
+    <div class="form-group"><label>Responsável</label><input type="text" id="eq-resp" placeholder="Nome do responsável"/></div>
+    <div class="form-group"><label><input type="checkbox" id="eq-sazonal"/> Equipamento Sazonal (Jul–Ago)</label></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="submeterEquipamento(${id?`'${id}'`:'null'})">💾 Guardar</button>
+    </div>
+  </div>`);
+}
+
+async function editEquipamento(id) {
+  const eqs = await sb.query('equipamentos', { filter: { id: `eq.${id}` } });
+  const eq = Array.isArray(eqs)&&eqs[0];
+  if(!eq) return;
+  showModal(`<div class="modal">
+    <h2>✏️ Editar Equipamento</h2>
+    <div class="form-group"><label>Nome</label><input type="text" id="eq-nome" value="${eq.nome}"/></div>
+    <div class="form-row">
+      <div class="form-group"><label>Tipo</label><select id="eq-tipo">
+        <option value="pavilhao" ${eq.tipo==='pavilhao'?'selected':''}>🏟️ Pavilhão</option>
+        <option value="piscina_coberta" ${eq.tipo==='piscina_coberta'?'selected':''}>🏊 Piscina Coberta</option>
+        <option value="piscina_descoberta" ${eq.tipo==='piscina_descoberta'?'selected':''}>🌊 Piscina Descoberta</option>
+        <option value="complexo" ${eq.tipo==='complexo'?'selected':''}>🌿 Complexo</option>
+        <option value="casa_juventude" ${eq.tipo==='casa_juventude'?'selected':''}>🏠 Casa da Juventude</option>
+      </select></div>
+      <div class="form-group"><label>Localização</label><input type="text" id="eq-local" value="${eq.localizacao||''}"/></div>
+    </div>
+    <div class="form-group"><label>Responsável</label><input type="text" id="eq-resp" value="${eq.responsavel_nome||''}"/></div>
+    <div class="form-group"><label><input type="checkbox" id="eq-sazonal" ${eq.sazonal?'checked':''}/> Equipamento Sazonal</label></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-danger btn-sm" onclick="toggleEqAtivo('${id}',${!eq.ativo})">${eq.ativo?'🚫 Desativar':'✅ Ativar'}</button>
+      <button class="btn btn-primary" onclick="submeterEquipamento('${id}')">💾 Guardar</button>
+    </div>
+  </div>`);
+}
+
+async function submeterEquipamento(id) {
+  const nome = document.getElementById('eq-nome')?.value?.trim();
+  if(!nome) { toast('Nome obrigatório.','error'); return; }
+  const data = { nome, tipo: document.getElementById('eq-tipo')?.value, localizacao: document.getElementById('eq-local')?.value||null, responsavel_nome: document.getElementById('eq-resp')?.value||null, sazonal: document.getElementById('eq-sazonal')?.checked||false };
+  if(id) await sb.update('equipamentos', id, data);
+  else await sb.insert('equipamentos', data);
+  closeModal(); toast(id?'Equipamento atualizado!':'Equipamento criado!','success');
+  await loadEquipamentos(); render();
+}
+
+async function toggleEqAtivo(id, ativo) {
+  await sb.update('equipamentos', id, { ativo });
+  closeModal(); toast(ativo?'Equipamento ativado!':'Equipamento desativado!','success');
+  await loadEquipamentos(); render();
+}
+
+function editResponsavel(eqId, atual) {
+  showModal(`<div class="modal">
+    <h2>👤 Alterar Responsável</h2>
+    <div class="form-group"><label>Nome do Responsável</label><input type="text" id="resp-nome" value="${atual}" placeholder="Nome completo"/></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarResponsavel('${eqId}')">💾 Guardar</button>
+    </div>
+  </div>`);
+}
+
+async function guardarResponsavel(eqId) {
+  const nome = document.getElementById('resp-nome')?.value?.trim()||null;
+  await sb.update('equipamentos', eqId, { responsavel_nome: nome });
+  closeModal(); toast('Responsável atualizado!','success');
+  await loadEquipamentos(); render();
+}
+
+function openModalNovoUser() {
+  const codigo = gerarCodigo();
+  showModal(`<div class="modal">
+    <h2>👤 Novo Utilizador</h2>
+    <div class="form-group"><label>Nome Completo</label><input type="text" id="nu-nome" placeholder="Nome do utilizador"/></div>
+    <div class="form-group"><label>Perfil</label><select id="nu-perfil">
+      <option value="funcionario">Funcionário</option>
+      <option value="responsavel">Responsável</option>
+      <option value="supervisor">Supervisor</option>
+      <option value="admin">Admin</option>
+    </select></div>
+    <div class="codigo-display">
+      <div class="codigo" id="nu-codigo-display">${codigo}</div>
+      <p>Código gerado automaticamente — copie e envie ao utilizador</p>
+    </div>
+    <input type="hidden" id="nu-codigo" value="${codigo}"/>
+    <button class="btn btn-secondary btn-sm" onclick="regenerarCodigoModal()">🔄 Gerar novo código</button>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="submeterNovoUser()">💾 Criar Utilizador</button>
+    </div>
+  </div>`);
+}
+
+function regenerarCodigoModal() {
+  const c = gerarCodigo();
+  document.getElementById('nu-codigo').value = c;
+  document.getElementById('nu-codigo-display').textContent = c;
+}
+
+async function submeterNovoUser() {
+  const nome = document.getElementById('nu-nome')?.value?.trim();
+  const perfil = document.getElementById('nu-perfil')?.value;
+  const codigo = document.getElementById('nu-codigo')?.value;
+  if(!nome) { toast('Nome obrigatório.','error'); return; }
+  const hash = hashCode(codigo);
+  await sb.insert('utilizadores', { nome, codigo_hash: hash, codigo_visivel: codigo, perfil });
+  closeModal(); toast(`Utilizador criado! Código: ${codigo}`,'success');
+  loadAndRenderUtilizadores();
+}
+
+async function editUser(id) {
+  const users = await sb.query('utilizadores', { filter: { id: `eq.${id}` } });
+  const u = Array.isArray(users)&&users[0];
+  if(!u) return;
+  showModal(`<div class="modal">
+    <h2>✏️ Editar Utilizador</h2>
+    <div class="form-group"><label>Nome</label><input type="text" id="eu-nome" value="${u.nome}"/></div>
+    <div class="form-group"><label>Perfil</label><select id="eu-perfil">
+      <option value="funcionario" ${u.perfil==='funcionario'?'selected':''}>Funcionário</option>
+      <option value="responsavel" ${u.perfil==='responsavel'?'selected':''}>Responsável</option>
+      <option value="supervisor" ${u.perfil==='supervisor'?'selected':''}>Supervisor</option>
+      <option value="admin" ${u.perfil==='admin'?'selected':''}>Admin</option>
+    </select></div>
+    <div class="codigo-display">
+      <div class="codigo">${u.codigo_visivel}</div>
+      <p>Código atual do utilizador</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEditUser('${id}')">💾 Guardar</button>
+    </div>
+  </div>`);
+}
+
+async function guardarEditUser(id) {
+  const nome = document.getElementById('eu-nome')?.value?.trim();
+  const perfil = document.getElementById('eu-perfil')?.value;
+  if(!nome) { toast('Nome obrigatório.','error'); return; }
+  await sb.update('utilizadores', id, { nome, perfil });
+  closeModal(); toast('Utilizador atualizado!','success');
+  loadAndRenderUtilizadores();
+}
+
+async function regenarCodigo(id) {
+  if(!confirm('Gerar novo código? O código anterior deixará de funcionar.')) return;
+  const novo = gerarCodigo();
+  const hash = hashCode(novo);
+  await sb.update('utilizadores', id, { codigo_hash: hash, codigo_visivel: novo });
+  toast(`Novo código: ${novo}`,'success');
+  loadAndRenderUtilizadores();
+  showModal(`<div class="modal">
+    <h2>🔄 Novo Código Gerado</h2>
+    <div class="codigo-display">
+      <div class="codigo">${novo}</div>
+      <p>Envie este código ao utilizador. O código anterior já não funciona.</p>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="closeModal()">Fechar</button></div>
+  </div>`);
+}
+
+async function toggleUser(id, ativo) {
+  if(!confirm(`${ativo?'Ativar':'Desativar'} este utilizador?`)) return;
+  await sb.update('utilizadores', id, { ativo });
+  toast(ativo?'Utilizador ativado!':'Utilizador desativado!','success');
+  loadAndRenderUtilizadores();
+}
+
+async function deleteUser(id) {
+  if(!confirm('Eliminar utilizador? Esta ação é irreversível.')) return;
+  await sb.delete('utilizadores', id);
+  toast('Utilizador eliminado.','success');
+  loadAndRenderUtilizadores();
+}
+
+// ===== INIT =====
+async function init() {
+  document.getElementById('root').innerHTML = '<div class="login-wrap"><div class="login-card"><div class="loading"><div class="spinner"></div> A iniciar...</div></div></div>';
+  const ok = await checkSession();
+  if(ok) { await loadEquipamentos(); }
+  render();
+}
+
+// Expose globals
+window.navigate = navigate;
+window.setTab = setTab;
+window.logout = logout;
+window.toggleSidebar = toggleSidebar;
+window.editEquipamento = editEquipamento;
+window.editResponsavel = editResponsavel;
+window.toggleCheck = toggleCheck;
+window.submeterChecklist = submeterChecklist;
+window.deleteCheckItem = deleteCheckItem;
+window.deleteReserva = deleteReserva;
+window.verDiaReservas = verDiaReservas;
+window.submeterReserva = submeterReserva;
+window.submeterItemCheck = submeterItemCheck;
+window.submeterTurno = submeterTurno;
+window.submeterParam = submeterParam;
+window.submeterAgua = submeterAgua;
+window.deleteParam = deleteParam;
+window.submeterMemorandoRep = submeterMemorandoRep;
+window.editMemorandoRep = editMemorandoRep;
+window.guardarMemorandoRep = guardarMemorandoRep;
+window.submeterMemorandoDDS = submeterMemorandoDDS;
+window.editMemorandoDDS = editMemorandoDDS;
+window.guardarMemorandoDDS = guardarMemorandoDDS;
+window.submeterEquipamento = submeterEquipamento;
+window.toggleEqAtivo = toggleEqAtivo;
+window.guardarResponsavel = guardarResponsavel;
+window.submeterNovoUser = submeterNovoUser;
+window.regenerarCodigoModal = regenerarCodigoModal;
+window.editUser = editUser;
+window.guardarEditUser = guardarEditUser;
+window.regenarCodigo = regenarCodigo;
+window.toggleUser = toggleUser;
+window.deleteUser = deleteUser;
+window.closeModal = closeModal;
+window.gerarRelatorio = gerarRelatorio;
+window.openModalMemorandoDDS = openModalMemorandoDDS;
+
+init();
+</script>
+</body>
+</html>
