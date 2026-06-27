@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>GestEq</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════════════════ */
+:root {
+  --midnight: #0F172A;
+  --navy: #1E293B;
+  --navy-light: #334155;
+  --blue: #3B82F6;
+  --blue-bright: #60A5FA;
+  --emerald: #10B981;
+  --amber: #F59E0B;
+  --red: #EF4444;
+  --ice: #F8FAFC;
+  --muted: #94A3B8;
+  --border: rgba(255,255,255,0.08);
+  --glass: rgba(255,255,255,0.05);
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 24px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --shadow-glow: 0 0 40px rgba(59,130,246,0.15);
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--midnight);color:var(--ice);font-family:'Inter',sans-serif;font-size:14px;-webkit-font-smoothing:antialiased;}
+input,select,textarea,button{font-family:inherit;font-size:inherit;}
+button{cursor:pointer;border:none;outline:none;}
+
+/* ═══════════════════════════════════════════════════════
+   SCREENS
+═══════════════════════════════════════════════════════ */
+.screen{position:fixed;inset:0;display:none;flex-direction:column;background:var(--midnight);transition:opacity 0.3s ease;}
+.screen.active{display:flex;}
+
+/* ═══════════════════════════════════════════════════════
+   LOGIN SCREEN
+═══════════════════════════════════════════════════════ */
+#screen-login{
+  align-items:center;
+  justify-content:center;
+  padding:32px 24px;
+  background:linear-gradient(160deg,#0F172A 0%,#1a2942 50%,#0F172A 100%);
+}
+.login-glow{
+  position:absolute;
+  width:400px;height:400px;
+  background:radial-gradient(circle,rgba(59,130,246,0.15) 0%,transparent 70%);
+  top:50%;left:50%;transform:translate(-50%,-60%);
+  pointer-events:none;
+}
+.login-logo{
+  width:56px;height:56px;
+  background:linear-gradient(135deg,var(--blue),#2563EB);
+  border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;
+  margin-bottom:24px;
+  box-shadow:0 8px 32px rgba(59,130,246,0.35);
+}
+.login-title{font-size:28px;font-weight:800;letter-spacing:-0.5px;margin-bottom:4px;}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:40px;}
+.login-card{
+  width:100%;max-width:360px;
+  background:var(--glass);
+  backdrop-filter:blur(20px);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:28px 24px;
+}
+.field-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;}
+.field-input{
+  width:100%;
+  background:rgba(255,255,255,0.06);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  color:var(--ice);
+  padding:14px 16px;
+  font-size:16px;
+  transition:border-color 0.2s,box-shadow 0.2s;
+  -webkit-appearance:none;
+}
+.field-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,0.15);}
+.field-wrap{margin-bottom:20px;}
+.btn-primary{
+  width:100%;
+  background:linear-gradient(135deg,var(--blue),#2563EB);
+  color:#fff;
+  font-size:15px;font-weight:700;
+  padding:15px;
+  border-radius:var(--radius-sm);
+  transition:opacity 0.2s,transform 0.15s;
+  letter-spacing:0.3px;
+}
+.btn-primary:active{opacity:0.85;transform:scale(0.98);}
+.btn-primary:disabled{opacity:0.5;}
+.login-error{font-size:12px;color:var(--red);min-height:16px;margin-top:12px;text-align:center;}
+
+/* ═══════════════════════════════════════════════════════
+   MAIN SCREEN
+═══════════════════════════════════════════════════════ */
+#screen-main{background:var(--midnight);}
+
+/* TOP BAR */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px 12px;
+  flex-shrink:0;
+  position:relative;
+  z-index:10;
+}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.menu-btn{
+  width:40px;height:40px;
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  transition:background 0.2s;
+}
+.menu-btn span{display:block;width:18px;height:2px;background:var(--ice);border-radius:2px;transition:transform 0.3s;}
+.topbar-title{font-size:15px;font-weight:700;color:var(--ice);}
+.topbar-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.notif-btn{
+  position:relative;
+  width:40px;height:40px;
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;
+  transition:background 0.2s;
+}
+.notif-dot{
+  position:absolute;top:8px;right:8px;
+  width:8px;height:8px;
+  background:var(--red);
+  border-radius:50%;
+  border:2px solid var(--midnight);
+  display:none;
+}
+.notif-dot.show{display:block;}
+
+/* SCROLLABLE AREA */
+.main-scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:100px;}
+
+/* GREETING */
+.greeting{padding:8px 20px 20px;}
+.greeting-date{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:4px;}
+.greeting-name{font-size:26px;font-weight:800;letter-spacing:-0.5px;line-height:1.1;}
+.greeting-name span{color:var(--blue-bright);}
+.greeting-meta{font-size:12px;color:var(--muted);margin-top:4px;}
+
+/* WEEK CALENDAR — THE HERO */
+.week-section{padding:0 20px 24px;}
+.week-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;
+}
+.week-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.week-nav{display:flex;gap:6px;}
+.week-nav-btn{
+  width:28px;height:28px;
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--muted);
+  font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;
+}
+.week-nav-btn:active{background:var(--navy-light);}
+
+.week-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:4px;
+  background:var(--navy);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:12px 8px;
+  overflow:hidden;
+}
+.day-col{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:80px;}
+.day-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+.day-num{
+  font-size:13px;font-weight:700;
+  width:28px;height:28px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:8px;
+  transition:all 0.2s;
+}
+.day-num.today{background:var(--blue);color:#fff;box-shadow:0 0 12px rgba(59,130,246,0.5);}
+.day-shifts{display:flex;flex-direction:column;gap:2px;width:100%;align-items:center;}
+.shift-block{
+  width:100%;max-width:36px;
+  border-radius:5px;
+  padding:2px 1px;
+  text-align:center;
+  cursor:pointer;
+  transition:transform 0.15s,opacity 0.15s;
+  animation:slideUp 0.3s ease both;
+}
+.shift-block:active{transform:scale(0.95);}
+.shift-time{font-size:7px;font-weight:700;color:rgba(255,255,255,0.9);line-height:1.3;}
+.day-off{
+  width:24px;height:24px;
+  background:rgba(255,255,255,0.04);
+  border-radius:6px;
+}
+.ferias-icon{font-size:14px;line-height:1;}
+
+@keyframes slideUp{
+  from{opacity:0;transform:translateY(8px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+/* SHIFT POPUP */
+.shift-popup{
+  position:fixed;
+  bottom:90px;left:50%;
+  transform:translateX(-50%) translateY(10px);
+  background:var(--navy);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px 20px;
+  min-width:220px;
+  text-align:center;
+  z-index:200;
+  box-shadow:var(--shadow);
+  animation:popIn 0.2s ease both;
+}
+@keyframes popIn{
+  from{opacity:0;transform:translateX(-50%) translateY(16px) scale(0.95);}
+  to{opacity:1;transform:translateX(-50%) translateY(0) scale(1);}
+}
+.popup-eq{font-size:12px;font-weight:700;margin-bottom:4px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.popup-time{font-size:22px;font-weight:800;letter-spacing:-0.5px;}
+.popup-date{font-size:11px;color:var(--muted);margin-top:4px;}
+
+/* METRICS ROW */
+.metrics{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  padding:0 20px 24px;
+}
+.metric-card{
+  background:var(--navy);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform 0.15s;
+  animation:fadeIn 0.4s ease both;
+}
+.metric-card:active{transform:scale(0.97);}
+.metric-icon{font-size:22px;margin-bottom:8px;}
+.metric-val{font-size:24px;font-weight:800;letter-spacing:-0.5px;line-height:1;}
+.metric-lbl{font-size:11px;color:var(--muted);margin-top:4px;font-weight:500;}
+.metric-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.metric-card.accent-blue{border-color:rgba(59,130,246,0.3);}
+.metric-card.accent-green{border-color:rgba(16,185,129,0.3);}
+.metric-card.accent-amber{border-color:rgba(245,158,11,0.3);}
+.metric-card.accent-red{border-color:rgba(239,68,68,0.3);}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(12px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+/* QUICK ACTIONS */
+.section-title{
+  font-size:11px;font-weight:700;
+  color:var(--muted);text-transform:uppercase;letter-spacing:1px;
+  padding:0 20px 12px;
+}
+.quick-actions{
+  display:flex;gap:10px;
+  padding:0 20px 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+.quick-actions::-webkit-scrollbar{display:none;}
+.qa-btn{
+  flex-shrink:0;
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px 18px;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  min-width:80px;
+  transition:all 0.2s;
+}
+.qa-btn:active{background:var(--navy);transform:scale(0.96);}
+.qa-icon{font-size:24px;}
+.qa-label{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap;}
+
+/* AVISOS */
+.avisos-list{padding:0 20px 24px;display:flex;flex-direction:column;gap:8px;}
+.aviso-card{
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-left:3px solid var(--amber);
+  border-radius:var(--radius-sm);
+  padding:12px 14px;
+  animation:fadeIn 0.3s ease both;
+}
+.aviso-card.unread{border-left-color:var(--blue);}
+.aviso-title{font-size:13px;font-weight:600;margin-bottom:2px;}
+.aviso-msg{font-size:12px;color:var(--muted);line-height:1.4;}
+
+/* SIDE MENU */
+.menu-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(4px);
+  z-index:100;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.3s;
+}
+.menu-overlay.open{opacity:1;pointer-events:all;}
+.side-menu{
+  position:fixed;left:0;top:0;bottom:0;
+  width:280px;
+  background:var(--navy);
+  border-right:1px solid var(--border);
+  z-index:101;
+  transform:translateX(-100%);
+  transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  display:flex;flex-direction:column;
+  overflow-y:auto;
+}
+.side-menu.open{transform:translateX(0);}
+.menu-head{
+  padding:56px 20px 20px;
+  border-bottom:1px solid var(--border);
+}
+.menu-avatar{
+  width:40px;height:40px;
+  border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:800;
+  color:#fff;
+  flex-shrink:0;
+}
+.menu-name{font-size:17px;font-weight:700;}
+.menu-role{font-size:12px;color:var(--muted);margin-top:2px;}
+.menu-items{padding:16px 12px;flex:1;}
+.menu-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 12px;
+  border-radius:var(--radius-sm);
+  color:var(--muted);
+  font-size:14px;font-weight:500;
+  transition:all 0.15s;
+  margin-bottom:2px;
+  background:transparent;
+  width:100%;text-align:left;
+}
+.menu-item:active,.menu-item.active{background:rgba(59,130,246,0.12);color:var(--ice);}
+.menu-item.active{border-left:2px solid var(--blue);padding-left:10px;}
+.menu-icon{font-size:18px;width:24px;text-align:center;}
+.menu-sep{height:1px;background:var(--border);margin:8px 0;}
+.menu-item.danger{color:#EF4444;}
+.menu-foot{padding:16px 12px 32px;}
+
+/* BOTTOM NAV */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;
+  height:76px;
+  background:var(--navy);
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-around;
+  padding:0 8px;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  z-index:50;
+  backdrop-filter:blur(20px);
+}
+.nav-item{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  flex:1;padding:8px 4px;
+  border-radius:var(--radius-sm);
+  transition:all 0.2s;
+  color:var(--muted);
+}
+.nav-item.active{color:var(--blue);}
+.nav-icon{font-size:22px;line-height:1;}
+.nav-label{font-size:10px;font-weight:600;letter-spacing:0.3px;}
+.nav-dot{width:4px;height:4px;background:var(--red);border-radius:50%;margin-top:-2px;display:none;}
+.nav-dot.show{display:block;}
+
+/* CONTENT PAGES */
+.content-page{
+  display:none;
+  flex-direction:column;
+  height:100%;
+  animation:fadeIn 0.25s ease;
+}
+.content-page.active{display:flex;}
+.page-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px 100px;}
+
+/* GENERIC CARD */
+.g-card{
+  background:var(--navy);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px;
+  margin-bottom:12px;
+}
+.g-card-title{font-size:14px;font-weight:700;margin-bottom:4px;}
+.g-card-sub{font-size:12px;color:var(--muted);}
+
+/* FORM ELEMENTS */
+.form-group{margin-bottom:16px;}
+.form-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;display:block;}
+.form-input{
+  width:100%;
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  color:var(--ice);
+  padding:13px 15px;
+  font-size:15px;
+  transition:border-color 0.2s;
+  -webkit-appearance:none;
+}
+.form-input:focus{outline:none;border-color:var(--blue);}
+.form-select{
+  width:100%;
+  background:var(--navy);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  color:var(--ice);
+  padding:13px 15px;
+  font-size:15px;
+  -webkit-appearance:none;
+}
+.form-textarea{
+  width:100%;
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  color:var(--ice);
+  padding:13px 15px;
+  font-size:14px;
+  resize:none;
+}
+
+/* BUTTONS */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:12px 20px;
+  border-radius:var(--radius-sm);
+  font-size:14px;font-weight:700;
+  transition:all 0.15s;
+  letter-spacing:0.3px;
+}
+.btn:active{transform:scale(0.97);}
+.btn-block{width:100%;display:flex;}
+.btn-blue{background:linear-gradient(135deg,var(--blue),#2563EB);color:#fff;}
+.btn-green{background:linear-gradient(135deg,var(--emerald),#059669);color:#fff;}
+.btn-amber{background:rgba(245,158,11,0.15);color:var(--amber);border:1px solid rgba(245,158,11,0.3);}
+.btn-red{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.3);}
+.btn-ghost{background:var(--glass);color:var(--muted);border:1px solid var(--border);}
+.btn-sm{padding:8px 14px;font-size:13px;}
+
+/* BADGE */
+.badge{
+  display:inline-flex;align-items:center;
+  padding:3px 10px;
+  border-radius:20px;
+  font-size:11px;font-weight:700;
+}
+.badge-blue{background:rgba(59,130,246,0.15);color:var(--blue-bright);}
+.badge-green{background:rgba(16,185,129,0.15);color:var(--emerald);}
+.badge-amber{background:rgba(245,158,11,0.15);color:var(--amber);}
+.badge-red{background:rgba(239,68,68,0.12);color:var(--red);}
+.badge-muted{background:rgba(148,163,184,0.1);color:var(--muted);}
+
+/* MODAL */
+.modal-ov{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.7);
+  backdrop-filter:blur(8px);
+  z-index:300;
+  display:none;align-items:flex-end;justify-content:center;
+}
+.modal-ov.open{display:flex;}
+.modal-sheet{
+  width:100%;max-width:520px;
+  background:var(--navy);
+  border-top:1px solid var(--border);
+  border-radius:24px 24px 0 0;
+  padding:24px 20px 48px;
+  max-height:90vh;
+  overflow-y:auto;
+  animation:slideSheet 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes slideSheet{
+  from{transform:translateY(100%);}
+  to{transform:translateY(0);}
+}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;}
+.modal-title{font-size:18px;font-weight:800;margin-bottom:20px;letter-spacing:-0.3px;}
+
+/* STATUS INDICATOR */
+.status-bar{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--muted);
+  padding:0 20px 12px;
+}
+.status-dot{width:6px;height:6px;border-radius:50%;}
+.status-dot.green{background:var(--emerald);box-shadow:0 0 6px var(--emerald);}
+.status-dot.amber{background:var(--amber);}
+
+/* EMPTY STATE */
+.empty{
+  text-align:center;
+  padding:48px 20px;
+  color:var(--muted);
+}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:0.5;}
+.empty-text{font-size:14px;font-weight:500;}
+.empty-sub{font-size:12px;margin-top:4px;opacity:0.7;}
+
+/* LOADING */
+.loading{
+  display:flex;align-items:center;justify-content:center;
+  padding:32px;
+  color:var(--muted);font-size:13px;gap:8px;
+}
+.spinner{
+  width:18px;height:18px;
+  border:2px solid var(--border);
+  border-top-color:var(--blue);
+  border-radius:50%;
+  animation:spin 0.7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:16px 0;}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:90px;left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:var(--navy-light);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:12px 20px;
+  font-size:13px;font-weight:600;
+  white-space:nowrap;
+  z-index:400;
+  opacity:0;
+  transition:all 0.3s;
+  pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     LOGIN
+══════════════════════════════════ -->
+<div class="screen active" id="screen-login">
+  <div class="login-glow"></div>
+  <div class="login-logo">🏛</div>
+  <div class="login-title">GestEq</div>
+  <div class="login-sub">Município de Cabeceiras de Basto</div>
+  <div class="login-card">
+    <div class="field-wrap">
+      <div class="field-label">Código de acesso</div>
+      <input class="field-input" id="inp-codigo" type="text" placeholder="Ex: ADM-0001" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+    </div>
+    <button class="btn-primary" id="btn-entrar">Entrar</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     MAIN
+══════════════════════════════════ -->
+<div class="screen" id="screen-main">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="menu-btn" id="btn-menu" onclick="abrirMenu()">
+        <span></span><span></span><span></span>
+      </button>
+      <div>
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+        <div class="topbar-sub" id="topbar-sub">Cabeceiras de Basto</div>
+      </div>
+    </div>
+    <button class="notif-btn" id="btn-notif" onclick="abrirAvisos()">
+      🔔
+      <div class="notif-dot" id="notif-dot"></div>
+    </button>
+  </div>
+
+  <!-- CONTENT PAGES -->
+  <div style="flex:1;overflow:hidden;position:relative;">
+
+    <!-- DASHBOARD -->
+    <div class="content-page active" id="page-dashboard">
+      <div class="main-scroll" id="dash-scroll">
+
+        <!-- GREETING -->
+        <div class="greeting" id="dash-greeting">
+          <div class="greeting-date" id="dash-date"></div>
+          <div class="greeting-name" id="dash-name"></div>
+          <div class="greeting-meta" id="dash-meta"></div>
+        </div>
+
+        <!-- WEEK CALENDAR -->
+        <div class="week-section">
+          <div class="week-header">
+            <div class="week-label" id="week-range-label"></div>
+            <div class="week-nav">
+              <button class="week-nav-btn" onclick="navegarSemana(-1)">‹</button>
+              <button class="week-nav-btn" onclick="navegarSemana(1)">›</button>
+            </div>
+          </div>
+          <div class="week-grid" id="week-grid"></div>
+        </div>
+
+        <!-- METRICS -->
+        <div id="dash-metrics"></div>
+
+        <!-- QUICK ACTIONS -->
+        <div class="section-title">Acções rápidas</div>
+        <div class="quick-actions" id="dash-quick"></div>
+
+        <!-- AVISOS -->
+        <div class="section-title" id="dash-avisos-title" style="display:none;">Avisos</div>
+        <div class="avisos-list" id="dash-avisos-list"></div>
+
+      </div>
+    </div>
+
+    <!-- EQUIPAMENTOS -->
+    <div class="content-page" id="page-equipamentos">
+      <div class="page-scroll" id="eq-scroll"></div>
+    </div>
+
+    <!-- BANCO DE HORAS -->
+    <div class="content-page" id="page-bh">
+      <div class="page-scroll" id="bh-scroll"></div>
+    </div>
+
+    <!-- MAIS -->
+    <div class="content-page" id="page-mais">
+      <div class="page-scroll" id="mais-scroll"></div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <button class="nav-item active" id="nav-dashboard" onclick="irPara('dashboard')">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Início</div>
+    </button>
+    <button class="nav-item" id="nav-equipamentos" onclick="irPara('equipamentos')">
+      <div class="nav-icon">🏛</div>
+      <div class="nav-label">Espaços</div>
+    </button>
+    <button class="nav-item" id="nav-bh" onclick="irPara('bh')">
+      <div class="nav-icon">⏱</div>
+      <div class="nav-label">Horas</div>
+    </button>
+    <button class="nav-item" id="nav-mais" onclick="irPara('mais')">
+      <div class="nav-icon">⋯</div>
+      <div class="nav-label">Mais</div>
+    </button>
+  </div>
+
+</div>
+
+<!-- SIDE MENU -->
+<div class="menu-overlay" id="menu-overlay" onclick="fecharMenu()"></div>
+<div class="side-menu" id="side-menu">
+  <div class="menu-head">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+      <div style="width:36px;height:36px;background:linear-gradient(135deg,#1a5fa8,#0F172A);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🏛</div>
+      <div>
+        <div style="font-size:13px;font-weight:800;color:var(--ice);letter-spacing:0.3px;">GestEq</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:1px;">Cabeceiras de Basto</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="menu-avatar" id="menu-avatar"></div>
+      <div>
+        <div class="menu-name" id="menu-name"></div>
+        <div class="menu-role" id="menu-role"></div>
+      </div>
+    </div>
+  </div>
+  <div class="menu-items" id="menu-items"></div>
+  <div class="menu-foot">
+    <button class="menu-item danger" onclick="sair()" style="width:100%;">
+      <span class="menu-icon">🚪</span>Sair
+    </button>
+  </div>
+</div>
+
+<!-- SHIFT POPUP -->
+<div id="shift-popup" style="display:none;" class="shift-popup" onclick="this.style.display='none'">
+  <div class="popup-eq" id="popup-eq"></div>
+  <div class="popup-time" id="popup-time"></div>
+  <div class="popup-date" id="popup-date"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════ -->
+<script>
+// ── SUPABASE ──────────────────────────────────────────────────────────────────
+var SB_URL='https://jpojyhvocspksumljslx.supabase.co';
+var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impwb2p5aHZvY3Nwa3N1bWxqc2x4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NzE3NDUsImV4cCI6MjA5NzQ0Nzc0NX0.qwAyl_zBx31Z6a3KbaHns8gWceRrjQPcdN3RDBTkGkA';
+
+function sbGet(t,p){
+  return fetch(SB_URL+'/rest/v1/'+t+'?'+(p||''),{
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+  }).then(function(r){return r.json();});
+}
+function sbPost(t,b){
+  return fetch(SB_URL+'/rest/v1/'+t,{
+    method:'POST',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify(b)
+  });
+}
+function sbPatch(t,q,b){
+  return fetch(SB_URL+'/rest/v1/'+t+'?'+q,{
+    method:'PATCH',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify(b)
+  });
+}
+function sbDelete(t,q){
+  return fetch(SB_URL+'/rest/v1/'+t+'?'+q,{
+    method:'DELETE',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+  });
+}
+
+// ── APP STATE ─────────────────────────────────────────────────────────────────
+var app={
+  utilizador:null,
+  equipamentos:[],
+  permissoes:{},
+  semanaOffset:0
+};
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+var DIAS_PT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+var DIAS_FULL=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+var MESES_PT=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+var MESES_PT_SHORT=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+function dataISO(d){
+  return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+}
+function dataLocal(s){
+  var p=s.split('-');return new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));
+}
+function formatPT(s){
+  if(!s)return '';var p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0];
+}
+function minToStr(m){
+  var h=Math.floor(m/60);var mn=m%60;
+  return h+'h'+(mn>0?mn+'m':'');
+}
+
+function toast(msg,dur){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(function(){el.classList.remove('show');},dur||2500);
+}
+
+// Cores por tipo de equipamento
+var EQ_CORES={
+  'piscina_coberta':'#0EA5E9',
+  'piscina_descoberta':'#06B6D4',
+  'centro_hipico':'#8B5CF6',
+  'pavilhao':'#F59E0B',
+  'escola':'#10B981',
+  'ceavm':'#059669',
+  'casa_cultura':'#EC4899',
+  'outro':'#6366F1'
+};
+function corEq(tipo){return EQ_CORES[tipo]||'#3B82F6';}
+
+// Cores avatar por perfil
+var PERFIL_CORES={
+  'admin':'linear-gradient(135deg,#3B82F6,#1D4ED8)',
+  'supervisor_udaj':'linear-gradient(135deg,#8B5CF6,#6D28D9)',
+  'supervisor_uase':'linear-gradient(135deg,#10B981,#059669)',
+  'responsavel':'linear-gradient(135deg,#F59E0B,#D97706)',
+  'funcionario':'linear-gradient(135deg,#6366F1,#4F46E5)',
+  'professor':'linear-gradient(135deg,#06B6D4,#0891B2)',
+  'professor_responsavel':'linear-gradient(135deg,#F59E0B,#D97706)'
+};
+var PERFIL_LABELS={
+  'admin':'Administrador',
+  'supervisor_udaj':'Supervisor UDAJ',
+  'supervisor_uase':'Supervisor UASE',
+  'responsavel':'Responsável',
+  'funcionario':'Funcionário',
+  'professor':'Professor',
+  'professor_responsavel':'Professor / Responsável',
+  'responsavel_dds':'Responsável Serviços DDS'
+};
+
+function isSupervisor(){
+  var p=app.utilizador.perfil;
+  return p==='supervisor_udaj'||p==='supervisor_uase';
+}
+function isAdmin(){return app.utilizador.perfil==='admin';}
+function isResponsavel(){
+  var p=app.utilizador.perfil;
+  return p==='responsavel'||p==='professor_responsavel';
+}
+function isFuncionario(){
+  var p=app.utilizador.perfil;
+  return p==='funcionario'||p==='professor'||p==='trabalhador';
+}
+
+function iniciais(nome){
+  if(!nome)return '?';
+  var p=nome.trim().split(' ');
+  if(p.length===1)return p[0].substring(0,2).toUpperCase();
+  return (p[0][0]+p[p.length-1][0]).toUpperCase();
+}
+function primeiroNome(nome){
+  if(!nome)return '';
+  var p=nome.trim().split(' ');
+  return p.length>1?p[0]+' '+p[1]:p[0];
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────────────────────
+document.getElementById('inp-codigo').addEventListener('keydown',function(e){
+  if(e.key==='Enter')fazerLogin();
+});
+document.getElementById('btn-entrar').addEventListener('click',fazerLogin);
+
+function fazerLogin(){
+  var cod=document.getElementById('inp-codigo').value.trim();
+  if(!cod)return;
+  var btn=document.getElementById('btn-entrar');
+  var err=document.getElementById('login-error');
+  btn.disabled=true;btn.textContent='A entrar...';err.textContent='';
+  sbGet('utilizadores','codigo_visivel=eq.'+cod+'&ativo=eq.true&select=*&limit=1')
+  .then(function(rows){
+    if(!rows||!rows.length){err.textContent='Código inválido.';btn.disabled=false;btn.textContent='Entrar';return;}
+    var u=rows[0];
+    try{localStorage.setItem('gesteq2_session',JSON.stringify(u));}catch(e){}
+    iniciarApp(u);
+  }).catch(function(){err.textContent='Erro de ligação.';btn.disabled=false;btn.textContent='Entrar';});
+}
+
+function iniciarApp(u){
+  app.utilizador=u;
+  // Carregar equipamentos
+  var eqPromise;
+  if(isAdmin()||u.perfil==='supervisor'){
+    eqPromise=sbGet('equipamentos','select=*&order=nome.asc');
+  }else if(isSupervisor()){
+    eqPromise=sbGet('equipamentos','supervisor_id=eq.'+u.id+'&select=*&order=nome.asc');
+  }else{
+    eqPromise=sbGet('utilizador_equipamentos','utilizador_id=eq.'+u.id+'&ativo=eq.true&select=equipamentos(*)').then(function(rels){
+      var eqs=[];for(var i=0;i<(rels||[]).length;i++)if(rels[i].equipamentos)eqs.push(rels[i].equipamentos);return eqs;
+    });
+  }
+  eqPromise.then(function(eqs){
+    app.equipamentos=eqs||[];
+    mostrarMain();
+  }).catch(function(){app.equipamentos=[];mostrarMain();});
+}
+
+function mostrarMain(){
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-main').classList.add('active');
+  configurarMenu();
+  renderDashboard();
+  setTimeout(verificarAvisos,1500);
+}
+
+// ── SESSÃO ────────────────────────────────────────────────────────────────────
+(function(){
+  try{
+    var s=localStorage.getItem('gesteq2_session');
+    if(s){var u=JSON.parse(s);iniciarApp(u);}
+  }catch(e){}
+})();
+
+function sair(){
+  try{localStorage.removeItem('gesteq2_session');}catch(e){}
+  app.utilizador=null;app.equipamentos=[];
+  fecharMenu();
+  document.getElementById('screen-main').classList.remove('active');
+  document.getElementById('screen-login').classList.add('active');
+  document.getElementById('inp-codigo').value='';
+  document.getElementById('login-error').textContent='';
+}
+
+// ── NAVEGAÇÃO ─────────────────────────────────────────────────────────────────
+var paginaAtual='dashboard';
+function irPara(pag){
+  paginaAtual=pag;
+  // Update nav
+  document.querySelectorAll('.nav-item').forEach(function(el){el.classList.remove('active');});
+  var navEl=document.getElementById('nav-'+pag);
+  if(navEl)navEl.classList.add('active');
+  // Update pages
+  document.querySelectorAll('.content-page').forEach(function(el){el.classList.remove('active');});
+  var pageEl=document.getElementById('page-'+pag);
+  if(pageEl)pageEl.classList.add('active');
+  // Update topbar
+  var titulos={dashboard:'Dashboard',equipamentos:'Espaços',bh:'Banco de Horas',mais:'Mais'};
+  document.getElementById('topbar-title').textContent=titulos[pag]||pag;
+  fecharMenu();
+  if(pag==='dashboard')renderDashboard();
+  else if(pag==='equipamentos')renderEquipamentos();
+  else if(pag==='bh')renderBH();
+  else if(pag==='mais')renderMais();
+}
+
+// ── MENU LATERAL ─────────────────────────────────────────────────────────────
+function abrirMenu(){
+  document.getElementById('menu-overlay').classList.add('open');
+  document.getElementById('side-menu').classList.add('open');
+}
+function fecharMenu(){
+  document.getElementById('menu-overlay').classList.remove('open');
+  document.getElementById('side-menu').classList.remove('open');
+}
+
+function configurarMenu(){
+  var u=app.utilizador;
+  if(!u)return;
+  var av=document.getElementById('menu-avatar');
+  av.textContent=iniciais(u.nome);
+  av.style.background=PERFIL_CORES[u.perfil]||PERFIL_CORES['funcionario'];
+  document.getElementById('menu-name').textContent=u.nome;
+  document.getElementById('menu-role').textContent=PERFIL_LABELS[u.perfil]||u.perfil;
+  var items=document.getElementById('menu-items');
+  items.innerHTML='';
+  function addItem(ic,lbl,fn,active){
+    var el=document.createElement('button');
+    el.className='menu-item'+(active?' active':'');
+    el.style.width='100%';
+    el.innerHTML='<span class="menu-icon">'+ic+'</span>'+lbl;
+    el.onclick=fn;items.appendChild(el);
+  }
+  addItem('🏠','Início',function(){irPara('dashboard');});
+  addItem('🏛','Espaços',function(){irPara('equipamentos');});
+  addItem('⏱','Banco de Horas',function(){irPara('bh');});
+  addItem('🏖','As Minhas Férias',function(){navAsMinhasFerias();fecharMenu();});
+  if(isAdmin()||isSupervisor()){
+    var sep=document.createElement('div');sep.className='menu-sep';items.appendChild(sep);
+    addItem('👥','Utilizadores',function(){navUtilizadores();fecharMenu();});
+    addItem('📢','Avisos',function(){navAvisosAdmin();fecharMenu();});
+    addItem('🔐','Permissões',function(){navPermissoes();fecharMenu();});
+  }
+  if(isAdmin()){
+    addItem('📊','Relatórios',function(){navRelatorios();fecharMenu();});
+  }
+}
+
+// ── AVISOS ────────────────────────────────────────────────────────────────────
+function verificarAvisos(){
+  if(!app.utilizador)return;
+  sbGet('avisos','destinatario_id=eq.'+app.utilizador.id+'&lido=eq.false&select=id&limit=1').then(function(rows){
+    var tem=rows&&rows.length>0;
+    document.getElementById('notif-dot').className='notif-dot'+(tem?' show':'');
+  }).catch(function(){});
+}
+
+function abrirAvisos(){
+  navAvisosUser();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+function renderDashboard(){
+  if(!app.utilizador)return;
+  var u=app.utilizador;
+  var agora=new Date();
+  var hora=agora.getHours();
+  var saud=hora<6?'Boa madrugada':hora<12?'Bom dia':hora<19?'Boa tarde':'Boa noite';
+
+  // Greeting
+  document.getElementById('dash-date').textContent=DIAS_FULL[agora.getDay()]+', '+agora.getDate()+' de '+MESES_PT[agora.getMonth()];
+  var nomeEl=document.getElementById('dash-name');
+  nomeEl.innerHTML=saud+', <span>'+primeiroNome(u.nome)+'</span>';
+  document.getElementById('dash-meta').textContent=
+    app.equipamentos.length+(app.equipamentos.length===1?' espaço atribuído':' espaços atribuídos');
+
+  // Semana
+  renderSemana();
+
+  // Métricas + quick actions dependem do perfil
+  if(isAdmin()||isSupervisor()){
+    renderDashboardSupervisor();
+  }else{
+    renderDashboardFuncionario();
+  }
+}
+
+// ── SEMANA ────────────────────────────────────────────────────────────────────
+function calcSemana(offset){
+  var hoje=new Date();
+  var dow=hoje.getDay();var diffSeg=dow===0?-6:(1-dow);
+  var seg=new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate()+diffSeg+(offset*7));
+  var dom=new Date(seg.getFullYear(),seg.getMonth(),seg.getDate()+6);
+  return{seg:seg,dom:dom};
+}
+
+function renderSemana(){
+  var sem=calcSemana(app.semanaOffset);
+  var isoSeg=dataISO(sem.seg);var isDom=dataISO(sem.dom);
+  // Label
+  var lbl=sem.seg.getDate()+' '+MESES_PT_SHORT[sem.seg.getMonth()];
+  lbl+=' — '+sem.dom.getDate()+' '+MESES_PT_SHORT[sem.dom.getMonth()]+' '+sem.dom.getFullYear();
+  document.getElementById('week-range-label').textContent=lbl;
+  var grid=document.getElementById('week-grid');
+  grid.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  var u=app.utilizador;
+  var hoje=dataISO(new Date());
+  Promise.all([
+    sbGet('escalas','utilizador_id=eq.'+u.id+'&data=gte.'+isoSeg+'&data=lte.'+isDom+'&select=data,hora_inicio,hora_fim,equipamento_id&order=data.asc,hora_inicio.asc'),
+    sbGet('ferias','utilizador_id=eq.'+u.id+'&data_inicio=lte.'+isDom+'&data_fim=gte.'+isoSeg+'&select=data_inicio,data_fim,estado')
+  ]).then(function(rs){
+    var turnos=rs[0]||[];var feriasArr=rs[1]||[];
+    // Map de equipamento cores
+    var eqMap={};
+    for(var i=0;i<app.equipamentos.length;i++){eqMap[app.equipamentos[i].id]=app.equipamentos[i];}
+    // Map turnos por dia
+    var tPorDia={};
+    for(var ti=0;ti<turnos.length;ti++){
+      var d=turnos[ti].data?turnos[ti].data.substring(0,10):'';
+      if(d){if(!tPorDia[d])tPorDia[d]=[];tPorDia[d].push(turnos[ti]);}
+    }
+    // Map férias por dia
+    var ferPorDia={};
+    for(var fi=0;fi<feriasArr.length;fi++){
+      var fI=new Date(feriasArr[fi].data_inicio+'T12:00:00');
+      var fF=new Date(feriasArr[fi].data_fim+'T12:00:00');
+      var est=feriasArr[fi].estado||'pendente';
+      while(fI<=fF){
+        var fD=dataISO(fI);ferPorDia[fD]=est;
+        fI.setDate(fI.getDate()+1);
+      }
+    }
+    // Render grid
+    grid.innerHTML='';
+    for(var di=0;di<7;di++){
+      var dObj=new Date(sem.seg.getFullYear(),sem.seg.getMonth(),sem.seg.getDate()+di);
+      var dIso=dataISO(dObj);
+      var eHoje=(dIso===hoje);
+      var ferEst=ferPorDia[dIso];
+      var col=document.createElement('div');col.className='day-col';
+      // Fundo especial para hoje ou férias
+      if(eHoje)col.style.cssText='display:flex;flex-direction:column;align-items:center;gap:4px;min-height:80px;background:rgba(59,130,246,0.08);border-radius:10px;padding:4px 2px;';
+      else if(ferEst==='aprovado')col.style.cssText='display:flex;flex-direction:column;align-items:center;gap:4px;min-height:80px;background:rgba(16,185,129,0.08);border-radius:10px;padding:4px 2px;';
+      else if(ferEst==='pendente')col.style.cssText='display:flex;flex-direction:column;align-items:center;gap:4px;min-height:80px;background:rgba(245,158,11,0.06);border-radius:10px;padding:4px 2px;';
+      else col.style.cssText='display:flex;flex-direction:column;align-items:center;gap:4px;min-height:80px;';
+      var dlbl=document.createElement('div');dlbl.className='day-label';
+      dlbl.style.color=eHoje?'#60A5FA':'';dlbl.textContent=DIAS_PT[dObj.getDay()];
+      var dnum=document.createElement('div');dnum.className='day-num'+(eHoje?' today':'');
+      dnum.textContent=dObj.getDate();
+      var shifts=document.createElement('div');shifts.className='day-shifts';
+      var tsDia=tPorDia[dIso]||[];
+      if(ferEst&&!tsDia.length){
+        var fIc=document.createElement('div');fIc.className='ferias-icon';fIc.textContent='🏖️';shifts.appendChild(fIc);
+      }else if(!tsDia.length){
+        var vz=document.createElement('div');vz.className='day-off';shifts.appendChild(vz);
+      }else{
+        for(var si=0;si<tsDia.length;si++){
+          (function(t){
+            var cor=eqMap[t.equipamento_id]?corEq(eqMap[t.equipamento_id].tipo):'#3B82F6';
+            var blk=document.createElement('div');blk.className='shift-block';
+            blk.style.background=cor+'22';blk.style.border='1px solid '+cor+'44';
+            var hI=t.hora_inicio?t.hora_inicio.substring(0,5):'';
+            var hF=t.hora_fim?t.hora_fim.substring(0,5):'';
+            var t1=document.createElement('div');t1.className='shift-time';t1.style.color=cor;t1.textContent=hI;
+            var t2=document.createElement('div');t2.className='shift-time';t2.style.color=cor;t2.style.opacity='0.7';t2.textContent=hF;
+            blk.appendChild(t1);blk.appendChild(t2);shifts.appendChild(blk);
+            blk.onclick=function(){mostrarPopupTurno(t,eqMap[t.equipamento_id],dObj);};
+          })(tsDia[si]);
+        }
+      }
+      col.appendChild(dlbl);col.appendChild(dnum);col.appendChild(shifts);
+      grid.appendChild(col);
+    }
+  }).catch(function(){grid.innerHTML='<div class="loading" style="color:#EF4444;">Erro ao carregar</div>';});
+}
+
+function navegarSemana(dir){
+  app.semanaOffset+=dir;
+  renderSemana();
+}
+
+function mostrarPopupTurno(t,eq,d){
+  var pop=document.getElementById('shift-popup');
+  var eqNome=eq?eq.nome:'Equipamento';
+  var cor=eq?corEq(eq.tipo):'#3B82F6';
+  var hI=t.hora_inicio?t.hora_inicio.substring(0,5):'';
+  var hF=t.hora_fim?t.hora_fim.substring(0,5):'';
+  document.getElementById('popup-eq').textContent=eqNome;
+  document.getElementById('popup-eq').style.color=cor;
+  document.getElementById('popup-time').textContent=hI+(hF?' — '+hF:'');
+  document.getElementById('popup-date').textContent=DIAS_FULL[d.getDay()]+', '+d.getDate()+' de '+MESES_PT[d.getMonth()];
+  pop.style.display='block';
+  setTimeout(function(){pop.style.display='none';},4000);
+}
+
+// ── DASHBOARD FUNCIONÁRIO ─────────────────────────────────────────────────────
+function renderDashboardFuncionario(){
+  var u=app.utilizador;
+  var hoje=dataISO(new Date());
+  var anoMes=hoje.substring(0,7);
+  var d=new Date();var ultDia=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+
+  Promise.all([
+    sbGet('horas_extra','utilizador_id=eq.'+u.id+'&estado=eq.aprovado&select=horas,minutos'),
+    sbGet('gozo_folga','utilizador_id=eq.'+u.id+'&estado=eq.aprovado&select=horas,minutos'),
+    sbGet('avisos','destinatario_id=eq.'+u.id+'&lido=eq.false&select=id,titulo,mensagem,created_at&order=created_at.desc&limit=5'),
+    sbGet('escalas','utilizador_id=eq.'+u.id+'&data=gte.'+anoMes+'-01&data=lte.'+anoMes+'-'+('0'+ultDia).slice(-2)+'&select=hora_inicio,hora_fim')
+  ]).then(function(rs){
+    var heAprov=rs[0]||[];var gzAprov=rs[1]||[];
+    var avisos=rs[2]||[];var escMes=rs[3]||[];
+    var totalHE=0;for(var i=0;i<heAprov.length;i++)totalHE+=(heAprov[i].horas||0)*60+(heAprov[i].minutos||0);
+    var totalGZ=0;for(var i=0;i<gzAprov.length;i++)totalGZ+=(gzAprov[i].horas||0)*60+(gzAprov[i].minutos||0);
+    var saldo=totalHE-totalGZ;
+    var totalMes=0;
+    for(var i=0;i<escMes.length;i++){
+      var eI=escMes[i].hora_inicio?escMes[i].hora_inicio.substring(0,5):'';
+      var eF=escMes[i].hora_fim?escMes[i].hora_fim.substring(0,5):'';
+      if(eI&&eF){var pI=eI.split(':');var pF=eF.split(':');var mI=parseInt(pI[0])*60+parseInt(pI[1]);var mF=parseInt(pF[0])*60+parseInt(pF[1]);if(mF>mI)totalMes+=mF-mI;}
+    }
+    // Metrics
+    var mEl=document.getElementById('dash-metrics');
+    mEl.innerHTML='';
+    var metricas=[
+      {ic:'⏱️',val:saldo>=0?minToStr(saldo):'-'+minToStr(Math.abs(saldo)),lbl:'Saldo banco horas',sub:'Extra: '+minToStr(totalHE)+' | Gozado: '+minToStr(totalGZ),cls:saldo>0?'accent-green':saldo<0?'accent-red':''},
+      {ic:'📆',val:minToStr(totalMes),lbl:'Horas este mês',sub:MESES_PT[new Date().getMonth()],cls:'accent-blue'}
+    ];
+    var grid=document.createElement('div');grid.className='metrics';
+    for(var mi=0;mi<metricas.length;mi++){
+      var m=metricas[mi];
+      var c=document.createElement('div');c.className='metric-card '+m.cls;
+      c.style.animationDelay=(mi*0.05)+'s';
+      var ic=document.createElement('div');ic.className='metric-icon';ic.textContent=m.ic;
+      var vl=document.createElement('div');vl.className='metric-val';vl.textContent=m.val;
+      var lb=document.createElement('div');lb.className='metric-lbl';lb.textContent=m.lbl;
+      var sb=document.createElement('div');sb.className='metric-sub';sb.textContent=m.sub||'';
+      c.appendChild(ic);c.appendChild(vl);c.appendChild(lb);if(m.sub)c.appendChild(sb);
+      grid.appendChild(c);
+    }
+    mEl.appendChild(grid);
+    // Quick actions
+    var qa=document.getElementById('dash-quick');qa.innerHTML='';
+    var actions=[
+      {ic:'⏱️',lbl:'Horas Extra',fn:function(){irPara('bh');}},
+      {ic:'🏖️',lbl:'Férias',fn:navAsMinhasFerias},
+      {ic:'🏛',lbl:'Espaços',fn:function(){irPara('equipamentos');}},
+      {ic:'📢',lbl:'Avisos',fn:navAvisosUser}
+    ];
+    for(var ai=0;ai<actions.length;ai++){
+      (function(a){
+        var btn=document.createElement('button');btn.className='qa-btn';
+        var ic=document.createElement('div');ic.className='qa-icon';ic.textContent=a.ic;
+        var lb=document.createElement('div');lb.className='qa-label';lb.textContent=a.lbl;
+        btn.appendChild(ic);btn.appendChild(lb);btn.onclick=a.fn;qa.appendChild(btn);
+      })(actions[ai]);
+    }
+    // Avisos
+    var avT=document.getElementById('dash-avisos-title');
+    var avL=document.getElementById('dash-avisos-list');avL.innerHTML='';
+    if(avisos.length){
+      avT.style.display='block';
+      for(var avi=0;avi<avisos.length;avi++){
+        var av=avisos[avi];
+        var card=document.createElement('div');card.className='aviso-card unread';
+        card.style.animationDelay=(avi*0.05)+'s';
+        var tit=document.createElement('div');tit.className='aviso-title';tit.textContent=av.titulo;
+        var msg=document.createElement('div');msg.className='aviso-msg';msg.textContent=av.mensagem||'';
+        card.appendChild(tit);if(av.mensagem)card.appendChild(msg);
+        avL.appendChild(card);
+      }
+    }else{avT.style.display='none';}
+  }).catch(function(){});
+}
+
+// ── DASHBOARD SUPERVISOR/ADMIN ────────────────────────────────────────────────
+function renderDashboardSupervisor(){
+  var u=app.utilizador;
+  var eqIds=[];for(var i=0;i<app.equipamentos.length;i++)eqIds.push(app.equipamentos[i].id);
+  var hoje=dataISO(new Date());
+  var eqFilter=eqIds.length?'equipamento_id=in.('+eqIds.join(',')+')'+'&':'';
+  Promise.all([
+    sbGet('checklists_registo',eqFilter+'data_registo=gte.'+hoje+'T00:00:00&select=id&limit=1'),
+    sbGet('horas_extra',eqFilter+'estado=eq.pendente&select=id&limit=50'),
+    sbGet('memorandos_reparacao',eqFilter+'estado=in.(pendente,em_aberto)&select=id&limit=50'),
+    sbGet('avisos','destinatario_id=eq.'+u.id+'&lido=eq.false&select=id&limit=50')
+  ]).then(function(rs){
+    var chkHoje=rs[0]||[];var bhPend=rs[1]||[];
+    var repAberto=rs[2]||[];var avisosN=rs[3]||[];
+    var mEl=document.getElementById('dash-metrics');mEl.innerHTML='';
+    var metricas=[
+      {ic:'✅',val:chkHoje.length>0?'Sim':'Não',lbl:'Checklists hoje',cls:chkHoje.length?'accent-green':'accent-amber'},
+      {ic:'⏱️',val:bhPend.length,lbl:'BH pendentes',cls:bhPend.length?'accent-amber':'accent-green'},
+      {ic:'🔧',val:repAberto.length,lbl:'Reparações abertas',cls:repAberto.length>0?'accent-red':'accent-green'},
+      {ic:'📢',val:avisosN.length,lbl:'Avisos por ler',cls:avisosN.length?'accent-blue':''}
+    ];
+    var grid=document.createElement('div');grid.className='metrics';
+    for(var mi=0;mi<metricas.length;mi++){
+      var m=metricas[mi];
+      var c=document.createElement('div');c.className='metric-card '+m.cls;c.style.animationDelay=(mi*0.05)+'s';
+      var ic=document.createElement('div');ic.className='metric-icon';ic.textContent=m.ic;
+      var vl=document.createElement('div');vl.className='metric-val';vl.textContent=m.val;
+      var lb=document.createElement('div');lb.className='metric-lbl';lb.textContent=m.lbl;
+      c.appendChild(ic);c.appendChild(vl);c.appendChild(lb);grid.appendChild(c);
+    }
+    mEl.appendChild(grid);
+    // Quick actions supervisor
+    var qa=document.getElementById('dash-quick');qa.innerHTML='';
+    var actions=[
+      {ic:'✅',lbl:'Checklists',fn:function(){irPara('equipamentos');}},
+      {ic:'⏱️',lbl:'BH Pendentes',fn:function(){irPara('bh');}},
+      {ic:'📢',lbl:'Avisos',fn:navAvisosAdmin},
+      {ic:'📊',lbl:'Relatórios',fn:navRelatorios}
+    ];
+    for(var ai=0;ai<actions.length;ai++){
+      (function(a){
+        var btn=document.createElement('button');btn.className='qa-btn';
+        var ic=document.createElement('div');ic.className='qa-icon';ic.textContent=a.ic;
+        var lb=document.createElement('div');lb.className='qa-label';lb.textContent=a.lbl;
+        btn.appendChild(ic);btn.appendChild(lb);btn.onclick=a.fn;qa.appendChild(btn);
+      })(actions[ai]);
+    }
+    document.getElementById('dash-avisos-title').style.display='none';
+  }).catch(function(){});
+}
+
+// ── EQUIPAMENTOS ──────────────────────────────────────────────────────────────
+var EQ_GRUPOS_ABERTOS={};
+var NOMES_GRUPOS={
+  'pavilhao':'Pavilhões','piscina_coberta':'Piscinas Cobertas',
+  'piscina_descoberta':'Piscinas Descobertas','centro_hipico':'Centro Hípico',
+  'escola':'Escolas AEC','casa_cultura':'Casa da Cultura','ceavm':'CEAVM',
+  'outro':'Outros Espaços'
+};
+var EQ_ICONS={
+  'pavilhao':'🏟','piscina_coberta':'🏊','piscina_descoberta':'🌊',
+  'centro_hipico':'🐴','escola':'🏫','casa_cultura':'🎭','ceavm':'🌿','outro':'🏛'
+};
+
+function renderEquipamentos(){
+  var sc=document.getElementById('eq-scroll');sc.innerHTML='';
+  if(!app.equipamentos.length){
+    sc.innerHTML='<div class="empty"><div class="empty-icon">🏛</div><div class="empty-text">Sem espaços atribuídos</div></div>';return;
+  }
+  document.getElementById('topbar-title').textContent='Espaços';
+  document.getElementById('topbar-sub').textContent='';
+  var grupos={};
+  for(var i=0;i<app.equipamentos.length;i++){
+    var eq=app.equipamentos[i];var tipo=eq.tipo||'outro';
+    if(!grupos[tipo])grupos[tipo]=[];grupos[tipo].push(eq);
+  }
+  for(var tipo in grupos){
+    (function(t,eqs){
+      var cor=corEq(t);
+      var aberto=EQ_GRUPOS_ABERTOS[t]!==false;
+      // Grupo header
+      var grpBtn=document.createElement('button');
+      grpBtn.style.cssText='width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--navy);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;cursor:pointer;transition:all 0.2s;';
+      var grpIc=document.createElement('div');grpIc.style.cssText='width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:'+cor+'22;';grpIc.textContent=EQ_ICONS[t]||'🏛';
+      var grpInfo=document.createElement('div');grpInfo.style.flex='1';grpInfo.style.textAlign='left';
+      var grpNm=document.createElement('div');grpNm.style.cssText='font-size:14px;font-weight:700;color:var(--ice);';grpNm.textContent=NOMES_GRUPOS[t]||t;
+      var grpCnt=document.createElement('div');grpCnt.style.cssText='font-size:11px;color:var(--muted);margin-top:2px;';grpCnt.textContent=eqs.length+(eqs.length===1?' espaço':' espaços');
+      grpInfo.appendChild(grpNm);grpInfo.appendChild(grpCnt);
+      var grpArr=document.createElement('div');grpArr.style.cssText='color:var(--muted);font-size:16px;transition:transform 0.2s;';grpArr.textContent='›';
+      if(aberto)grpArr.style.transform='rotate(90deg)';
+      grpBtn.appendChild(grpIc);grpBtn.appendChild(grpInfo);grpBtn.appendChild(grpArr);
+      // Lista de equipamentos
+      var lista=document.createElement('div');lista.style.cssText='margin-bottom:8px;display:'+(aberto?'block':'none')+';';
+      for(var gi=0;gi<eqs.length;gi++){
+        (function(eq){
+          var card=document.createElement('div');
+          card.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 14px 12px 20px;background:var(--glass);border:1px solid var(--border);border-left:3px solid '+cor+';border-radius:var(--radius-sm);margin-bottom:6px;cursor:pointer;transition:all 0.15s;';
+          var eqNm=document.createElement('div');eqNm.style.cssText='font-size:13px;font-weight:600;color:var(--ice);flex:1;';eqNm.textContent=eq.nome;
+          var eqArr=document.createElement('div');eqArr.style.cssText='color:var(--muted);font-size:16px;';eqArr.textContent='›';
+          card.appendChild(eqNm);card.appendChild(eqArr);
+          card.onclick=function(){navEquipamento(eq);};
+          lista.appendChild(card);
+        })(eqs[gi]);
+      }
+      grpBtn.onclick=function(){
+        var open=lista.style.display==='none';
+        lista.style.display=open?'block':'none';
+        grpArr.style.transform=open?'rotate(90deg)':'rotate(0deg)';
+        EQ_GRUPOS_ABERTOS[t]=open;
+      };
+      sc.appendChild(grpBtn);sc.appendChild(lista);
+    })(tipo,grupos[tipo]);
+  }
+}
+
+// Placeholder pages
+function navEquipamento(eq){
+  document.getElementById('topbar-title').textContent=eq.nome;
+  document.getElementById('topbar-sub').textContent=eq.tipo||'';
+  var sc=document.getElementById('eq-scroll');sc.innerHTML='';
+  var back=document.createElement('button');back.className='btn btn-ghost btn-sm';back.style.marginBottom='16px';back.textContent='‹ Voltar';
+  back.onclick=function(){renderEquipamentos();document.getElementById('topbar-title').textContent='Espaços';document.getElementById('topbar-sub').textContent='';};
+  sc.appendChild(back);
+  var p=document.createElement('div');p.className='empty';p.innerHTML='<div class="empty-icon">🏗</div><div class="empty-text">Módulos do equipamento</div><div class="empty-sub">Em construção</div>';
+  sc.appendChild(p);
+}
+
+function renderBH(){
+  var sc=document.getElementById('bh-scroll');
+  sc.innerHTML='<div class="empty"><div class="empty-icon">⏱️</div><div class="empty-text">Banco de Horas</div><div class="empty-sub">Em construção</div></div>';
+}
+function renderMais(){
+  var sc=document.getElementById('mais-scroll');
+  sc.innerHTML='<div class="empty"><div class="empty-icon">⋯</div><div class="empty-text">Mais opções</div><div class="empty-sub">Em construção</div></div>';
+}
+function navAsMinhasFerias(){
+  var sc=document.getElementById('mais-scroll');irPara('mais');
+  sc.innerHTML='<div class="empty"><div class="empty-icon">🏖️</div><div class="empty-text">As Minhas Férias</div><div class="empty-sub">Em construção</div></div>';
+}
+function navAvisosUser(){
+  var sc=document.getElementById('mais-scroll');irPara('mais');
+  sc.innerHTML='<div class="empty"><div class="empty-icon">📢</div><div class="empty-text">Avisos</div><div class="empty-sub">Em construção</div></div>';
+}
+function navAvisosAdmin(){navAvisosUser();}
+function navUtilizadores(){navAvisosUser();}
+function navPermissoes(){navAvisosUser();}
+function navRelatorios(){
+  var sc=document.getElementById('mais-scroll');irPara('mais');
+  sc.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Relatórios</div><div class="empty-sub">Em construção</div></div>';
+}
+</script>
+</body>
+</html>
