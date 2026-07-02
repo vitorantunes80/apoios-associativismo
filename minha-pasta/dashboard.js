@@ -60,7 +60,8 @@ var Dashboard = (function() {
     html += _statCard('si-blue',   _svgEq(),   'Equipamentos',   APP.equipamentos.length, 'Ativos',    "App.nav('equipamentos','lista')");
     html += _statCard('si-green',  _svgTeam(), 'Funcionários',   APP.utilizadores.length, 'Registados',"App.nav('funcionarios')");
     html += _statCard('si-amber',  _svgTool(), 'Memorandos',     mAbertos,                'Pendentes', "App.nav('memorandos','sec2')");
-    html += _statCard('si-purple', _svgCal(),  'Reservas Hoje',  23,                      'Agendadas', '');
+    var reservasHoje = _contarReservasHoje();
+    html += _statCard('si-purple', _svgCal(), 'Reservas Hoje', reservasHoje, 'Agendadas', '');
     html += '</div>';
 
     // MAIN GRID
@@ -138,7 +139,7 @@ var Dashboard = (function() {
     html += '<div class="eq-tab-panel' + (0 === 2 ? ' active' : '') + '" id="spot-t0">';
     if (spotEq) {
       html += '<div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px;">';
-      html += _statCard('si-blue', _svgCal(), 'Reservas Hoje', 7, 'Agendadas', '');
+      html += _statCard('si-blue', _svgCal(), 'Reservas Hoje', _contarReservasHojeEq(APP.spotEqId), 'Agendadas', '');
       html += _statCard('si-green', _svgTeam(), 'Funcionários', 12, 'Em serviço: 4', '');
       var memosEq = APP.memos.filter(function(m) { return m.equipamento_id === spotEq.id && m.estado !== 'concluido'; });
       html += _statCard('si-amber', _svgTool(), 'Memos Abertos', memosEq.length, 'Pendentes', '');
@@ -164,7 +165,14 @@ var Dashboard = (function() {
     [1,3,4,5].forEach(function(i) {
       var labels = { 1:'Reservas', 3:'Checklists', 4:'Reparações', 5:'Informações' };
       html += '<div class="eq-tab-panel" id="spot-t' + i + '">';
-      html += '<div class="mod-ph"><div class="mod-ph-t">' + labels[i] + '</div><div class="mod-ph-s">Módulo em desenvolvimento na próxima fase.</div><span class="wip-badge">Em desenvolvimento</span></div>';
+      if (i === 1) {
+        // Reservas — mostrar próximas do equipamento
+        html += _renderReservasTab(APP.spotEqId);
+      } else if (i === 3) {
+        html += '<div class="mod-ph"><div class="mod-ph-t">Checklists</div><div class="mod-ph-s">Em desenvolvimento.</div><span class="wip-badge">Em desenvolvimento</span></div>';
+      } else {
+        html += '<div class="mod-ph"><div class="mod-ph-t">' + labels[i] + '</div><div class="mod-ph-s">Em desenvolvimento.</div><span class="wip-badge">Em desenvolvimento</span></div>';
+      }
       html += '</div>';
     });
 
@@ -260,17 +268,126 @@ var Dashboard = (function() {
     return html;
   }
 
-  function _renderReservas() {
-    var html = '<div class="panel-card">';
-    html += '<div class="panel-head"><div class="panel-title">Próximas Reservas</div><div class="panel-link">Ver todas</div></div>';
-    RESERVAS_DEMO.forEach(function(r) {
-      html += '<div class="reserva-item">';
-      html += '<div class="r-dot" style="background:' + r.cor + ';"></div>';
-      html += '<div class="r-time">' + r.hora + '</div>';
-      html += '<div class="r-info"><div class="r-name">' + H(r.nome) + '</div><div class="r-loc">' + H(r.local) + '</div></div>';
-      html += '<span>›</span>';
+  function _contarReservasHoje() {
+    if (!APP.reservas) return 0;
+    var hoje = new Date().toDateString();
+    return (APP.reservas || []).filter(function(r) {
+      if (r.estado === 'cancelada') return false;
+      if (r.recorrente) {
+        var dias = (r.dias_semana || '').split(',').map(function(d) { return parseInt(d,10); });
+        var diaSem = new Date().getDay();
+        var pi = new Date(r.data_inicio_periodo), pf = new Date(r.data_fim_periodo);
+        var agora = new Date(); agora.setHours(0,0,0,0);
+        return dias.indexOf(diaSem) >= 0 && agora >= pi && agora <= pf;
+      }
+      return new Date(r.data_inicio).toDateString() === hoje;
+    }).length;
+  }
+
+  function _contarReservasHojeEq(eqId) {
+    if (!APP.reservas || !eqId) return 0;
+    var hoje = new Date().toDateString();
+    return (APP.reservas || []).filter(function(r) {
+      if (r.equipamento_id !== eqId || r.estado === 'cancelada') return false;
+      if (r.recorrente) {
+        var dias = (r.dias_semana || '').split(',').map(function(d) { return parseInt(d,10); });
+        var diaSem = new Date().getDay();
+        var pi = new Date(r.data_inicio_periodo), pf = new Date(r.data_fim_periodo);
+        var agora = new Date(); agora.setHours(0,0,0,0);
+        return dias.indexOf(diaSem) >= 0 && agora >= pi && agora <= pf;
+      }
+      return new Date(r.data_inicio).toDateString() === hoje;
+    }).length;
+  }
+
+  function _renderReservasTab(eqId) {
+    var reservas = (APP.reservas || []).filter(function(r) {
+      return r.equipamento_id === eqId && r.estado !== 'cancelada';
+    });
+
+    // Próximas reservas desta semana
+    var hoje = new Date(); hoje.setHours(0,0,0,0);
+    var fim  = new Date(hoje); fim.setDate(hoje.getDate() + 7);
+
+    var proximas = reservas.filter(function(r) {
+      if (r.recorrente) {
+        var pf = new Date(r.data_fim_periodo);
+        return pf >= hoje;
+      }
+      var d = new Date(r.data_inicio); d.setHours(0,0,0,0);
+      return d >= hoje && d <= fim;
+    }).slice(0, 8);
+
+    if (!proximas.length) {
+      return '<div style="padding:20px;text-align:center;color:var(--text-3);font-size:13px;">Sem reservas nos próximos 7 dias.<br><br>' +
+        '<button class="btn btn-primary btn-sm" onclick="App.nav(\'reservas\')">Ver calendário</button></div>';
+    }
+
+    var html = '<div style="padding:8px 0;">';
+    proximas.forEach(function(r) {
+      var ESTADOS_CORES = { pre_reserva: '#F59E0B', confirmada: '#3B82F6', cancelada: '#EF4444' };
+      var cor = ESTADOS_CORES[r.estado] || '#3B82F6';
+      var horario = '';
+      if (r.recorrente && r.hora_inicio) {
+        var diasN = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+        var diasStr = (r.dias_semana || '').split(',').map(function(d) { return diasN[parseInt(d,10)]; }).join(',');
+        horario = diasStr + ' ' + (r.hora_inicio||'').slice(0,5) + '–' + (r.hora_fim||'').slice(0,5);
+      } else if (r.data_inicio) {
+        var d = new Date(r.data_inicio);
+        horario = fData(r.data_inicio) + ' ' + d.getHours().toString().padStart(2,'0') + ':00';
+      }
+      html += '<div class="reserva-item" onclick="App.nav(\'reservas\')">';
+      html += '<div class="r-dot" style="background:' + cor + ';"></div>';
+      html += '<div class="r-time" style="font-size:11px;">' + H(horario) + '</div>';
+      html += '<div class="r-info"><div class="r-name">' + H(r.titulo) + '</div>';
+      html += '<div class="r-loc">' + H(r.entidade || r.espaco || '—') + '</div></div>';
+      if (r.estado === 'pre_reserva') html += '<span style="font-size:10px;color:#F59E0B;font-weight:700;">PRÉ</span>';
       html += '</div>';
     });
+    html += '<div style="padding:8px 13px;"><button class="btn btn-ghost btn-sm" onclick="App.nav(\'reservas\')" style="width:100%;">Ver calendário completo →</button></div>';
+    html += '</div>';
+    return html;
+  }
+
+  function _renderReservas() {
+    var reservas = APP.reservas || [];
+    // próximas reservas de todos os equipamentos, hoje e amanhã
+    var hoje = new Date(); hoje.setHours(0,0,0,0);
+    var amanha = new Date(hoje); amanha.setDate(hoje.getDate() + 2);
+    var ESTADOS_CORES = { pre_reserva: '#F59E0B', confirmada: '#3B82F6', cancelada: '#EF4444' };
+
+    var proximas = reservas.filter(function(r) {
+      if (r.estado === 'cancelada') return false;
+      if (r.recorrente) {
+        var dias = (r.dias_semana || '').split(',').map(function(d) { return parseInt(d,10); });
+        return dias.indexOf(hoje.getDay()) >= 0 || dias.indexOf(amanha.getDay()) >= 0;
+      }
+      var d = new Date(r.data_inicio); d.setHours(0,0,0,0);
+      return d >= hoje && d < amanha;
+    }).slice(0, 5);
+
+    var html = '<div class="panel-card">';
+    html += '<div class="panel-head"><div class="panel-title">Próximas Reservas</div>';
+    html += '<div class="panel-link" onclick="App.nav(\'reservas\')">Ver calendário</div></div>';
+
+    if (!proximas.length) {
+      html += '<div style="padding:14px 13px;font-size:12.5px;color:var(--text-3);text-align:center;">Sem reservas para hoje.</div>';
+    } else {
+      proximas.forEach(function(r) {
+        var cor = ESTADOS_CORES[r.estado] || '#3B82F6';
+        var eq  = r.equipamento_id ? getEq(r.equipamento_id) : null;
+        var hora = '';
+        if (r.recorrente && r.hora_inicio) hora = (r.hora_inicio||'').slice(0,5) + '–' + (r.hora_fim||'').slice(0,5);
+        else if (r.data_inicio) { var d=new Date(r.data_inicio); hora=d.getHours().toString().padStart(2,'0')+':00'; }
+        html += '<div class="reserva-item" onclick="App.nav(\'reservas\')">';
+        html += '<div class="r-dot" style="background:' + cor + ';"></div>';
+        html += '<div class="r-time">' + H(hora) + '</div>';
+        html += '<div class="r-info"><div class="r-name">' + H(r.titulo) + '</div>';
+        html += '<div class="r-loc">' + H(eq ? eq.nome : (r.entidade || '—')) + '</div></div>';
+        if (r.estado === 'pre_reserva') html += '<span style="font-size:10px;color:#F59E0B;font-weight:700;">PRÉ</span>';
+        html += '</div>';
+      });
+    }
     html += '</div>';
     return html;
   }
