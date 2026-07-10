@@ -351,7 +351,7 @@ var Relatorios = (function() {
     h += '<button class="btn btn-ghost btn-sm" onclick="Relatorios.imprimir(\'ficha\',\'UDAJ\')">UDAJ</button>';
     h += '</div>';
 
-    h += '<div class="rep-grp"><div class="rep-grp-t">Ficha de Operação (módulos, espaços, reservas, escala)</div>';
+    h += '<div class="rep-grp"><div class="rep-grp-t">Ficha de Operação (espaços, reservas, escala)</div>';
     h += '<button class="btn btn-ghost btn-sm" onclick="Relatorios.imprimir(\'ficha_op\',\'\')">Todos</button>';
     h += '<button class="btn btn-ghost btn-sm" onclick="Relatorios.imprimir(\'ficha_op\',\'UASE\')">UASE</button>';
     h += '<button class="btn btn-ghost btn-sm" onclick="Relatorios.imprimir(\'ficha_op\',\'UDAJ\')">UDAJ</button>';
@@ -578,10 +578,6 @@ var Relatorios = (function() {
     h += '</div>';
 
     if (mostraOp) {
-      var modsOn = MOD_DEFS.filter(function(m){ return modAtivo(e, m.k); });
-      h += '<div class="pr-sec">Módulos activos</div>';
-      h += modsOn.length ? '<div>' + modsOn.map(function(m){ return '<span class="pr-badge">' + esc(m.l) + '</span>'; }).join('') + '</div>' : '<div class="pr-empty">Nenhum módulo activo.</div>';
-
       var espacos = (APP.espacos || []).filter(function(x){ return x.equipamento_id === e.id; }).sort(function(a, b){ return (a.ordem || 0) - (b.ordem || 0); });
       h += '<div class="pr-sec">Espaços / Valências (' + espacos.length + ')</div>';
       h += espacos.length ? '<div>' + espacos.map(function(x){ return '<span class="pr-badge">' + esc(x.nome) + '</span>'; }).join('') + '</div>' : '<div class="pr-empty">Sem espaços registados.</div>';
