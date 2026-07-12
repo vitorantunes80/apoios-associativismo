@@ -1,0 +1,461 @@
+// ============================================================
+// GestDDS — funcionarios.js  v5.1
+// Gestão de funcionários afectos aos equipamentos
+// ============================================================
+
+var Funcionarios = (function() {
+
+  // ── RENDER ────────────────────────────────────────────────
+  function render() {
+    var isAdmin = APP.isAdmin();
+    var isDds   = APP.isDds();
+    var podeGerir = isAdmin || isDds || APP.isResponsavel();
+
+    var html = '<div class="dash-greeting">';
+    html += '<div><div class="dash-hello" style="font-size:18px;">Funcionários</div>';
+    html += '<div class="dash-sub">Funcionários afectos aos equipamentos da divisão.</div></div>';
+    if (podeGerir) {
+      html += '<button class="btn btn-primary" onclick="Funcionarios.openNovo()">+ Novo funcionário</button>';
+    }
+    html += '</div>';
+
+    // Funcionários = lista mestra de TODO o pessoal.
+    // (o menu Utilizadores é que filtra só quem tem acesso à app)
+    var funcs = APP.utilizadores.slice();
+
+    // Se não-DDS, mostrar só do seu equipamento
+    if (!isDds && APP.user && APP.user.equipamento_id) {
+      funcs = funcs.filter(function(u) {
+        return u.equipamento_id === APP.user.equipamento_id;
+      });
+    }
+
+    if (!funcs.length) {
+      return html + emptyState('Sem funcionários', 'Nenhum funcionário registado.');
+    }
+
+    // Agrupar por equipamento
+    var groups = {};
+    var semEq = [];
+    funcs.forEach(function(u) {
+      if (u.equipamento_id) {
+        if (!groups[u.equipamento_id]) groups[u.equipamento_id] = [];
+        groups[u.equipamento_id].push(u);
+      } else {
+        semEq.push(u);
+      }
+    });
+
+    // Por equipamento
+    APP.equipamentos.forEach(function(eq) {
+      if (!groups[eq.id] || !groups[eq.id].length) return;
+      html += '<div style="margin-bottom:20px;">';
+      html += '<div class="sec-head"><div class="sec-title">';
+      var tipo = eq.tipo_id ? APP.tiposEq.filter(function(t) { return t.id === eq.tipo_id; })[0] : null;
+      html += (tipo && tipo.emoji ? tipo.emoji + ' ' : '') + H(eq.nome);
+      html += ' <span class="sec-badge">' + groups[eq.id].length + '</span></div></div>';
+      html += _tabela(groups[eq.id], podeGerir);
+      html += '</div>';
+    });
+
+    // Sem equipamento
+    if (semEq.length) {
+      html += '<div style="margin-bottom:20px;">';
+      html += '<div class="sec-head"><div class="sec-title">Sem equipamento atribuído <span class="sec-badge">' + semEq.length + '</span></div></div>';
+      html += _tabela(semEq, podeGerir);
+      html += '</div>';
+    }
+
+    return html;
+  }
+
+  function _opcoesGuardadas(campo, predefinidos) {
+    // reunir valores únicos: predefinidos + os já usados nos utilizadores
+    var set = {};
+    (predefinidos || []).forEach(function(v) { if (v) set[v] = true; });
+    (APP.utilizadores || []).forEach(function(u) {
+      var v = u[campo];
+      if (v && String(v).trim()) set[String(v).trim()] = true;
+    });
+    var opcoes = Object.keys(set).sort();
+    return opcoes.map(function(v) { return '<option value="' + H(v) + '"></option>'; }).join('');
+  }
+
+  function _tabela(funcs, isAdmin) {
+    var html = '<div class="dtw"><table class="dt">';
+    html += '<thead><tr><th>Nome</th><th>Perfil</th><th>Unidade / Categoria</th><th>Código</th><th>Estado</th><th>Acesso à app</th>';
+    if (isAdmin) html += '<th></th>';
+    html += '</tr></thead><tbody>';
+
+    funcs.forEach(function(u) {
+      var pal  = PERFIL_PALETTES[u.perfil] || ['#F1F5F9','#475569'];
+      var ini  = iniciais(u.nome);
+      var ativo = u.ativo !== false;
+
+      html += '<tr>';
+      html += '<td><div style="display:flex;align-items:center;gap:10px;">';
+      html += '<div style="width:34px;height:34px;border-radius:50%;background:' + pal[0] + ';color:' + pal[1] + ';font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + ini + '</div>';
+      html += '<div><div class="td-p">' + H(u.nome) + '</div>';
+      if (u.funcao) html += '<div class="td-m">' + H(u.funcao) + '</div>';
+      if (u.num_mecanografico) html += '<div class="td-m" style="font-size:11px;">Nº ' + H(u.num_mecanografico) + '</div>';
+      html += '</div></div></td>';
+      html += '<td><span class="bdg" style="background:' + pal[0] + ';color:' + pal[1] + ';">' + H(_labelPerfil(u.perfil)) + '</span></td>';
+      html += '<td>';
+      if (u.unidade === 'EXTERNA') {
+        html += '<span class="td-p" style="font-size:12.5px;color:var(--amber);">Externo à DDS</span>';
+        if (u.divisao_origem) html += '<div class="td-m" style="font-size:11px;">' + H(u.divisao_origem) + '</div>';
+      } else if (u.unidade) {
+        html += '<span class="td-p" style="font-size:12.5px;">' + H(u.unidade) + '</span>';
+      }
+      if (u.area) html += '<div class="td-m">' + H(u.area) + '</div>';
+      if (u.categoria) html += '<div class="td-m" style="font-size:11px;">' + H(u.categoria) + '</div>';
+      if (u.vinculo) html += '<div class="td-m" style="font-size:10.5px;margin-top:2px;color:' + (u.vinculo === 'Recibo verde' || u.vinculo === 'Avença' ? 'var(--amber)' : 'var(--text-3)') + ';">' + H(u.vinculo) + '</div>';
+      if (!u.unidade && !u.area && !u.categoria) html += '<span class="td-m">—</span>';
+      html += '</td>';
+      html += '<td><span class="td-mono" style="font-size:12px;background:var(--bg);padding:2px 8px;border-radius:6px;border:1px solid var(--border);">' + H(u.codigo || '—') + '</span></td>';
+      html += '<td>' + (ativo
+        ? '<span class="bdg bdg-ativo"><span class="bdg-dot"></span>Activo</span>'
+        : '<span class="bdg bdg-inativo">Inactivo</span>') + '</td>';
+
+      // Acesso à app
+      var temAcesso = u.tem_acesso === true;
+      html += '<td>';
+      html += temAcesso
+        ? '<span class="bdg" style="background:#DCFCE7;color:#15803D;">💻 Com acesso</span>'
+        : '<span class="bdg" style="background:var(--bg);color:var(--text-3);">Sem acesso</span>';
+      if (isAdmin && APP.user && u.id !== APP.user.id) {
+        html += temAcesso
+          ? '<div style="margin-top:4px;"><button class="btn btn-ghost btn-sm" style="color:var(--red);font-size:11px;" onclick="Funcionarios.retirarAcesso(\'' + u.id + '\')">Retirar acesso</button></div>'
+          : '<div style="margin-top:4px;"><button class="btn btn-ghost btn-sm" style="color:var(--accent);font-size:11px;" onclick="Funcionarios.darAcesso(\'' + u.id + '\')">Dar acesso</button></div>';
+      }
+      html += '</td>';
+
+      if (isAdmin) {
+        html += '<td><div class="td-act">';
+        html += '<button class="btn btn-ghost btn-sm" onclick="Funcionarios.openEditar(\'' + u.id + '\')">Editar</button>';
+        if (APP.user && u.id !== APP.user.id) {
+          html += '<button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="Funcionarios.confirmarApagar(\'' + u.id + '\',\'' + H(u.nome) + '\')">Apagar</button>';
+        }
+        html += '</div></td>';
+      }
+      html += '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    return html;
+  }
+
+  function _labelPerfil(p) {
+    var labels = {
+      admin: 'Administrador',
+      responsavel_dds: 'Responsável DDS',
+      supervisor_udaj: 'Chefe UDAJ',
+      supervisor_uase: 'Chefe UASE',
+      responsavel: 'Responsável',
+      professor_responsavel: 'Prof. Responsável',
+      funcionario: 'Funcionário'
+    };
+    return labels[p] || p || '—';
+  }
+
+  // ── MODAL HTML ────────────────────────────────────────────
+  function getModaisHTML() {
+    var html = '';
+
+    html += '<div class="modal-bd" id="m-func-novo">';
+    html += '<div class="modal" style="max-width:520px;">';
+    html += '<div class="modal-header">';
+    html += '<div class="mh-ic mhi-blue"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>';
+    html += '<div><div class="modal-title" id="m-func-ttl">Novo funcionário</div><div class="modal-sub">Dados do funcionário</div></div>';
+    html += '<button class="modal-close" onclick="closeModal(\'m-func-novo\')">✕</button>';
+    html += '</div>';
+    html += '<div class="modal-body">';
+
+    html += '<div class="form-sec-t">Identificação</div>';
+    html += '<div class="form-row">';
+    html += '<div class="fi"><label class="fl">Nome completo *</label><input type="text" id="func-nome" class="fin" placeholder="ex: Ana Silva"></div>';
+    html += '<div class="fi"><label class="fl">Código de acesso *</label><input type="text" id="func-codigo" class="fin" placeholder="ex: AS2026" style="font-family:\'JetBrains Mono\',monospace;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()"></div>';
+    html += '</div>';
+    html += '<div class="form-row">';
+    html += '<div class="fi"><label class="fl">Email</label><input type="email" id="func-email" class="fin" placeholder="email@cm-cabeceiras.pt"></div>';
+    html += '<div class="fi"><label class="fl">Nº mecanográfico</label><input type="text" id="func-mecanografico" class="fin" placeholder="ex: 12345"></div>';
+    html += '</div>';
+
+    html += '<div class="form-sec-t">Equipamento</div>';
+    html += '<div class="form-row">';
+    html += '<div class="fi"><label class="fl">Equipamento principal</label>';
+    html += '<select id="func-eq" class="fin"><option value="">Nenhum</option></select>';
+    html += '</div></div>';
+    html += '<div class="fi"><label class="fl">Também desempenha funções em</label>';
+    html += '<p style="font-size:12px;color:var(--text-3);margin:0 0 6px;line-height:1.5;">Marque outros equipamentos onde este funcionário trabalha (iniciativas, apoios pontuais). Passa a aparecer nas escalas e no banco de horas desses equipamentos.</p>';
+    html += '<div id="func-eq-extra" style="display:flex;flex-wrap:wrap;gap:6px;"></div>';
+    html += '</div>';
+
+    html += '<div class="form-sec-t">Enquadramento orgânico</div>';
+    html += '<div class="form-row">';
+    html += '<div class="fi"><label class="fl">Unidade</label>';
+    html += '<select id="func-unidade" class="fin" onchange="Funcionarios.onUnidadeChange()">';
+    html += '<option value="">Nenhuma</option>';
+    html += '<option value="UASE">UASE — Unidade de Ação Social, Saúde e Educação</option>';
+    html += '<option value="UDAJ">UDAJ — Unidade de Desporto, Associativismo e Juventude</option>';
+    html += '<option value="EXTERNA">Externo à DDS — outra divisão do município</option>';
+    html += '</select></div>';
+    html += '<div class="fi" id="func-divisao-wrap" style="display:none;"><label class="fl">Divisão de origem</label>';
+    html += '<input type="text" id="func-divisao" class="fin" list="divisao-opcoes" placeholder="ex: Divisão de Obras Municipais">';
+    html += '<datalist id="divisao-opcoes">' + _opcoesGuardadas('divisao_origem', ['Divisão Administrativa e Geral','Divisão de Obras Municipais','Divisão de Ambiente','Divisão de Cultura','Divisão de Urbanismo']) + '</datalist>';
+    html += '</div>';
+    html += '<div class="fi"><label class="fl">Área</label>';
+    html += '<input type="text" id="func-area" class="fin" list="area-opcoes" placeholder="Escreva ou escolha">';
+    html += '<datalist id="area-opcoes">' + _opcoesGuardadas('area', ['Ação Social','Saúde','Educação','Desporto','Associativismo','Juventude']) + '</datalist>';
+    html += '</div>';
+    html += '</div>';
+    html += '<div class="form-row">';
+    html += '<div class="fi"><label class="fl">Função</label>';
+    html += '<input type="text" id="func-funcao" class="fin" list="funcao-opcoes" placeholder="ex: Coordenador de instalações">';
+    html += '<datalist id="funcao-opcoes">' + _opcoesGuardadas('funcao', []) + '</datalist>';
+    html += '</div>';
+    html += '<div class="fi"><label class="fl">Categoria</label>';
+    html += '<input type="text" id="func-categoria" class="fin" list="categoria-opcoes" placeholder="Escreva ou escolha">';
+    html += '<datalist id="categoria-opcoes">' + _opcoesGuardadas('categoria', ['Assistente Operacional','Assistente Técnico','Técnico Superior','Dirigente']) + '</datalist>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '<div class="form-row">';
+    html += '<div class="fi"><label class="fl">Vínculo</label>';
+    html += '<select id="func-vinculo" class="fin">';
+    html += '<option value="">—</option>';
+    html += '<option value="Contrato sem termo">Contrato sem termo</option>';
+    html += '<option value="Contrato a termo">Contrato a termo</option>';
+    html += '<option value="Recibo verde">Recibo verde</option>';
+    html += '<option value="Avença">Avença</option>';
+    html += '<option value="Estágio">Estágio</option>';
+    html += '<option value="Outro">Outro</option>';
+    html += '</select></div>';
+    html += '</div>';
+
+    html += '<div class="form-row">';
+    html += '<div class="fi"><label class="fl">Estado</label>';
+    html += '<select id="func-ativo" class="fin"><option value="true">Activo</option><option value="false">Inactivo</option></select>';
+    html += '</div></div>';
+
+    html += '</div>'; // modal-body
+    html += '<div class="modal-footer">';
+    html += '<button class="btn btn-ghost" onclick="closeModal(\'m-func-novo\')">Cancelar</button>';
+    html += '<button class="btn btn-primary" onclick="Funcionarios.salvar()">Guardar</button>';
+    html += '</div>';
+    html += '</div></div>';
+
+    // APAGAR
+    html += '<div class="modal-bd" id="m-func-apagar"><div class="modal">';
+    html += '<div class="modal-header"><div class="mh-ic mhi-red"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg></div>';
+    html += '<div><div class="modal-title">Apagar funcionário</div><div class="modal-sub" id="m-func-ap-nome">—</div></div>';
+    html += '<button class="modal-close" onclick="closeModal(\'m-func-apagar\')">✕</button></div>';
+    html += '<div class="modal-body"><p style="font-size:13.5px;color:var(--text-2);">Esta acção é irreversível.</p></div>';
+    html += '<div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal(\'m-func-apagar\')">Cancelar</button>';
+    html += '<button class="btn btn-danger" onclick="Funcionarios.execApagar()">Apagar</button></div>';
+    html += '</div></div>';
+
+    return html;
+  }
+
+  // ── ACÇÕES ────────────────────────────────────────────────
+  function _popularEqSelect(selId, selValue) {
+    var sel = document.getElementById(selId);
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Nenhum</option>';
+    APP.equipamentos.forEach(function(e) {
+      var o = document.createElement('option');
+      o.value = e.id;
+      o.textContent = e.nome;
+      if (selValue && e.id === selValue) o.selected = true;
+      sel.appendChild(o);
+    });
+  }
+
+  function openNovo() {
+    APP.editId = null;
+    document.getElementById('m-func-ttl').textContent = 'Novo funcionário';
+    ['func-nome','func-codigo','func-email','func-mecanografico','func-funcao'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.value = '';
+    });
+    ['func-unidade','func-area','func-categoria','func-vinculo','func-divisao'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.value = '';
+    });
+    var a = document.getElementById('func-ativo'); if (a) a.value = 'true';
+    onUnidadeChange();
+    _popularEqSelect('func-eq');
+    _popularEqExtra([]);
+    // Se não-DDS, pré-seleccionar o seu equipamento
+    if (!APP.isDds() && APP.user && APP.user.equipamento_id) {
+      var eqSel = document.getElementById('func-eq');
+      if (eqSel) eqSel.value = APP.user.equipamento_id;
+    }
+    openModal('m-func-novo');
+  }
+
+  function openEditar(id) {
+    var u = APP.utilizadores.filter(function(x) { return x.id === id; })[0];
+    if (!u) return;
+    APP.editId = id;
+    document.getElementById('m-func-ttl').textContent = 'Editar funcionário';
+    var set = function(eid, val) {
+      var el = document.getElementById(eid);
+      if (el) el.value = val !== null && val !== undefined ? val : '';
+    };
+    set('func-nome',     u.nome);
+    set('func-codigo',   u.codigo);
+    set('func-email',    u.email);
+    set('func-mecanografico', u.num_mecanografico);
+    set('func-unidade',  u.unidade);
+    set('func-divisao',  u.divisao_origem);
+    onUnidadeChange();
+    set('func-vinculo',  u.vinculo);
+    set('func-area',     u.area);
+    set('func-funcao',   u.funcao);
+    set('func-categoria',u.categoria);
+    set('func-ativo',    u.ativo !== false ? 'true' : 'false');
+    _popularEqSelect('func-eq', u.equipamento_id);
+    _popularEqExtra(Array.isArray(u.equipamentos_extra) ? u.equipamentos_extra : []);
+    openModal('m-func-novo');
+  }
+
+  function salvar() {
+    var nome   = document.getElementById('func-nome');
+    var codigo = document.getElementById('func-codigo');
+    if (!nome || !nome.value.trim()) { toast('O nome é obrigatório.', 'error'); return; }
+    if (!codigo || !codigo.value.trim()) { toast('O código de acesso é obrigatório.', 'error'); return; }
+
+    var eqSel  = document.getElementById('func-eq');
+    var atvSel = document.getElementById('func-ativo');
+
+    var body = {
+      nome:           nome.value.trim(),
+      codigo:         (codigo.value || '').trim().toUpperCase() || null,
+      email:          ((document.getElementById('func-email') || {}).value || '').trim() || null,
+      num_mecanografico: (document.getElementById('func-mecanografico').value || '').trim() || null,
+      equipamento_id: (eqSel && eqSel.value) ? eqSel.value : null,
+      unidade:        (document.getElementById('func-unidade')   || {}).value || null,
+      area:           (document.getElementById('func-area')      || {}).value || null,
+      funcao:         ((document.getElementById('func-funcao')   || {}).value || '').trim() || null,
+      categoria:      (document.getElementById('func-categoria') || {}).value || null,
+      vinculo:        (document.getElementById('func-vinculo')   || {}).value || null,
+      divisao_origem: ((document.getElementById('func-unidade') || {}).value === 'EXTERNA')
+                        ? (((document.getElementById('func-divisao') || {}).value || '').trim() || null)
+                        : null,
+      ativo:          atvSel ? atvSel.value === 'true' : true
+    };
+
+    // equipamentos adicionais (exclui o principal para não duplicar)
+    var extras = [];
+    document.querySelectorAll('.func-eqx').forEach(function(cb) {
+      if (cb.checked && cb.value !== body.equipamento_id) extras.push(cb.value);
+    });
+    body.equipamentos_extra = extras;
+
+    // novo funcionário nasce sem acesso à app e com perfil base;
+    // perfil, acessos e permissões gerem-se no menu Utilizadores
+    if (!APP.editId) {
+      body.perfil = 'funcionario';
+      body.isDds = false;
+      body.tem_acesso = false;
+      body.permissoes_extra = {};
+    }
+
+    var p = APP.editId
+      ? sbPatch('utilizadores', 'id=eq.' + APP.editId, body)
+      : sbPost('utilizadores', body);
+
+    p.then(function() {
+      toast(APP.editId ? 'Funcionário actualizado.' : 'Funcionário criado.', 'success');
+      closeModal('m-func-novo');
+      loadAll(function() { App.renderContent(); App.buildSidebar(); });
+    }).catch(function(e) {
+      console.error('Erro ao guardar funcionário:', e);
+      if (e && e.message && e.message.indexOf('unique') >= 0) {
+        toast('Esse código já está em uso.', 'error');
+      } else {
+        var msg = [e && e.code, e && e.message, e && e.details, e && e.hint].filter(Boolean).join(' · ');
+        toast('Erro ao guardar: ' + (msg || 'desconhecido'), 'error');
+      }
+    });
+  }
+
+  // ── ACESSO À APP ──────────────────────────────────────────
+  function darAcesso(id) {
+    sbPatch('utilizadores', 'id=eq.' + id, { tem_acesso: true }).then(function() {
+      toast('Acesso concedido. Configure o perfil no menu Utilizadores.', 'success');
+      loadAll(function() { App.renderContent(); });
+    }).catch(function() { toast('Erro ao conceder acesso.', 'error'); });
+  }
+
+  function retirarAcesso(id) {
+    sbPatch('utilizadores', 'id=eq.' + id, { tem_acesso: false }).then(function() {
+      toast('Acesso à app retirado.', 'success');
+      loadAll(function() { App.renderContent(); });
+    }).catch(function() { toast('Erro ao retirar acesso.', 'error'); });
+  }
+
+  // checkboxes dos equipamentos adicionais
+  function _popularEqExtra(selecionados) {
+    var wrap = document.getElementById('func-eq-extra');
+    if (!wrap) return;
+    selecionados = Array.isArray(selecionados) ? selecionados : [];
+    var h = '';
+    (APP.equipamentos || []).slice()
+      .sort(function(a, b) { return (a.nome || '').localeCompare(b.nome || ''); })
+      .forEach(function(e) {
+        var on = selecionados.indexOf(e.id) >= 0;
+        h += '<label style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;border:1px solid var(--border);border-radius:6px;padding:5px 9px;cursor:pointer;">';
+        h += '<input type="checkbox" class="func-eqx" value="' + e.id + '"' + (on ? ' checked' : '') + ' style="margin:0;">';
+        h += H(e.nome) + '</label>';
+      });
+    wrap.innerHTML = h || '<span style="font-size:12px;color:var(--text-3);">Sem equipamentos.</span>';
+  }
+
+  // mostra o campo "Divisão de origem" só quando a unidade é EXTERNA
+  function onUnidadeChange() {
+    var sel  = document.getElementById('func-unidade');
+    var wrap = document.getElementById('func-divisao-wrap');
+    if (!sel || !wrap) return;
+    wrap.style.display = (sel.value === 'EXTERNA') ? 'block' : 'none';
+    if (sel.value !== 'EXTERNA') {
+      var d = document.getElementById('func-divisao');
+      if (d) d.value = '';
+    }
+  }
+
+  function confirmarApagar(id, nome) {
+    APP.actionId = id;
+    var el = document.getElementById('m-func-ap-nome');
+    if (el) el.textContent = nome;
+    openModal('m-func-apagar');
+  }
+
+  function execApagar() {
+    if (!APP.actionId) return;
+    sbDelete('utilizadores', 'id=eq.' + APP.actionId).then(function() {
+      toast('Funcionário eliminado.', 'success');
+      closeModal('m-func-apagar');
+      loadAll(function() { App.renderContent(); App.buildSidebar(); });
+    }).catch(function() { toast('Erro ao eliminar.', 'error'); });
+  }
+
+  function init() {
+    var cont = document.getElementById('modais-funcionarios');
+    if (cont) cont.innerHTML = getModaisHTML();
+  }
+
+  return {
+    render: render,
+    init: init,
+    openNovo: openNovo,
+    openEditar: openEditar,
+    salvar: salvar,
+    onUnidadeChange: onUnidadeChange,
+    darAcesso: darAcesso,
+    retirarAcesso: retirarAcesso,
+    confirmarApagar: confirmarApagar,
+    execApagar: execApagar
+  };
+
+})();
