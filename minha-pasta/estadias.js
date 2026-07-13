@@ -81,40 +81,110 @@ var Estadias = (function() {
 
     var pode = APP.podeGerirEstadias ? APP.podeGerirEstadias(eqId) : true;
 
-    var ativas = _lista.filter(function(e) { return e.estado === 'ativa'; });
     var hoje = _hoje();
-    var saemHoje = ativas.filter(function(e) { return e.data_checkout_prev === hoje; });
+    var ativas   = _lista.filter(function(e) { return e.estado === 'ativa'; });
+    var reservas = _lista.filter(function(e) {
+      return e.estado === 'reservada' && (!e.data_checkout_prev || e.data_checkout_prev >= hoje);
+    });
+    var saemHoje  = ativas.filter(function(e) { return e.data_checkout_prev === hoje; });
+    var chegamHoje = reservas.filter(function(e) { return e.data_checkin === hoje; });
 
     var h = '';
 
     // ── KPIs ao vivo ──
-    var pessoasAgora = 0, unidadesAgora = ativas.length;
+    var pessoasAgora = 0;
     ativas.forEach(function(e) { pessoasAgora += _pessoas(e); });
 
     h += '<div class="rep-cards" style="margin-bottom:14px;">';
-    h += _card(unidadesAgora, 'Ocupados agora', 'tendas / caravanas', '#1D4ED8');
+    h += _card(ativas.length, 'Ocupados agora', 'tendas / caravanas', '#1D4ED8');
     h += _card(pessoasAgora, 'Pessoas no parque', 'neste momento', '#15803D');
-    h += _card(saemHoje.length, 'Saídas previstas hoje', 'check-outs', '#D97706');
+    h += _card(chegamHoje.length, 'Chegadas hoje', 'reservas por entrar', '#7C3AED');
+    h += _card(saemHoje.length, 'Saídas hoje', 'check-outs previstos', '#D97706');
     h += '</div>';
+
+    var tab = APP.estadiaTab || 'ativas';
 
     // ── Botões ──
     if (pode) {
       h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">';
-      h += '<button class="btn btn-primary btn-sm" onclick="Estadias.openNovo(\'' + eqId + '\')">+ Novo check-in</button>';
-      h += '<button class="btn btn-ghost btn-sm" onclick="Estadias.setTab(\'ativas\')">No parque (' + ativas.length + ')</button>';
-      h += '<button class="btn btn-ghost btn-sm" onclick="Estadias.setTab(\'historico\')">Histórico</button>';
-      h += '<button class="btn btn-ghost btn-sm" onclick="Estadias.setTab(\'stats\')">📊 Estatísticas</button>';
+      h += '<button class="btn btn-primary btn-sm" onclick="Estadias.openNovo(\'' + eqId + '\',\'reserva\')">+ Nova reserva</button>';
+      h += '<button class="btn btn-secondary btn-sm" onclick="Estadias.openNovo(\'' + eqId + '\',\'checkin\')">+ Check-in directo</button>';
       h += '</div>';
     }
 
-    var tab = APP.estadiaTab || 'ativas';
+    // ── Separadores ──
+    h += '<div class="eq-tabs" style="margin-bottom:14px;">';
+    h += _tab('reservas',  'Reservas', reservas.length, tab);
+    h += _tab('ativas',    'No parque', ativas.length, tab);
+    h += _tab('historico', 'Histórico', 0, tab);
+    h += _tab('stats',     '📊 Estatísticas', 0, tab);
+    h += '</div>';
 
     if (tab === 'stats')          h += _renderStats();
     else if (tab === 'historico') h += _renderLista(_lista, pode, true);
+    else if (tab === 'reservas')  h += _renderReservas(reservas, pode);
     else                          h += _renderLista(ativas, pode, false);
 
     _garantirModais();
     return h;
+  }
+
+  function _tab(id, label, n, atual) {
+    var h = '<div class="eq-tab' + (atual === id ? ' active' : '') + '" onclick="Estadias.setTab(\'' + id + '\')">';
+    h += label;
+    if (n > 0) h += ' <span style="background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;margin-left:3px;">' + n + '</span>';
+    h += '</div>';
+    return h;
+  }
+
+  // ── LISTA DE RESERVAS (ainda não chegaram) ────────────────
+  function _renderReservas(lista, pode) {
+    if (!lista.length) {
+      return emptyState('Sem reservas', 'Não há reservas de lugares por ocupar.');
+    }
+
+    var hoje = _hoje();
+    lista = lista.slice().sort(function(a, b) { return (a.data_checkin || '').localeCompare(b.data_checkin || ''); });
+
+    var h = '<div class="dtw"><table class="dt">';
+    h += '<thead><tr><th>Chegada</th><th>Lugar</th><th>Tipo</th><th>Responsável</th><th>Pessoas</th><th>Noites</th><th>País</th><th></th></tr></thead><tbody>';
+
+    lista.forEach(function(e) {
+      var t = _tipo(e.tipo_alojamento);
+      var hojeChega = e.data_checkin === hoje;
+      var atrasada  = e.data_checkin < hoje;
+
+      h += '<tr' + (hojeChega ? ' style="background:#F5F3FF;"' : (atrasada ? ' style="background:#FEF2F2;"' : '')) + '>';
+      h += '<td><span class="td-p">' + _fdata(e.data_checkin) + '</span>';
+      if (hojeChega) h += '<div style="font-size:10.5px;color:#7C3AED;font-weight:700;">HOJE</div>';
+      else if (atrasada) h += '<div style="font-size:10.5px;color:var(--red);font-weight:600;">Não compareceu?</div>';
+      h += '</td>';
+      h += '<td class="td-m">' + H(e.lugar || '—') + '</td>';
+      h += '<td class="td-m">' + t.i + ' ' + t.l + '</td>';
+      h += '<td><span class="td-p">' + H(e.responsavel_nome) + '</span>';
+      if (e.contacto) h += '<div class="td-m" style="font-size:10.5px;">' + H(e.contacto) + '</div>';
+      h += '</td>';
+      h += '<td class="td-m">' + _pessoas(e) + '</td>';
+      h += '<td class="td-m">' + (e.data_checkout_prev ? _noitesPrev(e) : '—') + '</td>';
+      h += '<td class="td-m">' + H(e.nacionalidade || '—') + '</td>';
+      h += '<td style="text-align:right;white-space:nowrap;">';
+      if (pode) {
+        h += '<button class="btn btn-primary btn-sm" onclick="Estadias.fazerCheckin(\'' + e.id + '\')">Check-in</button>';
+        h += '<button class="btn btn-ghost btn-sm" onclick="Estadias.openEditar(\'' + e.id + '\')">Editar</button>';
+        h += '<button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="Estadias.cancelar(\'' + e.id + '\')">Cancelar</button>';
+      }
+      h += '</td></tr>';
+    });
+
+    h += '</tbody></table></div>';
+    return h;
+  }
+
+  // noites previstas de uma reserva
+  function _noitesPrev(e) {
+    if (!e.data_checkin || !e.data_checkout_prev) return '—';
+    var n = Math.round((new Date(e.data_checkout_prev) - new Date(e.data_checkin)) / 86400000);
+    return n > 0 ? n : 1;
   }
 
   // os modais vivem no body (fora do painel), para não serem destruídos ao redesenhar
@@ -356,14 +426,15 @@ var Estadias = (function() {
 
     h += '<div class="form-sec-t">Datas</div>';
     h += '<div class="form-row">';
-    h += '<div class="fi"><label class="fl">Check-in *</label><input type="date" id="est-ci" class="fin"></div>';
-    h += '<div class="fi"><label class="fl">Check-out previsto</label><input type="date" id="est-co" class="fin"></div>';
+    h += '<div class="fi"><label class="fl" id="est-lbl-ci">Check-in *</label><input type="date" id="est-ci" class="fin"></div>';
+    h += '<div class="fi"><label class="fl">Saída prevista</label><input type="date" id="est-co" class="fin"></div>';
     h += '</div>';
+    h += '<div id="est-ajuda" style="border-radius:8px;padding:9px 12px;font-size:12px;line-height:1.5;margin-bottom:12px;display:none;"></div>';
     h += '<div class="fi"><label class="fl">Observações</label><textarea id="est-obs" class="fin" rows="2"></textarea></div>';
 
     h += '</div>';
     h += '<div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal(\'m-est-novo\')">Cancelar</button>';
-    h += '<button class="btn btn-primary" onclick="Estadias.salvar()">Registar</button></div>';
+    h += '<button class="btn btn-primary" id="est-btn-salvar" onclick="Estadias.salvar()">Registar</button></div>';
     h += '</div></div>';
 
     // CHECK-OUT
@@ -401,16 +472,34 @@ var Estadias = (function() {
     else if (typeof App !== 'undefined' && App.renderContent) App.renderContent();
   }
 
-  function openNovo(eqId) {
+  function openNovo(eqId, modo) {
     APP.editId = null;
+    APP.estModo = modo || 'checkin';   // 'reserva' | 'checkin'
     _eqId = eqId || _eqId;
     var eq = getEq(_eqId);
     var set = function(i, v) { var el = document.getElementById(i); if (el) el.value = v; };
 
+    var eReserva = (APP.estModo === 'reserva');
+
     var ttl = document.getElementById('m-est-ttl');
-    if (ttl) ttl.textContent = 'Novo check-in';
+    if (ttl) ttl.textContent = eReserva ? 'Nova reserva de lugar' : 'Novo check-in';
     var eqEl = document.getElementById('m-est-eq');
     if (eqEl) eqEl.textContent = eq ? eq.nome : '—';
+
+    // rótulos e ajuda mudam conforme o modo
+    var lblCi = document.getElementById('est-lbl-ci');
+    if (lblCi) lblCi.textContent = eReserva ? 'Data de chegada *' : 'Check-in *';
+    var ajuda = document.getElementById('est-ajuda');
+    if (ajuda) {
+      ajuda.style.display = 'block';
+      ajuda.innerHTML = eReserva
+        ? 'A reserva fica <strong>à espera</strong>. Quando o hóspede chegar, faça o check-in a partir da lista de reservas.'
+        : 'O hóspede <strong>já chegou</strong> — a estadia começa hoje.';
+      ajuda.style.background = eReserva ? '#F5F3FF' : '#DCFCE7';
+      ajuda.style.color = eReserva ? '#5B21B6' : '#15803D';
+    }
+    var btn = document.getElementById('est-btn-salvar');
+    if (btn) btn.textContent = eReserva ? 'Reservar lugar' : 'Registar entrada';
 
     set('est-tipo', 'tenda');
     set('est-lugar', '');
@@ -428,6 +517,48 @@ var Estadias = (function() {
     openModal('m-est-novo');
   }
 
+  // ── Check-in de uma reserva: passa de 'reservada' a 'ativa' ──
+  function fazerCheckin(id) {
+    if (APP.podeGerirEstadias && !APP.podeGerirEstadias(_eqId)) {
+      toast('Não tem autorização.', 'error');
+      return;
+    }
+    var e = _lista.filter(function(x) { return x.id === id; })[0];
+    if (!e) return;
+
+    var hoje = _hoje();
+    var msg = 'Confirmar a entrada de ' + e.responsavel_nome + ' no lugar ' + (e.lugar || '—') + '?';
+    if (e.data_checkin !== hoje) {
+      msg += '\n\nA reserva era para ' + _fdata(e.data_checkin) + '. A estadia passa a começar hoje (' + _fdata(hoje) + ').';
+    }
+    if (!confirm(msg)) return;
+
+    sbPatch('estadias', 'id=eq.' + id, {
+      estado: 'ativa',
+      data_checkin: hoje    // a estadia conta a partir da entrada real
+    }).then(function() {
+      toast('Check-in feito. Bem-vindos!', 'success');
+      APP.estadiaTab = 'ativas';
+      load(_eqId, function() { _redesenhar(); });
+    }).catch(function(err) {
+      console.error('Erro no check-in:', err);
+      var m = [err && err.code, err && err.message].filter(Boolean).join(' · ');
+      toast('Erro no check-in: ' + (m || 'desconhecido'), 'error');
+    });
+  }
+
+  function cancelar(id) {
+    if (APP.podeGerirEstadias && !APP.podeGerirEstadias(_eqId)) return;
+    var e = _lista.filter(function(x) { return x.id === id; })[0];
+    if (!e) return;
+    if (!confirm('Cancelar a reserva de ' + e.responsavel_nome + '?\n\nO lugar ' + (e.lugar || '') + ' fica livre.')) return;
+
+    sbPatch('estadias', 'id=eq.' + id, { estado: 'cancelada' }).then(function() {
+      toast('Reserva cancelada.', 'success');
+      load(_eqId, function() { _redesenhar(); });
+    }).catch(function() { toast('Erro ao cancelar.', 'error'); });
+  }
+
   function openEditar(id) {
     var e = _lista.filter(function(x) { return x.id === id; })[0];
     if (!e) return;
@@ -435,10 +566,19 @@ var Estadias = (function() {
     var eq = getEq(e.equipamento_id);
     var set = function(i, v) { var el = document.getElementById(i); if (el) el.value = (v == null ? '' : v); };
 
+    APP.estModo = (e.estado === 'reservada') ? 'reserva' : 'checkin';
+
     var ttl = document.getElementById('m-est-ttl');
-    if (ttl) ttl.textContent = 'Editar estadia';
+    if (ttl) ttl.textContent = (e.estado === 'reservada') ? 'Editar reserva' : 'Editar estadia';
     var eqEl = document.getElementById('m-est-eq');
     if (eqEl) eqEl.textContent = eq ? eq.nome : '—';
+
+    var lblCi = document.getElementById('est-lbl-ci');
+    if (lblCi) lblCi.textContent = (e.estado === 'reservada') ? 'Data de chegada *' : 'Check-in *';
+    var ajuda = document.getElementById('est-ajuda');
+    if (ajuda) ajuda.style.display = 'none';
+    var btn = document.getElementById('est-btn-salvar');
+    if (btn) btn.textContent = 'Guardar alterações';
 
     set('est-tipo', e.tipo_alojamento);
     set('est-lugar', e.lugar);
@@ -494,15 +634,20 @@ var Estadias = (function() {
       observacoes:        (v('est-obs') || '').trim() || null,
       criado_por:         APP.user ? APP.user.id : null
     };
-    if (!APP.editId) body.estado = 'ativa';
+    if (!APP.editId) {
+      body.estado = (APP.estModo === 'reserva') ? 'reservada' : 'ativa';
+    }
 
     var p = APP.editId
       ? sbPatch('estadias', 'id=eq.' + APP.editId, body)
       : sbPost('estadias', body);
 
     p.then(function() {
-      toast(APP.editId ? 'Estadia actualizada.' : 'Check-in registado.', 'success');
+      var msg = APP.editId ? 'Registo actualizado.'
+              : (APP.estModo === 'reserva' ? 'Lugar reservado.' : 'Check-in registado.');
+      toast(msg, 'success');
       closeModal('m-est-novo');
+      if (!APP.editId) APP.estadiaTab = (APP.estModo === 'reserva') ? 'reservas' : 'ativas';
       load(_eqId, function() { _redesenhar(); });
     }).catch(function(e) {
       console.error('Erro estadia:', e);
@@ -666,6 +811,7 @@ var Estadias = (function() {
     openNovo: openNovo, openEditar: openEditar, salvar: salvar,
     checkout: checkout, confirmarCheckout: confirmarCheckout,
     setTab: setTab, setMes: setMes, imprimir: imprimir,
+    fazerCheckin: fazerCheckin, cancelar: cancelar,
     lista: function() { return _lista; },
     dormidas: _dormidas, pessoas: _pessoas, noites: _noites
   };
