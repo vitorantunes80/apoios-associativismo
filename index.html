@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DDS IA | Assistente de Processos</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;color:#1f2937}
+header{background:#17365d;color:white;padding:22px 28px}
+header h1{margin:0;font-size:26px} header p{margin:5px 0 0;opacity:.85}
+main{max-width:1100px;margin:28px auto;padding:0 18px}
+.card{background:white;border-radius:14px;padding:22px;margin-bottom:18px;box-shadow:0 3px 12px rgba(0,0,0,.07)}
+h2{font-size:18px;margin:0 0 15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+button{border:1px solid #d1d5db;background:white;border-radius:9px;padding:12px;cursor:pointer;font-size:14px}
+button:hover{background:#eef3f8} button.selected{background:#17365d;color:white;border-color:#17365d}
+textarea{width:100%;min-height:210px;border:1px solid #cbd5e1;border-radius:9px;padding:14px;font-size:15px;resize:vertical}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.primary{background:#17365d;color:white;border:0;padding:13px 20px;font-weight:bold}
+.secondary{background:#eef3f8;border:0}
+.output{white-space:pre-wrap;background:#f8fafc;border:1px solid #dbe2ea;border-radius:9px;padding:18px;min-height:120px}
+.note{font-size:13px;color:#64748b}
+.badge{display:inline-block;background:#e8eef6;color:#17365d;padding:5px 9px;border-radius:999px;font-size:12px;margin-right:5px}
+</style>
+</head>
+<body>
+<header>
+  <h1>DDS IA</h1>
+  <p>Assistente de Processos da Divisão de Desenvolvimento Social</p>
+</header>
+
+<main>
+<section class="card">
+<h2>1. O que pretende fazer?</h2>
+<div class="grid" id="actions">
+<button data-action="UASE">Enviar para UASE</button>
+<button data-action="UDAJ">Enviar para UDAJ</button>
+<button data-action="DAG">Enviar para DAG</button>
+<button data-action="SUPERIOR">Preparar para decisão superior</button>
+<button data-action="SEGUIMENTO">Dar seguimento a despacho</button>
+<button data-action="REQUERENTE">Responder ao requerente</button>
+<button data-action="RESUMIR">Resumir informação</button>
+<button data-action="CORRIGIR">Corrigir / reformular</button>
+</div>
+</section>
+
+<section class="card">
+<h2>2. Assunto, opcional</h2>
+<p class="note" id="topicHint">Escolha primeiro o destino para apresentar os assuntos correspondentes.</p>
+<div class="grid" id="topics"></div>
+</section>
+
+<section class="card">
+<h2>3. Informação do FDoc</h2>
+<textarea id="input" placeholder="Cole aqui a informação recebida no FDoc..."></textarea>
+<p class="note">Na versão seguinte, esta área será ligada à IA para interpretar automaticamente o conteúdo e propor o encaminhamento.</p>
+<div class="actions">
+<button class="primary" id="generate">GERAR PROPOSTA</button>
+<button class="secondary" id="clear">Limpar</button>
+</div>
+</section>
+
+<section class="card">
+<h2>4. Texto sugerido</h2>
+<div id="output" class="output">A proposta aparecerá aqui.</div>
+<div class="actions">
+<button class="secondary" id="copy">Copiar texto</button>
+<button class="secondary" id="shorter">Mais curto</button>
+<button class="secondary" id="formal">Mais formal</button>
+</div>
+</section>
+</main>
+
+<script>
+let action="", topic="";
+document.querySelectorAll("#actions button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("#actions button").forEach(x=>x.classList.remove("selected"));
+  b.classList.add("selected"); action=b.dataset.action; renderTopics();
+});
+const topicGroups = {
+  UASE: [
+    "Apoio à natalidade",
+    "Ação Social",
+    "Transportes",
+    "Saúde",
+    "Outros assuntos UASE"
+  ],
+  UDAJ: [
+    "Associativismo",
+    "Equipamentos desportivos",
+    "Piscinas cobertas",
+    "Piscinas descobertas",
+    "Centro hípico",
+    "Parque de campismo",
+    "CEAVM",
+    "Outros assuntos UDAJ"
+  ],
+  DAG: [
+    "Remessa de informação",
+    "Para conhecimento",
+    "Para decisão",
+    "Após informação da UASE",
+    "Após informação da UDAJ",
+    "Outro"
+  ],
+  SUPERIOR: [
+    "Submissão à consideração superior",
+    "Outro"
+  ],
+  SEGUIMENTO: [
+    "Dar seguimento a despacho",
+    "Outro"
+  ],
+  REQUERENTE: [
+    "Resposta ao requerente",
+    "Pedido de informação",
+    "Reclamação",
+    "Outro"
+  ],
+  RESUMIR: ["Resumo de informação"],
+  CORRIGIR: ["Correção / reformulação"]
+};
+
+function renderTopics() {
+  const container=document.getElementById("topics");
+  const hint=document.getElementById("topicHint");
+  container.innerHTML="";
+  topic="";
+  if(!action){
+    hint.textContent="Escolha primeiro o destino/ação para apresentar os assuntos correspondentes.";
+    return;
+  }
+  const items=topicGroups[action] || ["Outro"];
+  hint.textContent="Selecione o assunto, se aplicável. Esta lista poderá ser ampliada futuramente.";
+  items.forEach(item=>{
+    const b=document.createElement("button");
+    b.textContent=item;
+    b.dataset.topic=item;
+    b.onclick=()=>{
+      container.querySelectorAll("button").forEach(x=>x.classList.remove("selected"));
+      b.classList.add("selected");
+      topic=item;
+    };
+    container.appendChild(b);
+  });
+}
+const input=document.getElementById("input"), output=document.getElementById("output");
+
+function proposal(){
+  if(!action){output.textContent="Selecione primeiro o que pretende fazer.";return}
+  const intro = topic ? `relativamente ao assunto de ${topic.toLowerCase()}` : "tendo em consideração o teor da informação antecedente";
+  let t="";
+  if(action==="UASE") t="Ao Chefe da UASE,\n\nPara analisar e informar.";
+  if(action==="UDAJ") t="Ao Chefe da UDAJ,\n\nPara analisar e informar.";
+  if(action==="DAG") t="Exma. Senhora Diretora do DAG, Dr.ª Fátima Oliveira,\n\nRemete-se o presente processo, acompanhado da informação antecedente, para conhecimento e efeitos tidos por convenientes.";
+  if(action==="SUPERIOR") t="À consideração superior,\n\nSubmete-se o presente processo à consideração superior, tendo em conta o teor da informação antecedente.";
+  if(action==="SEGUIMENTO") t="Na sequência do despacho superior, deverá ser dado seguimento ao solicitado, nos termos da informação antecedente.";
+  if(action==="REQUERENTE") t="Em resposta ao pedido apresentado, e de acordo com a informação dos serviços, comunica-se o seguinte:\n\n[Resposta a completar com base na informação do processo.]";
+  if(action==="RESUMIR") t="Resumo da informação:\n\n[O conteúdo será resumido pela IA na próxima versão.]";
+  if(action==="CORRIGIR") t=input.value ? input.value : "[Cole a informação que pretende corrigir ou reformular.]";
+  if((action==="DAG"||action==="SUPERIOR"||action==="SEGUIMENTO") && topic) t += `\n\nAssunto identificado: ${topic}.`;
+  output.textContent=t;
+}
+document.getElementById("generate").onclick=proposal;
+document.getElementById("clear").onclick=()=>{input.value="";output.textContent="A proposta aparecerá aqui.";action="";topic="";document.querySelectorAll("button").forEach(x=>x.classList.remove("selected")); renderTopics()};
+document.getElementById("copy").onclick=()=>navigator.clipboard.writeText(output.textContent);
+document.getElementById("shorter").onclick=()=>{output.textContent=output.textContent.replace(" para conhecimento e efeitos tidos por convenientes","").replace("tendo em conta o teor da informação antecedente","com base na informação antecedente")};
+document.getElementById("formal").onclick=()=>{output.textContent=output.textContent.replace("Remete-se o presente processo","Remete-se o presente processo, para os devidos efeitos").replace("Para analisar e informar.","Para análise e informação.")};
+</script>
+</body>
+</html>
