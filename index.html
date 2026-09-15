@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DDS IA | Assistente de Processos</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;color:#1f2937}
+header{background:#17365d;color:#fff;padding:24px 28px}
+header h1{margin:0;font-size:28px}
+header p{margin:6px 0 0;opacity:.86}
+main{max-width:1100px;margin:28px auto;padding:0 18px}
+.card{background:#fff;border-radius:14px;padding:22px;margin-bottom:18px;box-shadow:0 3px 12px rgba(0,0,0,.07)}
+.step{font-size:13px;font-weight:bold;color:#64748b;text-transform:uppercase;letter-spacing:.04em;margin-bottom:7px}
+h2{font-size:19px;margin:0 0 15px}
+textarea{width:100%;min-height:230px;border:1px solid #cbd5e1;border-radius:10px;padding:14px;font-size:15px;resize:vertical;outline:none}
+textarea:focus{border-color:#17365d}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+button{border:1px solid #d1d5db;background:#fff;border-radius:9px;padding:12px;cursor:pointer;font-size:14px}
+button:hover{background:#eef3f8}
+button.selected{background:#17365d;color:#fff;border-color:#17365d}
+.hidden{display:none}
+.options{margin-top:18px}
+.option-title{font-size:14px;font-weight:bold;margin-bottom:9px}
+.primary{background:#17365d;color:#fff;border:0;padding:13px 22px;font-weight:bold}
+.secondary{background:#eef3f8;border:0}
+.output{white-space:pre-wrap;background:#f8fafc;border:1px solid #dbe2ea;border-radius:10px;padding:18px;min-height:140px;line-height:1.55}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.badge{display:inline-block;background:#e8eef6;color:#17365d;padding:5px 9px;border-radius:999px;font-size:12px;margin-right:5px}
+.detected{margin-top:15px;padding:12px 14px;background:#f1f5f9;border-radius:9px;font-size:14px}
+.note{font-size:13px;color:#64748b;margin-top:8px}
+.model-box{margin-top:15px;border-top:1px solid #e5e7eb;padding-top:15px}
+.meeting-item{padding:13px 14px;border:1px solid #dbe2ea;border-radius:9px;margin-bottom:9px;background:#fff}
+.meeting-item strong{display:block;margin-bottom:4px}
+.remove-meeting{margin-top:8px;padding:7px 10px;font-size:12px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>DDS IA</h1>
+  <p>Assistente de Processos da Divisão de Desenvolvimento Social</p>
+</header>
+
+<main>
+
+<section class="card">
+  <div class="step">Passo 1</div>
+  <h2>Informação do FDoc</h2>
+  <textarea id="input" placeholder="Cole aqui a informação recebida no FDoc, independentemente de onde vem..."></textarea>
+  <div style="margin-top:16px;padding:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px">
+    <label style="display:flex;align-items:center;gap:10px;font-size:15px;font-weight:bold;cursor:pointer">
+      <input type="checkbox" id="meetingRequired" style="width:18px;height:18px">
+      Este processo tem que ir a Reunião de Câmara
+    </label>
+    <div id="meetingFields" class="hidden" style="margin-top:13px">
+      <div class="option-title">Número do FDoc</div>
+      <input id="fdocNumber" type="text" placeholder="Ex.: FDoc 12345/2026"
+        style="width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:9px;font-size:14px">
+      <div class="option-title" style="margin-top:12px">Data prevista da Reunião de Câmara, opcional</div>
+      <input id="meetingDate" type="date"
+        style="width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:9px;font-size:14px">
+      <p class="note">O número do FDoc ficará associado ao processo para que não te esqueças de o acompanhar. Na versão seguinte podemos ligar este registo a notificações/calendário.</p>
+    </div>
+  </div>
+  <p class="note">A origem da informação não é necessária nesta fase. O conteúdo será analisado para ajudar a identificar o assunto e preparar a resposta.</p>
+</section>
+
+<section class="card hidden" id="meetingReminderCard">
+  <div class="step">Acompanhamento</div>
+  <h2>Processos para Reunião de Câmara</h2>
+  <div id="meetingList"></div>
+</section>
+
+<section class="card">
+  <div class="step">Passo 2</div>
+  <h2>Para onde deve seguir?</h2>
+
+  <div class="grid" id="destinations">
+    <button data-destination="UASE">UASE</button>
+    <button data-destination="UDAJ">UDAJ</button>
+    <button data-destination="DAG">DAG</button>
+    <button data-destination="Presidente">Presidente</button>
+    <button data-destination="Vereadora">Vereadora</button>
+    <button data-destination="Requerente">Requerente</button>
+    <button data-destination="Outro">Outro</button>
+  </div>
+
+  <div id="purposeArea" class="options hidden">
+    <div class="option-title">Para quê?</div>
+    <div class="grid" id="purposes"></div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="step">Passo 3</div>
+  <h2>Assunto identificado</h2>
+  <div class="detected" id="detected">
+    O assunto será identificado pela IA a partir da informação colocada no Passo 1.
+  </div>
+  <p class="note">Poderá ser alterado caso a identificação não esteja correta.</p>
+</section>
+
+<section class="card">
+  <div class="step">Passo 4</div>
+  <h2>Gerar resposta</h2>
+  <p class="note">A resposta será construída com base na informação do FDoc, no destino escolhido e na finalidade indicada.</p>
+  <button class="primary" id="generate">GERAR RESPOSTA</button>
+</section>
+
+<section class="card">
+  <div class="step">Resultado</div>
+  <h2>Texto sugerido</h2>
+  <div id="output" class="output">A resposta aparecerá aqui.</div>
+
+  <div class="actions">
+    <button class="primary" id="copy">Copiar para o FDoc</button>
+    <button class="secondary" id="edit">✏️ Trabalhar resposta</button>
+    <button class="secondary" id="save">💾 Guardar como modelo</button>
+  </div>
+
+  <div id="editArea" class="model-box hidden">
+    <div class="option-title">Editar resposta</div>
+    <textarea id="edited" style="min-height:180px"></textarea>
+    <div class="actions">
+      <button class="primary" id="apply">Aplicar alteração</button>
+      <button class="secondary" id="cancelEdit">Cancelar</button>
+    </div>
+  </div>
+
+  <div id="saveArea" class="model-box hidden">
+    <div class="option-title">Nome do modelo</div>
+    <input id="modelName" type="text" placeholder="Ex.: Remessa para DAG após informação da UDAJ"
+      style="width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:9px;font-size:14px">
+    <div class="actions">
+      <button class="primary" id="confirmSave">Guardar modelo</button>
+      <button class="secondary" id="cancelSave">Cancelar</button>
+    </div>
+    <p class="note">Nesta versão, o botão demonstra a funcionalidade. Na versão ligada à IA, os modelos serão guardados para utilização futura.</p>
+  </div>
+</section>
+
+</main>
+
+<script>
+let destination = "";
+let purpose = "";
+let topic = "";
+
+const purposeGroups = {
+  UASE: ["Para analisar e informar", "Para esclarecimento", "Para outro"],
+  UDAJ: ["Para analisar e informar", "Para parecer jurídico", "Para esclarecimento", "Para outro"],
+  DAG: ["Para conhecimento", "Para análise e informação", "Para decisão", "Na sequência de informação da UASE", "Na sequência de informação da UDAJ", "Para outro"],
+  Presidente: ["Para conhecimento", "Para decisão", "Para outro"],
+  Vereadora: ["Para conhecimento", "Para decisão", "Para outro"],
+  Requerente: ["Responder ao requerente", "Pedido de informação", "Reclamação", "Para outro"],
+  Outro: ["Para análise", "Para informação", "Outro"]
+};
+
+function renderPurposes(){
+  const area=document.getElementById("purposeArea");
+  const box=document.getElementById("purposes");
+  box.innerHTML="";
+  purpose="";
+  if(!destination){
+    area.classList.add("hidden");
+    return;
+  }
+  area.classList.remove("hidden");
+  (purposeGroups[destination] || ["Para outro"]).forEach(item=>{
+    const b=document.createElement("button");
+    b.textContent=item;
+    b.onclick=()=>{
+      box.querySelectorAll("button").forEach(x=>x.classList.remove("selected"));
+      b.classList.add("selected");
+      purpose=item;
+    };
+    box.appendChild(b);
+  });
+}
+
+document.querySelectorAll("#destinations button").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll("#destinations button").forEach(x=>x.classList.remove("selected"));
+    b.classList.add("selected");
+    destination=b.dataset.destination;
+    renderPurposes();
+  };
+});
+
+function detectTopic(text){
+  const t=text.toLowerCase();
+  if(t.includes("natalidade") || t.includes("nascimento")) return "Apoio à natalidade";
+  if(t.includes("transport") || t.includes("circuito escolar")) return "Transportes";
+  if(t.includes("ação social") || t.includes("accao social")) return "Ação Social";
+  if(t.includes("saúde") || t.includes("saude")) return "Saúde";
+  if(t.includes("associativ")) return "Associativismo";
+  if(t.includes("piscina")) return t.includes("coberta") ? "Piscinas cobertas" : "Piscinas descobertas";
+  if(t.includes("centro hípico") || t.includes("centro hipico")) return "Centro hípico";
+  if(t.includes("campismo") || t.includes("parque de campismo")) return "Parque de campismo";
+  if(t.includes("ceavm")) return "CEAVM";
+  if(t.includes("equipamento desportivo") || t.includes("equipamentos desportivos")) return "Equipamentos desportivos";
+  if(t.includes("reunião") || t.includes("reuniao")) return "Pedido de reunião";
+  if(t.includes("reclamação") || t.includes("reclamacao")) return "Reclamação";
+  return "A identificar pela IA";
+}
+
+
+let meetingProcesses = JSON.parse(localStorage.getItem("ddsMeetingProcesses") || "[]");
+
+const meetingRequired = document.getElementById("meetingRequired");
+const meetingFields = document.getElementById("meetingFields");
+const meetingReminderCard = document.getElementById("meetingReminderCard");
+const meetingList = document.getElementById("meetingList");
+
+meetingRequired.addEventListener("change", () => {
+  meetingFields.classList.toggle("hidden", !meetingRequired.checked);
+  if (!meetingRequired.checked) {
+    document.getElementById("fdocNumber").value = "";
+    document.getElementById("meetingDate").value = "";
+  }
+});
+
+function renderMeetings(){
+  if(!meetingProcesses.length){
+    meetingReminderCard.classList.add("hidden");
+    meetingList.innerHTML="";
+    return;
+  }
+  meetingReminderCard.classList.remove("hidden");
+  meetingList.innerHTML="";
+  meetingProcesses.forEach((item,index)=>{
+    const div=document.createElement("div");
+    div.className="meeting-item";
+    const date=item.date ? new Date(item.date+"T00:00:00").toLocaleDateString("pt-PT") : "Data ainda não definida";
+    div.innerHTML=`<strong>FDoc: ${item.fdoc}</strong><span>${item.topic || "Assunto não identificado"}</span><br><span style="font-size:13px;color:#64748b">Reunião: ${date}</span><br><button class="remove-meeting" data-index="${index}">Marcar como tratado / retirar</button>`;
+    meetingList.appendChild(div);
+  });
+  meetingList.querySelectorAll(".remove-meeting").forEach(btn=>{
+    btn.onclick=()=>{
+      meetingProcesses.splice(Number(btn.dataset.index),1);
+      localStorage.setItem("ddsMeetingProcesses",JSON.stringify(meetingProcesses));
+      renderMeetings();
+    };
+  });
+}
+
+function saveMeetingProcess(){
+  if(!meetingRequired.checked) return;
+  const fdoc=document.getElementById("fdocNumber").value.trim();
+  if(!fdoc){
+    alert("Quando o processo vai a Reunião de Câmara, indique o número do FDoc.");
+    document.getElementById("fdocNumber").focus();
+    return false;
+  }
+  const item={
+    fdoc:fdoc,
+    date:document.getElementById("meetingDate").value,
+    topic:topic,
+    created:new Date().toISOString()
+  };
+  const exists=meetingProcesses.some(x=>x.fdoc.toLowerCase()===fdoc.toLowerCase());
+  if(!exists){
+    meetingProcesses.push(item);
+    localStorage.setItem("ddsMeetingProcesses",JSON.stringify(meetingProcesses));
+  }
+  renderMeetings();
+  return true;
+}
+
+renderMeetings();
+
+document.getElementById("generate").onclick=()=>{
+  const text=document.getElementById("input").value.trim();
+  if(!text){document.getElementById("output").textContent="Cole primeiro a informação do FDoc.";return;}
+  if(!destination){document.getElementById("output").textContent="Selecione primeiro para onde deve seguir o processo.";return;}
+  if(!purpose){document.getElementById("output").textContent="Selecione a finalidade do encaminhamento.";return;}
+
+  topic=detectTopic(text);
+  if(!saveMeetingProcess()) return;
+  document.getElementById("detected").innerHTML='<span class="badge">'+topic+'</span>';
+
+  let result="";
+  if(destination==="UASE") result="Ao Chefe da UASE,\n\nPara análise e informação.";
+  else if(destination==="UDAJ") result="Ao Chefe da UDAJ,\n\nPara análise e informação.";
+  else if(destination==="DAG") result="Exma. Senhora Diretora do DAG, Dr.ª Fátima Oliveira,\n\nRemete-se o presente processo, acompanhado da informação antecedente, para os efeitos tidos por convenientes.";
+  else if(destination==="Presidente") result="À consideração do Exmo. Senhor Presidente da Câmara Municipal,\n\nSubmete-se o presente processo à consideração superior.";
+  else if(destination==="Vereadora") result="À consideração da Exma. Senhora Vereadora,\n\nSubmete-se o presente processo à consideração superior.";
+  else if(destination==="Requerente") result="Em resposta ao pedido apresentado, informa-se o seguinte:\n\n[Resposta a elaborar com base na informação do processo.]";
+  else result="Remete-se o presente processo para análise e os efeitos tidos por convenientes.";
+
+  document.getElementById("output").textContent=result;
+};
+
+document.getElementById("copy").onclick=()=>{
+  navigator.clipboard.writeText(document.getElementById("output").textContent);
+};
+
+document.getElementById("edit").onclick=()=>{
+  const area=document.getElementById("editArea");
+  document.getElementById("edited").value=document.getElementById("output").textContent;
+  area.classList.remove("hidden");
+};
+
+document.getElementById("apply").onclick=()=>{
+  document.getElementById("output").textContent=document.getElementById("edited").value;
+  document.getElementById("editArea").classList.add("hidden");
+};
+
+document.getElementById("cancelEdit").onclick=()=>{
+  document.getElementById("editArea").classList.add("hidden");
+};
+
+document.getElementById("save").onclick=()=>{
+  document.getElementById("saveArea").classList.remove("hidden");
+  document.getElementById("modelName").focus();
+};
+
+document.getElementById("cancelSave").onclick=()=>{
+  document.getElementById("saveArea").classList.add("hidden");
+};
+
+document.getElementById("confirmSave").onclick=()=>{
+  const name=document.getElementById("modelName").value.trim();
+  if(!name){alert("Indique um nome para o modelo.");return;}
+  alert("Modelo guardado nesta demonstração. Na próxima versão, será guardado de forma permanente para utilização futura.");
+  document.getElementById("modelName").value="";
+  document.getElementById("saveArea").classList.add("hidden");
+};
+</script>
+
+</body>
+</html>
